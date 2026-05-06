@@ -88,6 +88,16 @@
   Today, Choose Program, Progress, History, Missed Workouts, Cell Members
 - Custom code areas:
   Progression engine, program assignment logic, revision-aware schedule projection, overdue workflow, adherence calculations
+- Delivery strategy:
+  Use very vertical slices.
+  Every new service, query, or mutation must ship with the smallest usable UI that exercises it in the same chunk.
+  The product should become usable slice-by-slice rather than waiting for a full backend-first pass.
+- First runtime slices:
+  1. Program Selection: assignment service plus `Choose Program` screen
+  2. Today: revision-aware schedule projection plus `Today` screen
+  3. Workout Logging: occurrence creation plus set logging screen
+  4. Submit And Advancement: workout submission plus `ready to advance` prompt and manual apply action
+  5. Progress And History: progress detail plus calendar/history screens
 
 ## Concrete Table Proposal
 
@@ -288,12 +298,15 @@ Notes:
   The user may log parts of it throughout the day.
   It becomes complete only when the user explicitly submits that workout occurrence.
 - Completed scheduled day:
-  A scheduled day counts as completed when the derived expected workout for that date has a matching completed workout occurrence and every prescribed exercise in that occurrence has at least `work_sets_min` completed work sets logged.
+  A scheduled day counts as completed when the derived expected workout for that date has a matching completed workout occurrence.
+  A completed workout may still be below the programmed minimum volume on one or more exercises.
   Timeliness is separate from completion.
   The system always stores both `scheduled_for_date` and `performed_on_date`.
+  Whether the user met the programmed minimum remains derivable from saved set counts versus `planned_work_sets_min`.
 - Ready to advance:
   A user can earn a `ready_to_advance` state when a single submitted workout occurrence logs at least `progression_sets` qualifying work sets for the current step and every qualifying set meets the progression target.
   For time-based steps, the target is `progression_seconds`.
+  If a time-based canonical step has no explicit `progression_sets`, one qualifying timed set is enough to earn readiness.
   For rep-based steps, the target is `progression_reps_max` when present, otherwise `progression_reps_min`.
   This benchmark can exceed the program's normal daily minimum volume, so users may log extra sets on benchmark or test days.
   The system does not auto-advance the user.
@@ -349,16 +362,19 @@ Notes:
 | --- | --- | --- | --- | --- |
 | 1 | Lock product and rules | custom local code/docs | none | Blueprint, workboard, and TODO reflect final product decisions |
 | 2 | Add user progress and occurrence schema | custom local code | 1 | Tables and ownership model are implemented |
-| 3 | Build revision-aware schedule projection and today's workout query | custom local code | 2 | User can pick a program and see today's prescription |
-| 4 | Build workout occurrence logging and progression update loop | custom local code | 2, 3 | User can log workouts and progress state updates correctly |
-| 5 | Build cell visibility and member views | custom local code | 3, 4 | Cell members can see consistency summaries |
+| 3 | Program Selection slice | custom local code + UI | 2 | User can choose a program, pick a start date, and create an active assignment with its first revision |
+| 4 | Today slice | custom local code + UI | 2, 3 | User can open the app and see today's derived workout plus overdue workouts |
+| 5 | Workout Logging slice | custom local code + UI | 2, 4 | User can start a workout occurrence and log reps or seconds against the prescribed exercises |
+| 6 | Submit And Advancement slice | custom local code + UI | 2, 5 | User can submit a workout, earn `ready to advance`, and choose whether to apply advancement |
+| 7 | Progress And History slice | custom local code + UI | 2, 6 | User can inspect current progress, earned advancement, and calendar/history detail |
+| 8 | Cell Visibility slice | custom local code + UI | 4, 7 | Cell members can see adherence and milestone summaries without private set logs |
 
 ## Verification
 
 - Commands to run:
   Verify planning docs by readback; implementation verification added in later chunks
 - Playwright coverage plan:
-  Add once UI implementation begins
+  Start with the `Choose Program` flow in Slice 3, then extend coverage slice-by-slice as each user-facing screen is added
 - Test auth strategy:
   Use JSKIT dev auth bypass once authenticated UI work starts
 - UI review expectations:

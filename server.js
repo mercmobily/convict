@@ -82,6 +82,15 @@ function canServeStaticFile(distRoot, relativePath) {
   return existsSync(resolvedPath);
 }
 
+function resolveSpaDocument(distRoot) {
+  const spaIndexPath = path.resolve(distRoot, SPA_INDEX_FILE);
+  if (!existsSync(spaIndexPath)) {
+    return null;
+  }
+
+  return readFileSync(spaIndexPath, "utf8");
+}
+
 async function createServer() {
   const app = Fastify({
     logger: true,
@@ -101,8 +110,6 @@ async function createServer() {
   const runtimeEnv = resolveRuntimeEnv();
   const appRoot = path.resolve(process.cwd());
   const distRoot = path.resolve(appRoot, "dist");
-  const hasWebBuild = existsSync(path.resolve(distRoot, SPA_INDEX_FILE));
-  const spaDocument = hasWebBuild ? readFileSync(path.resolve(distRoot, SPA_INDEX_FILE), "utf8") : "";
   const runtime = await tryCreateProviderRuntimeFromApp({
     appRoot,
     profile: resolveRuntimeProfileFromSurface({
@@ -121,7 +128,7 @@ async function createServer() {
     globalUiPaths: resolveGlobalUiPaths(runtime?.globalUiPaths || [])
   });
 
-  if (hasWebBuild) {
+  if (resolveSpaDocument(distRoot)) {
     await app.register(fastifyStatic, {
       root: distRoot,
       index: false,
@@ -143,6 +150,8 @@ async function createServer() {
         statusCode: 404
       });
     }
+    const spaDocument = resolveSpaDocument(distRoot);
+    const hasWebBuild = Boolean(spaDocument);
     if (hasFileExtension(pathname)) {
       const staticFilePath = resolveStaticFilePath(pathname);
       if (hasWebBuild && staticFilePath && canServeStaticFile(distRoot, staticFilePath)) {

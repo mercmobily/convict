@@ -1907,6 +1907,50 @@
       "options": {},
       "installedAt": "2026-05-05T15:45:44.559Z",
       "migrationSyncVersion": "0.1.30"
+    },
+    "@local/program-assignment": {
+      "packageId": "@local/program-assignment",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/program-assignment",
+        "descriptorPath": "packages/program-assignment/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-06T03:32:44.658Z"
+    },
+    "@local/today": {
+      "packageId": "@local/today",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/today",
+        "descriptorPath": "packages/today/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-06T04:54:20.143Z"
     }
   }
 }

@@ -26,25 +26,40 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 
 ## Data Model
 
-- [ ] Finalize `exercises` as the canonical exercise-family table.
-- [ ] Finalize `exercise_steps` as the canonical step/progression table.
-- [ ] Keep `measurement_unit` on `exercise_steps`, not on `exercises`.
-- [ ] Finalize `programs` for system programs and user forks.
-- [ ] Finalize `program_schedule_entries` for weekday exercise prescriptions.
-- [ ] Add `user_program_assignments`.
-- [ ] Add `user_program_assignment_revisions`.
-- [ ] Add `personal_step_variations`.
-- [ ] Add `user_exercise_progress`.
-- [ ] Add `workout_occurrences`.
-- [ ] Add `workout_occurrence_exercises`.
-- [ ] Add `workout_set_logs`.
-- [ ] Add `scheduled_for_date` and `performed_on_date` to the workout occurrence model.
-- [ ] Add status fields for `in_progress`, `completed`, and `definitely_missed`.
+- [x] Finalize `exercises` as the canonical exercise-family table.
+- [x] Finalize `exercise_steps` as the canonical step/progression table.
+- [x] Keep `measurement_unit` on `exercise_steps`, not on `exercises`.
+- [x] Finalize `programs` for system programs and user forks.
+- [x] Finalize `program_schedule_entries` for weekday exercise prescriptions.
+- [x] Add `user_program_assignments`.
+- [x] Add `user_program_assignment_revisions`.
+- [x] Add `personal_step_variations`.
+- [x] Add `user_exercise_progress`.
+- [x] Add `workout_occurrences`.
+- [x] Add `workout_occurrence_exercises`.
+- [x] Add `workout_set_logs`.
+- [x] Add `scheduled_for_date` and `performed_on_date` to the workout occurrence model.
+- [x] Add status fields for `in_progress`, `completed`, and `definitely_missed`.
 - [x] Decide whether `scheduled` and `overdue` stay fully derived instead of persisted.
 - [x] Separate earned advancement from active current step in user progress.
 - [x] Decide whether to snapshot step, variation, and program names into log rows for historical accuracy.
 - [x] Decide that used program sources are immutable and schedule edits create a new source row plus assignment revision.
 - [x] Decide whether to support one active program per user or multiple concurrent assignments.
+
+## Delivery Strategy
+
+- [x] Switch execution strategy to very vertical slices.
+- [x] Require every new service or query to ship with the smallest usable UI in the same chunk.
+- [x] Make `Program Selection` the first runtime slice.
+- [x] Make `Today` the second runtime slice.
+- [x] Make `Workout Logging` the third runtime slice.
+- [x] Make `Submit And Advancement` the fourth runtime slice.
+- [x] Make `Progress And History` the fifth runtime slice.
+- [x] Build Slice 1: program assignment service plus `Choose Program` UI.
+- [x] Build Slice 2: derived today projection plus `Today` UI.
+- [x] Build Slice 3: workout occurrence creation and set logging plus workout detail UI.
+- [x] Build Slice 4: workout submission plus `ready to advance` prompt and manual advancement UI.
+- [ ] Build Slice 5: progress and history UI on top of progress services.
 
 ## Canonical Content
 
@@ -62,18 +77,18 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 
 - [ ] Build logic to determine the user's current step per exercise family.
 - [ ] Build revision-aware schedule projection for arbitrary date ranges.
-- [ ] Build logic to fetch today's prescribed workout from the active program.
-- [ ] Build logic to show the correct input type: `reps` or `seconds`.
-- [ ] Build logic to evaluate whether a logged session met the progression standard.
+- [x] Build logic to fetch today's prescribed workout from the active program.
+- [x] Build logic to show the correct input type: `reps` or `seconds`.
+- [x] Build logic to evaluate whether a logged session met the progression standard.
 - [ ] Build logic to mark `ready_to_advance`, `stay`, or `review`.
-- [ ] Build the explicit user action that applies an earned advancement.
+- [x] Build the explicit user action that applies an earned advancement.
 - [ ] Add a place to track stalls without implementing full deload rules yet.
-- [ ] Ensure `Handstand Push-ups` mixed-unit steps are handled correctly.
+- [x] Ensure `Handstand Push-ups` mixed-unit steps are handled correctly.
 - [ ] Define how advisory prompts behave when a personal variation is active.
 
 ## Program And Forking Flow
 
-- [ ] Build the first-time `choose a program` flow.
+- [x] Build the first-time `choose a program` flow.
 - [ ] Build the `switch program` flow for existing users.
 - [ ] Build the `fork program` action from a system program.
 - [ ] Ensure schedule or program changes create a new assignment revision effective from a chosen date.
@@ -85,19 +100,19 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 ## Core User Flows
 
 - [ ] Build onboarding: sign up, pick a program, pick a start date.
-- [ ] Build the `Today` screen.
+- [x] Build the `Today` screen.
 - [ ] Build the calendar from derived schedule projection plus workout occurrence overlays.
-- [ ] Build a fast logging flow for the scheduled workout.
-- [ ] Allow a workout occurrence to remain open and be logged in parts throughout the day.
-- [ ] Build the session save flow with minimal friction.
+- [x] Build a fast logging flow for the scheduled workout.
+- [x] Allow a workout occurrence to remain open and be logged in parts throughout the day.
+- [x] Build the session save flow with minimal friction.
 - [ ] Build a progress screen per exercise family.
 - [ ] Build a history or calendar screen.
-- [ ] Build a `Missed Workouts` or `Overdue Workouts` screen.
-- [ ] Allow users to complete overdue workouts on any later date.
-- [ ] Allow users to mark an overdue workout as `definitely missed`.
+- [x] Build a `Missed Workouts` or `Overdue Workouts` screen.
+- [x] Allow users to complete overdue workouts on any later date.
+- [x] Allow users to mark an overdue workout as `definitely missed`.
 - [ ] Allow multiple scheduled workouts to share the same performed date.
 - [ ] Build a program details screen showing the weekly schedule.
-- [ ] Build the rest-day screen behavior.
+- [x] Build the rest-day screen behavior.
 
 ## Cell And Workspace Features
 
@@ -137,8 +152,8 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 - [ ] Add integration tests for today's workout generation.
 - [ ] Add integration tests for program forking.
 - [ ] Add integration tests for session logging and progress updates.
-- [ ] Add Playwright coverage for onboarding and program selection.
-- [ ] Add Playwright coverage for logging a scheduled workout.
+- [x] Add Playwright coverage for onboarding and program selection.
+- [x] Add Playwright coverage for logging a scheduled workout.
 - [ ] Add Playwright coverage for viewing updated progress.
 - [ ] Add Playwright coverage for cell invite and member flows.
 
