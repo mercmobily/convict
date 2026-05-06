@@ -42,8 +42,7 @@ class TodayProvider {
         api: scope.make(INTERNAL_JSON_REST_API),
         userExerciseProgressRepository: scope.make("repository.user_exercise_progress"),
         workoutOccurrencesRepository: scope.make("repository.workout_occurrences"),
-        workoutOccurrenceExercisesRepository: scope.make("repository.workout_occurrence_exercises"),
-        workoutSetLogsRepository: scope.make("repository.workout_set_logs")
+        workoutOccurrenceExercisesRepository: scope.make("repository.workout_occurrence_exercises")
       });
     });
 

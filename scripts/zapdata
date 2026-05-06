@@ -15,7 +15,7 @@ const envPath = path.join(repoRoot, ".env");
 function printUsage() {
   console.error("Usage: ./scripts/zapdata [--yes] <user-email|ALL>");
   console.error("");
-  console.error("Deletes non-training user data while keeping login rows, package bootstrap rows, and all training data.");
+  console.error("Deletes only user training data while keeping login rows and non-training app data.");
 }
 
 function parseArgs(argv = []) {
@@ -61,7 +61,7 @@ async function confirmDestructiveAction(targetLabel) {
 
   try {
     const answer = await rl.question(
-      `Delete non-training user data for ${targetLabel}? Type DELETE to continue: `
+      `Delete training data for ${targetLabel}? Type DELETE to continue: `
     );
     return String(answer || "").trim() === "DELETE";
   } finally {
@@ -69,52 +69,66 @@ async function confirmDestructiveAction(targetLabel) {
   }
 }
 
-async function deleteNonTrainingUserDataForUser(connection, { userId, email }, deletedCounts) {
-  deletedCounts.userSettings += (
+async function deleteTrainingDataForUser(connection, { userId }, deletedCounts) {
+  deletedCounts.workoutSetLogs += (
     await connection.query(
-      "DELETE FROM user_settings WHERE user_id = ?",
+      "DELETE FROM workout_set_logs WHERE user_id = ?",
       [userId]
     )
   )[0].affectedRows;
 
-  deletedCounts.consoleSettingsCleared += (
+  deletedCounts.workoutOccurrenceExercises += (
     await connection.query(
-      "UPDATE console_settings SET owner_user_id = NULL WHERE owner_user_id = ?",
+      "DELETE FROM workout_occurrence_exercises WHERE user_id = ?",
       [userId]
     )
   )[0].affectedRows;
 
-  deletedCounts.assistantMessages += (
+  deletedCounts.userExerciseProgress += (
     await connection.query(
-      "DELETE FROM assistant_messages WHERE actor_user_id = ?",
+      "DELETE FROM user_exercise_progress WHERE user_id = ?",
       [userId]
     )
   )[0].affectedRows;
 
-  deletedCounts.assistantConversations += (
+  deletedCounts.workoutOccurrences += (
     await connection.query(
-      "DELETE FROM assistant_conversations WHERE created_by_user_id = ?",
+      "DELETE FROM workout_occurrences WHERE user_id = ?",
       [userId]
     )
   )[0].affectedRows;
 
-  deletedCounts.workspaceInvites += (
+  deletedCounts.personalStepVariations += (
     await connection.query(
-      "DELETE FROM workspace_invites WHERE invited_by_user_id = ? OR email = ?",
-      [userId, email]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.workspaceMemberships += (
-    await connection.query(
-      "DELETE FROM workspace_memberships WHERE user_id = ?",
+      "DELETE FROM personal_step_variations WHERE user_id = ?",
       [userId]
     )
   )[0].affectedRows;
 
-  deletedCounts.workspaces += (
+  deletedCounts.userProgramAssignmentRevisions += (
     await connection.query(
-      "DELETE FROM workspaces WHERE owner_user_id = ?",
+      "DELETE FROM user_program_assignment_revisions WHERE user_id = ?",
+      [userId]
+    )
+  )[0].affectedRows;
+
+  deletedCounts.userProgramAssignments += (
+    await connection.query(
+      "DELETE FROM user_program_assignments WHERE user_id = ?",
+      [userId]
+    )
+  )[0].affectedRows;
+
+  deletedCounts.programScheduleEntries += (
+    await connection.query(
+      "DELETE FROM program_schedule_entries WHERE user_id = ?",
+      [userId]
+    )
+  )[0].affectedRows;
+
+  deletedCounts.programs += (
+    await connection.query(
+      "DELETE FROM programs WHERE user_id = ?",
       [userId]
     )
   )[0].affectedRows;
@@ -143,13 +157,15 @@ async function main() {
   });
 
   const deletedCounts = {
-    userSettings: 0,
-    consoleSettingsCleared: 0,
-    assistantMessages: 0,
-    assistantConversations: 0,
-    workspaceInvites: 0,
-    workspaceMemberships: 0,
-    workspaces: 0
+    workoutSetLogs: 0,
+    workoutOccurrenceExercises: 0,
+    workoutOccurrences: 0,
+    userExerciseProgress: 0,
+    personalStepVariations: 0,
+    userProgramAssignmentRevisions: 0,
+    userProgramAssignments: 0,
+    programScheduleEntries: 0,
+    programs: 0
   };
 
   try {
@@ -180,7 +196,7 @@ async function main() {
     }
 
     for (const user of normalizedUsers) {
-      await deleteNonTrainingUserDataForUser(connection, user, deletedCounts);
+      await deleteTrainingDataForUser(connection, user, deletedCounts);
     }
 
     await connection.commit();
@@ -197,7 +213,7 @@ async function main() {
       : `zapdata complete for ${target}`
   );
   console.log(JSON.stringify(deletedCounts, null, 2));
-  console.log("Training data and login rows were left intact.");
+  console.log("Login rows and non-training app data were left intact.");
 }
 
 main().catch((error) => {

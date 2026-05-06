@@ -33,7 +33,13 @@ function resolveCrudPolicyFromApp(app) {
 class WorkoutSetLogsProvider {
   static id = "crud.workout_set_logs";
 
-  static dependsOn = ["runtime.actions", "runtime.database", "auth.policy.fastify", "local.main", "json-rest-api.core"];
+  static dependsOn = [
+    "runtime.actions",
+    "runtime.database",
+    "auth.policy.fastify",
+    "local.main",
+    "json-rest-api.core"
+  ];
 
   register(app) {
     const crudPolicy = resolveCrudPolicyFromApp(app);

@@ -105,7 +105,7 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 - [x] Build a fast logging flow for the scheduled workout.
 - [x] Allow a workout occurrence to remain open and be logged in parts throughout the day.
 - [x] Build the session save flow with minimal friction.
-- [ ] Build a progress screen per exercise family.
+- [x] Build a progress screen per exercise family.
 - [ ] Build a history or calendar screen.
 - [x] Build a `Missed Workouts` or `Overdue Workouts` screen.
 - [x] Allow users to complete overdue workouts on any later date.
@@ -154,7 +154,7 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 - [ ] Add integration tests for session logging and progress updates.
 - [x] Add Playwright coverage for onboarding and program selection.
 - [x] Add Playwright coverage for logging a scheduled workout.
-- [ ] Add Playwright coverage for viewing updated progress.
+- [x] Add Playwright coverage for viewing updated progress.
 - [ ] Add Playwright coverage for cell invite and member flows.
 
 ## Release Readiness

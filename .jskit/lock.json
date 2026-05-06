@@ -1938,6 +1938,28 @@
       },
       "options": {},
       "installedAt": "2026-05-06T12:05:38.895Z"
+    },
+    "@local/progress": {
+      "packageId": "@local/progress",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/progress",
+        "descriptorPath": "packages/progress/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-06T23:42:33.285Z"
     }
   }
 }

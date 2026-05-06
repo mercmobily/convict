@@ -46,40 +46,6 @@ const applyAdvancementBodyInputValidator = deepFreeze({
   mode: "patch"
 });
 
-const saveWorkoutSetLogsBodyInputValidator = deepFreeze({
-  schema: createSchema({
-    occurrenceExerciseId: {
-      type: "id",
-      required: true
-    },
-    sets: {
-      type: "array",
-      required: true,
-      items: {
-        type: "object",
-        properties: {
-          setNumber: {
-            type: "integer",
-            required: true,
-            minimum: 1
-          },
-          side: {
-            type: "string",
-            required: false,
-            enum: ["both", "left", "right"]
-          },
-          performedValue: {
-            type: "number",
-            required: false,
-            minimum: 0
-          }
-        }
-      }
-    }
-  }),
-  mode: "patch"
-});
-
 const startWorkoutCommandInputValidator = composeSchemaDefinitions([
   workspaceSlugParamsValidator,
   startWorkoutBodyInputValidator
@@ -100,12 +66,6 @@ const submitWorkoutCommandInputValidator = composeSchemaDefinitions([
   scheduledForDateRouteParamsValidator
 ]);
 
-const saveWorkoutSetLogsCommandInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
-  scheduledForDateRouteParamsValidator,
-  saveWorkoutSetLogsBodyInputValidator
-]);
-
 const applyAdvancementCommandInputValidator = composeSchemaDefinitions([
   workspaceSlugParamsValidator,
   applyAdvancementBodyInputValidator
@@ -117,10 +77,8 @@ export {
   startWorkoutBodyInputValidator,
   markWorkoutDefinitelyMissedBodyInputValidator,
   applyAdvancementBodyInputValidator,
-  saveWorkoutSetLogsBodyInputValidator,
   startWorkoutCommandInputValidator,
   markWorkoutDefinitelyMissedCommandInputValidator,
   submitWorkoutCommandInputValidator,
-  saveWorkoutSetLogsCommandInputValidator,
   applyAdvancementCommandInputValidator
 };

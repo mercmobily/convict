@@ -102,6 +102,14 @@ async function fetchExerciseProgressRows(userId) {
   }
 }
 
+function locateSavedSetRow(card, displaySetNumber, valueText) {
+  return card.locator(".set-log-row").filter({
+    hasText: `Set ${displaySetNumber}`
+  }).filter({
+    hasText: valueText
+  }).first();
+}
+
 test("user can finish a workout and manually apply earned advancement", async ({ page }) => {
   const fixturePlan = buildWorkoutSubmitFixturePlan();
   const fixtureState = await ensureWorkoutSubmitFixture({
@@ -133,18 +141,21 @@ test("user can finish a workout and manually apply earned advancement", async ({
   }).first();
 
   await pushupsCard.locator('input[type="number"]').first().fill("50");
-  await pushupsCard.getByRole("button", { name: "Add set" }).click();
-  await pushupsCard.locator('input[type="number"]').nth(1).fill("50");
-  await pushupsCard.getByRole("button", { name: "Add set" }).click();
-  await pushupsCard.locator('input[type="number"]').nth(2).fill("50");
-  await pushupsCard.getByRole("button", { name: "Save logs" }).click();
-  await expect(pushupsCard.getByText("Set 3: 50 reps")).toBeVisible();
+  await pushupsCard.getByRole("button", { name: "Save set" }).click();
+  await expect(pushupsCard.getByText("Add set 2")).toBeVisible();
+  await pushupsCard.locator('input[type="number"]').first().fill("50");
+  await pushupsCard.getByRole("button", { name: "Save set" }).click();
+  await expect(pushupsCard.getByText("Add set 3")).toBeVisible();
+  await pushupsCard.locator('input[type="number"]').first().fill("50");
+  await pushupsCard.getByRole("button", { name: "Save set" }).click();
+  await expect(locateSavedSetRow(pushupsCard, 3, "50 reps")).toBeVisible();
 
   await legRaisesCard.locator('input[type="number"]').first().fill("10");
-  await legRaisesCard.getByRole("button", { name: "Add set" }).click();
-  await legRaisesCard.locator('input[type="number"]').nth(1).fill("10");
-  await legRaisesCard.getByRole("button", { name: "Save logs" }).click();
-  await expect(legRaisesCard.getByText("Set 2: 10 reps")).toBeVisible();
+  await legRaisesCard.getByRole("button", { name: "Save set" }).click();
+  await expect(legRaisesCard.getByText("Add set 2")).toBeVisible();
+  await legRaisesCard.locator('input[type="number"]').first().fill("10");
+  await legRaisesCard.getByRole("button", { name: "Save set" }).click();
+  await expect(locateSavedSetRow(legRaisesCard, 2, "10 reps")).toBeVisible();
 
   const finishWorkoutButton = page.getByRole("button", { name: "Finish workout" });
   await expect(finishWorkoutButton).toBeEnabled();
@@ -230,7 +241,7 @@ test("user can finish a workout below the programmed minimum volume", async ({ p
   }).first();
 
   await pushupsCard.locator('input[type="number"]').first().fill("15");
-  await pushupsCard.getByRole("button", { name: "Save logs" }).click();
+  await pushupsCard.getByRole("button", { name: "Save set" }).click();
 
   await expect(page.getByText("You can finish now, but 2 exercises are below the programmed minimum.")).toBeVisible();
 

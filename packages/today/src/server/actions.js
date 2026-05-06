@@ -4,14 +4,12 @@ import {
   startWorkoutCommandInputValidator,
   markWorkoutDefinitelyMissedCommandInputValidator,
   submitWorkoutCommandInputValidator,
-  saveWorkoutSetLogsCommandInputValidator,
   applyAdvancementCommandInputValidator
 } from "./inputSchemas.js";
 
 const READ_TODAY_PROJECTION = "feature.today.projection.read";
 const READ_WORKOUT_DETAIL = "feature.today.workout.read";
 const START_WORKOUT_OCCURRENCE = "feature.today.workout.start";
-const SAVE_WORKOUT_SET_LOGS = "feature.today.workout.set-logs.save";
 const SUBMIT_WORKOUT_OCCURRENCE = "feature.today.workout.submit";
 const APPLY_EXERCISE_ADVANCEMENT = "feature.today.progress.advance";
 const MARK_WORKOUT_DEFINITELY_MISSED = "feature.today.workout.definitely-missed";
@@ -70,25 +68,6 @@ const featureActions = Object.freeze([
     observability: {},
     async execute(input, context, deps) {
       return deps.todayService.startWorkout(input, {
-        context
-      });
-    }
-  },
-  {
-    id: SAVE_WORKOUT_SET_LOGS,
-    version: 1,
-    kind: "command",
-    channels: ["api", "automation", "internal"],
-    surfaces: ["app"],
-    input: saveWorkoutSetLogsCommandInputValidator,
-    output: null,
-    idempotency: "optional",
-    audit: {
-      actionName: SAVE_WORKOUT_SET_LOGS
-    },
-    observability: {},
-    async execute(input, context, deps) {
-      return deps.todayService.saveWorkoutSetLogs(input, {
         context
       });
     }
@@ -156,7 +135,6 @@ export {
   READ_TODAY_PROJECTION,
   READ_WORKOUT_DETAIL,
   START_WORKOUT_OCCURRENCE,
-  SAVE_WORKOUT_SET_LOGS,
   SUBMIT_WORKOUT_OCCURRENCE,
   APPLY_EXERCISE_ADVANCEMENT,
   MARK_WORKOUT_DEFINITELY_MISSED,

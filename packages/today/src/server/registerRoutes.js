@@ -6,7 +6,6 @@ import {
   READ_TODAY_PROJECTION,
   READ_WORKOUT_DETAIL,
   START_WORKOUT_OCCURRENCE,
-  SAVE_WORKOUT_SET_LOGS,
   SUBMIT_WORKOUT_OCCURRENCE,
   APPLY_EXERCISE_ADVANCEMENT,
   MARK_WORKOUT_DEFINITELY_MISSED
@@ -15,8 +14,7 @@ import {
   workoutDetailQueryInputValidator,
   startWorkoutBodyInputValidator,
   markWorkoutDefinitelyMissedBodyInputValidator,
-  applyAdvancementBodyInputValidator,
-  saveWorkoutSetLogsBodyInputValidator
+  applyAdvancementBodyInputValidator
 } from "./inputSchemas.js";
 
 function registerRoutes(
@@ -109,34 +107,6 @@ function registerRoutes(
         actionId: START_WORKOUT_OCCURRENCE,
         input: {
           ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.body || {})
-        }
-      });
-
-      reply.code(200).send(response);
-    }
-  );
-
-  router.register(
-    "POST",
-    `${routeBase}/workouts/:scheduledForDate/log-sets`,
-    {
-      auth: "required",
-      surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
-      meta: {
-        tags: ["feature"],
-        summary: "Replace the saved set logs for a workout exercise inside an open occurrence."
-      },
-      params: workoutDetailQueryInputValidator,
-      body: saveWorkoutSetLogsBodyInputValidator
-    },
-    async function (request, reply) {
-      const response = await request.executeAction({
-        actionId: SAVE_WORKOUT_SET_LOGS,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.params || {}),
           ...(request.input.body || {})
         }
       });

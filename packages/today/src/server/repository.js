@@ -113,8 +113,7 @@ function createRepository({
   api,
   userExerciseProgressRepository,
   workoutOccurrencesRepository,
-  workoutOccurrenceExercisesRepository,
-  workoutSetLogsRepository
+  workoutOccurrenceExercisesRepository
 } = {}) {
   const withTransaction = workoutOccurrencesRepository.withTransaction;
 
@@ -510,39 +509,6 @@ function createRepository({
         trx: options?.trx || null,
         context: options?.context || null
       });
-    },
-    async replaceSetLogsForOccurrenceExercise(occurrenceExerciseId, records = [], options = {}) {
-      if (!occurrenceExerciseId) {
-        throw new TypeError("replaceSetLogsForOccurrenceExercise requires occurrence exercise id.");
-      }
-
-      const normalizedRecords = Array.isArray(records) ? records : [];
-      const existingRows = await repository.listSetLogsByOccurrenceExerciseIds([occurrenceExerciseId], options);
-      for (const existingRow of existingRows) {
-        await workoutSetLogsRepository.deleteDocumentById(existingRow.id, {
-          trx: options?.trx || null,
-          context: options?.context || null
-        });
-      }
-
-      if (normalizedRecords.length < 1) {
-        return 0;
-      }
-
-      for (const record of normalizedRecords) {
-        await workoutSetLogsRepository.createDocument(
-          {
-            workoutOccurrenceExerciseId: occurrenceExerciseId,
-            ...record
-          },
-          {
-            trx: options?.trx || null,
-            context: options?.context || null
-          }
-        );
-      }
-
-      return normalizedRecords.length;
     },
     async createExerciseProgress(
       {

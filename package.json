@@ -113,7 +113,8 @@
     "@local/user-exercise-progress": "file:packages/user-exercise-progress",
     "@local/workout-occurrences": "file:packages/workout-occurrences",
     "@local/workout-occurrence-exercises": "file:packages/workout-occurrence-exercises",
-    "@local/workout-set-logs": "file:packages/workout-set-logs"
+    "@local/workout-set-logs": "file:packages/workout-set-logs",
+    "@local/progress": "file:packages/progress"
   },
   "devDependencies": {
     "@jskit-ai/agent-docs": "0.x",

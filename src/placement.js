@@ -337,3 +337,21 @@ addPlacement({
     when: ({ auth }) => auth?.authenticated === true
   });
 }
+// jskit:ui-generator.page.link:app:/progress
+{
+  addPlacement({
+    id: "ui-generator.page.app.progress.link",
+    target: "shell-layout:primary-menu",
+    surfaces: ["app"],
+    order: 155,
+    componentToken: "local.main.ui.surface-aware-menu-link-item",
+    props: {
+      label: "Progress",
+      icon: "mdi-view-list-outline",
+      surface: "app",
+      scopedSuffix: "/progress",
+      unscopedSuffix: "/progress",
+    },
+    when: ({ auth }) => auth?.authenticated === true
+  });
+}

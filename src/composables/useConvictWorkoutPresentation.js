@@ -93,6 +93,38 @@ function progressionTargetLabel(exercise = {}) {
     : `${targetValue} ${unit}`;
 }
 
+function exerciseStatusLabel(status = "") {
+  switch (String(status || "").trim().toLowerCase()) {
+    case "completed":
+      return "Completed";
+    case "pending":
+      return "Pending";
+    case "in_progress":
+      return "In progress";
+    case "logged":
+      return "Logged";
+    case "definitely_missed":
+      return "Definitely missed";
+    default:
+      return "Pending";
+  }
+}
+
+function exerciseStatusColor(status = "") {
+  switch (String(status || "").trim().toLowerCase()) {
+    case "completed":
+      return "success";
+    case "logged":
+      return "success";
+    case "in_progress":
+      return "info";
+    case "definitely_missed":
+      return "error";
+    default:
+      return "surface-variant";
+  }
+}
+
 function exerciseDetailLine(exercise = {}) {
   const detailParts = [];
   const currentStepNumber = exerciseCurrentStepNumber(exercise);
@@ -116,6 +148,8 @@ function useConvictWorkoutPresentation() {
     exerciseCurrentStepName,
     exerciseCurrentStepNumber,
     exerciseDetailLine,
+    exerciseStatusColor,
+    exerciseStatusLabel,
     formatWorkSetLabel,
     measurementLabel,
     progressionTargetLabel,

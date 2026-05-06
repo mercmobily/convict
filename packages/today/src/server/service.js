@@ -242,6 +242,26 @@ function buildOccurrenceExerciseProjection(row = {}) {
   };
 }
 
+function decorateSetLogForExercise(exercise = {}, setLog = {}) {
+  return {
+    ...setLog,
+    qualifiesForProgression: qualifiesSetForProgression(exercise, Number(setLog.performedValue || 0))
+  };
+}
+
+function deriveOccurrenceExerciseStatus(exercise = {}, setLogs = []) {
+  if (!Array.isArray(setLogs) || setLogs.length < 1) {
+    return "pending";
+  }
+
+  const plannedWorkSetsMin = Number(exercise.plannedWorkSetsMin || 0);
+  if (plannedWorkSetsMin > 0 && setLogs.length < plannedWorkSetsMin) {
+    return "in_progress";
+  }
+
+  return "logged";
+}
+
 function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByOccurrenceExerciseId = new Map()) {
   if (!workoutProjection) {
     return null;
@@ -252,10 +272,16 @@ function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByOcc
     canStart: workoutProjection.status === "scheduled" || workoutProjection.status === "overdue",
     canLog: workoutProjection.status === "in_progress",
     exercises: Array.isArray(workoutProjection.exercises)
-      ? workoutProjection.exercises.map((exercise) => ({
-          ...exercise,
-          setLogs: setLogsByOccurrenceExerciseId.get(String(exercise.occurrenceExerciseId || "")) || []
-        }))
+      ? workoutProjection.exercises.map((exercise) => {
+          const setLogs = (setLogsByOccurrenceExerciseId.get(String(exercise.occurrenceExerciseId || "")) || [])
+            .map((setLog) => decorateSetLogForExercise(exercise, setLog));
+
+          return {
+            ...exercise,
+            exerciseStatus: deriveOccurrenceExerciseStatus(exercise, setLogs),
+            setLogs
+          };
+        })
       : []
   };
 }
@@ -778,67 +804,6 @@ async function buildWorkoutDetailState(todayRepository, { userId, todayDate, sch
   };
 }
 
-function normalizeSetSide(value = "") {
-  const normalized = String(value || "both").trim().toLowerCase() || "both";
-  if (normalized !== "both" && normalized !== "left" && normalized !== "right") {
-    throw new AppError(400, `Invalid set side "${normalized}".`);
-  }
-  return normalized;
-}
-
-function normalizeLoggedSets(rawSets = []) {
-  if (!Array.isArray(rawSets)) {
-    throw new AppError(400, "sets must be an array.");
-  }
-
-  const normalizedRecords = [];
-  const seenKeys = new Set();
-
-  for (const rawSet of rawSets) {
-    if (!rawSet || typeof rawSet !== "object" || Array.isArray(rawSet)) {
-      throw new AppError(400, "Each set log must be an object.");
-    }
-
-    const setNumber = Number(rawSet.setNumber);
-    if (!Number.isInteger(setNumber) || setNumber < 1) {
-      throw new AppError(400, "Each set log must include a positive integer setNumber.");
-    }
-
-    const rawPerformedValue = rawSet.performedValue;
-    if (rawPerformedValue == null || String(rawPerformedValue).trim() === "") {
-      continue;
-    }
-
-    const performedValue = Number(rawPerformedValue);
-    if (!Number.isFinite(performedValue) || performedValue <= 0) {
-      throw new AppError(400, "Each set log must include a performedValue greater than zero.");
-    }
-
-    const side = normalizeSetSide(rawSet.side);
-    const dedupeKey = `${setNumber}:${side}`;
-    if (seenKeys.has(dedupeKey)) {
-      throw new AppError(400, `Duplicate set log for set ${setNumber} (${side}).`);
-    }
-    seenKeys.add(dedupeKey);
-
-    normalizedRecords.push({
-      setNumber,
-      side,
-      performedValue
-    });
-  }
-
-  normalizedRecords.sort((left, right) => {
-    const setNumberDelta = left.setNumber - right.setNumber;
-    if (setNumberDelta !== 0) {
-      return setNumberDelta;
-    }
-    return left.side.localeCompare(right.side);
-  });
-
-  return normalizedRecords;
-}
-
 function qualifiesSetForProgression(exercise = {}, performedValue = 0) {
   const measurementUnit = String(exercise.measurementUnit || "").trim().toLowerCase();
   if (measurementUnit === "seconds") {
@@ -849,19 +814,6 @@ function qualifiesSetForProgression(exercise = {}, performedValue = 0) {
   const rawThreshold = exercise.progressionRepsMax ?? exercise.progressionRepsMin ?? null;
   const threshold = rawThreshold == null ? 0 : Number(rawThreshold);
   return threshold > 0 && performedValue >= threshold;
-}
-
-function deriveOccurrenceExerciseStatus(exercise = {}, normalizedSets = []) {
-  if (!Array.isArray(normalizedSets) || normalizedSets.length < 1) {
-    return "pending";
-  }
-
-  const plannedWorkSetsMin = Number(exercise.plannedWorkSetsMin || 0);
-  if (plannedWorkSetsMin > 0 && normalizedSets.length < plannedWorkSetsMin) {
-    return "in_progress";
-  }
-
-  return "logged";
 }
 
 function requiredProgressionSetCount(exercise = {}) {
@@ -1044,74 +996,6 @@ function createService({ todayRepository } = {}) {
         context
       });
     },
-    async saveWorkoutSetLogs(input = {}, options = {}) {
-      void input?.workspaceSlug;
-      const context = options?.context || null;
-      const userId = resolveCurrentUserId(context);
-      const workspaceId = resolveCurrentWorkspaceId(context);
-      const todayDate = localTodayDateString();
-      const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const occurrenceExerciseId = input?.occurrenceExerciseId || null;
-      const workspace = resolveCurrentWorkspace(context);
-      if (!occurrenceExerciseId) {
-        throw new AppError(400, "occurrenceExerciseId is required.");
-      }
-
-      const detailState = await buildWorkoutDetailState(todayRepository, {
-        userId,
-        todayDate,
-        scheduledForDate,
-        workspace,
-        context
-      });
-
-      if (!detailState.assignment?.id) {
-        throw new ConflictError("Choose a program before logging sets.");
-      }
-
-      assertLoggableWorkout(detailState.workout, {
-        scheduledForDate
-      });
-
-      const exercise = detailState.workout.exercises.find(
-        (entry) => String(entry.occurrenceExerciseId || "") === String(occurrenceExerciseId)
-      ) || null;
-      if (!exercise) {
-        throw new NotFoundError("Workout exercise not found for this occurrence.");
-      }
-
-      const normalizedSets = normalizeLoggedSets(input?.sets);
-      const loggedAt = localNowDateTimeString();
-      const records = normalizedSets.map((setLog) => ({
-        workspaceId,
-        setNumber: setLog.setNumber,
-        side: setLog.side,
-        measurementUnitSnapshot: exercise.measurementUnit,
-        performedValue: setLog.performedValue,
-        qualifiesForProgression: qualifiesSetForProgression(exercise, setLog.performedValue),
-        loggedAt
-      }));
-      const exerciseStatus = deriveOccurrenceExerciseStatus(exercise, normalizedSets);
-
-      await todayRepository.withTransaction(async (trx) => {
-        await todayRepository.replaceSetLogsForOccurrenceExercise(occurrenceExerciseId, records, { trx, context });
-        await todayRepository.updateOccurrenceExercise(
-          occurrenceExerciseId,
-          {
-            status: exerciseStatus
-          },
-          { trx, context }
-        );
-      });
-
-      return buildWorkoutDetailState(todayRepository, {
-        userId,
-        todayDate,
-        scheduledForDate,
-        workspace,
-        context
-      });
-    },
     async submitWorkout(input = {}, options = {}) {
       void input?.workspaceSlug;
       const context = options?.context || null;
@@ -1165,17 +1049,13 @@ function createService({ todayRepository } = {}) {
             : []
         );
 
-        const refreshedExercises = occurrenceExercises.map((exercise) => ({
-          ...buildOccurrenceExerciseProjection(exercise),
-          setLogs: setLogsByOccurrenceExerciseId.get(String(exercise.id || "")) || []
-        }));
-
-        const refreshedWorkout = {
+        const refreshedWorkout = attachSetLogsToWorkoutProjection({
           ...detailState.workout,
           occurrenceId: workoutOccurrenceId,
           status: detailState.workout.status,
-          exercises: refreshedExercises
-        };
+          exercises: occurrenceExercises.map(buildOccurrenceExerciseProjection)
+        }, setLogsByOccurrenceExerciseId);
+        const refreshedExercises = Array.isArray(refreshedWorkout?.exercises) ? refreshedWorkout.exercises : [];
 
         assertSubmittableWorkout(refreshedWorkout, {
           scheduledForDate

@@ -79,6 +79,14 @@ async function fetchSavedSetLogs(userId, scheduledForDate) {
   }
 }
 
+function locateSavedSetRow(card, displaySetNumber, valueText) {
+  return card.locator(".set-log-row").filter({
+    hasText: `Set ${displaySetNumber}`
+  }).filter({
+    hasText: valueText
+  }).first();
+}
+
 test("user can log reps and seconds on an in-progress workout and see them after reload", async ({ page }) => {
   const fixturePlan = buildWorkoutLoggingFixturePlan();
   const fixtureState = await ensureWorkoutLoggingFixture({
@@ -121,19 +129,33 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await expect(bridgesCard.locator(".v-chip").filter({ hasText: "reps" }).first()).toBeVisible();
   await expect(handstandCard.getByText("LOG NOT SAVED")).toBeVisible();
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toBeVisible();
+  await expect(handstandCard.getByText("Add set 1")).toBeVisible();
+  await expect(bridgesCard.getByText("Add set 1")).toBeVisible();
 
   await handstandCard.locator('input[type="number"]').first().fill("35");
-  await handstandCard.getByRole("button", { name: "Add set" }).click();
-  await handstandCard.locator('input[type="number"]').nth(1).fill("45");
-  await handstandCard.getByRole("button", { name: "Save logs" }).click();
-  await expect(handstandCard.getByText("Set 2: 45 seconds")).toBeVisible();
+  await handstandCard.getByRole("button", { name: "Save set" }).click();
+  await expect(handstandCard.getByText("Add set 2")).toBeVisible();
+  await handstandCard.locator('input[type="number"]').first().fill("45");
+  await handstandCard.getByRole("button", { name: "Save set" }).click();
+  await expect(locateSavedSetRow(handstandCard, 2, "45 seconds")).toBeVisible();
+  await expect(handstandCard.getByText("Add set 3")).toBeVisible();
   await expect(handstandCard.getByText("LOG NOT SAVED")).not.toBeVisible();
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toBeVisible();
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
+  const editHandstandSetOne = handstandCard.locator(".set-log-editor").filter({
+    hasText: "Edit set 1"
+  }).first();
+  await handstandCard.getByRole("button", { name: "Edit set 1" }).click();
+  await expect(editHandstandSetOne).toBeVisible();
+  await editHandstandSetOne.locator('input[type="number"]').fill("36");
+  await editHandstandSetOne.getByRole("button", { name: "Save set" }).click();
+  await expect(locateSavedSetRow(handstandCard, 1, "36 seconds")).toBeVisible();
+
   await bridgesCard.locator('input[type="number"]').first().fill("20");
-  await bridgesCard.getByRole("button", { name: "Save logs" }).click();
-  await expect(bridgesCard.getByText("Set 1: 20 reps")).toBeVisible();
+  await bridgesCard.getByRole("button", { name: "Save set" }).click();
+  await expect(locateSavedSetRow(bridgesCard, 1, "20 reps")).toBeVisible();
+  await expect(bridgesCard.getByText("Add set 2")).toBeVisible();
   await expect(bridgesCard.getByText("LOG NOT SAVED")).not.toBeVisible();
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
@@ -143,7 +165,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
       exerciseName: "Handstand Push-ups",
       setNumber: 1,
       measurementUnit: "seconds",
-      performedValue: 35
+      performedValue: 36
     },
     {
       exerciseName: "Handstand Push-ups",
@@ -168,7 +190,60 @@ test("user can log reps and seconds on an in-progress workout and see them after
     hasText: "Bridges"
   }).first();
 
-  await expect(reloadedHandstandCard.locator('input[type="number"]').nth(0)).toHaveValue("35");
-  await expect(reloadedHandstandCard.locator('input[type="number"]').nth(1)).toHaveValue("45");
-  await expect(reloadedBridgesCard.locator('input[type="number"]').nth(0)).toHaveValue("20");
+  await expect(locateSavedSetRow(reloadedHandstandCard, 1, "36 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(reloadedHandstandCard, 2, "45 seconds")).toBeVisible();
+  await expect(reloadedHandstandCard.getByText("Add set 3")).toBeVisible();
+  await expect(locateSavedSetRow(reloadedBridgesCard, 1, "20 reps")).toBeVisible();
+  await expect(reloadedBridgesCard.getByText("Add set 2")).toBeVisible();
+});
+
+test("deleting the middle saved set renumbers the visible list without gaps", async ({ page }) => {
+  const fixturePlan = buildWorkoutLoggingFixturePlan();
+  await ensureWorkoutLoggingFixture({
+    email: DEV_USER_EMAIL,
+    workspaceSlug: WORKSPACE_SLUG,
+    workspaceName: WORKSPACE_NAME,
+    startOn: fixturePlan.startOn
+  });
+
+  await devLoginAs(page, {
+    email: DEV_USER_EMAIL
+  });
+
+  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+
+  const targetWorkoutCard = page.locator(".overdue-workout-card").filter({
+    hasText: fixturePlan.targetWorkoutDate
+  }).first();
+  await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
+
+  const handstandCard = page.locator(".exercise-card").filter({
+    hasText: "Handstand Push-ups"
+  }).first();
+
+  await handstandCard.locator('input[type="number"]').first().fill("35");
+  await handstandCard.getByRole("button", { name: "Save set" }).click();
+  await expect(handstandCard.getByText("Add set 2")).toBeVisible();
+  await handstandCard.locator('input[type="number"]').first().fill("45");
+  await handstandCard.getByRole("button", { name: "Save set" }).click();
+  await expect(handstandCard.getByText("Add set 3")).toBeVisible();
+  await handstandCard.locator('input[type="number"]').first().fill("55");
+  await handstandCard.getByRole("button", { name: "Save set" }).click();
+
+  await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(handstandCard, 2, "45 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(handstandCard, 3, "55 seconds")).toBeVisible();
+
+  await handstandCard.getByRole("button", { name: "Delete set 2" }).click();
+
+  await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(handstandCard, 2, "55 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(handstandCard, 3, "55 seconds")).toHaveCount(0);
+  await expect(handstandCard.getByText("Add set 3")).toBeVisible();
+
+  await handstandCard.locator('input[type="number"]').first().fill("65");
+  await handstandCard.getByRole("button", { name: "Save set" }).click();
+
+  await expect(locateSavedSetRow(handstandCard, 3, "65 seconds")).toBeVisible();
+  await expect(handstandCard.getByText("Add set 4")).toBeVisible();
 });
