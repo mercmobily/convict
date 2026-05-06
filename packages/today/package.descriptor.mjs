@@ -6,8 +6,19 @@ export default Object.freeze({
   description: "App-local non-CRUD feature package (today).",
   dependsOn: [
     "@jskit-ai/kernel",
-    "@jskit-ai/database-runtime",
-    "@jskit-ai/workspaces-core"
+    "@jskit-ai/json-rest-api-core",
+    "@jskit-ai/workspaces-core",
+    "@local/programs",
+    "@local/program-schedule-entries",
+    "@local/exercises",
+    "@local/exercise-steps",
+    "@local/user-program-assignments",
+    "@local/user-program-assignment-revisions",
+    "@local/personal-step-variations",
+    "@local/user-exercise-progress",
+    "@local/workout-occurrences",
+    "@local/workout-occurrence-exercises",
+    "@local/workout-set-logs"
   ],
   capabilities: {
     provides: [
@@ -48,8 +59,8 @@ export default Object.freeze({
     },
     jskit: {
       scaffoldShape: "feature-server-v1",
-      scaffoldMode: "custom-knex",
-      lane: "weird-custom"
+      scaffoldMode: "json-rest",
+      lane: "default"
     }
   },
   mutations: {

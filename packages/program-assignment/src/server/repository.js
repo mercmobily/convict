@@ -1,9 +1,8 @@
 import {
-  createWithTransaction,
-  normalizeDbRecordId,
-  resolveInsertedRecordId,
-  resolveRepoClient
-} from "@jskit-ai/database-runtime/shared";
+  createJsonRestContext,
+  extractJsonRestCollectionRows
+} from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
+import { normalizeRecordId } from "@jskit-ai/kernel/shared/support/normalize";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
 
@@ -11,237 +10,343 @@ function padDatePart(value) {
   return String(value).padStart(2, "0");
 }
 
-function formatLocalDateOnly(date) {
-  return [
-    date.getFullYear(),
-    padDatePart(date.getMonth() + 1),
-    padDatePart(date.getDate())
-  ].join("-");
-}
-
-function normalizeDateOnly(value) {
+function normalizeDateOnly(value = null) {
   if (value == null || value === "") {
     return null;
   }
 
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return formatLocalDateOnly(value);
-  }
-
-  const source = String(value).trim();
-  if (!source) {
+  const parsedDate = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
     return null;
   }
 
-  const isoDateMatch = source.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (isoDateMatch) {
-    return isoDateMatch[1];
+  return [
+    parsedDate.getFullYear(),
+    padDatePart(parsedDate.getMonth() + 1),
+    padDatePart(parsedDate.getDate())
+  ].join("-");
+}
+
+function readRelatedId(row = null, relationKey = "", fieldKey = "") {
+  const directId = normalizeRecordId(row?.[fieldKey], { fallback: null });
+  if (directId) {
+    return directId;
   }
 
-  const parsed = new Date(source);
-  if (!Number.isNaN(parsed.getTime())) {
-    return formatLocalDateOnly(parsed);
+  return normalizeRecordId(row?.[relationKey]?.id, { fallback: null });
+}
+
+function normalizeTemplateScheduleEntryRow(row = null) {
+  if (!row || typeof row !== "object") {
+    return null;
   }
 
-  return source;
-}
-
-function mapProgramRow(row = {}) {
   return {
-    id: normalizeDbRecordId(row.id, { fallback: null }),
-    slug: String(row.slug || "").trim(),
-    name: String(row.name || "").trim(),
-    description: row.description == null ? "" : String(row.description),
-    visibility: String(row.visibility || "").trim().toLowerCase() || "private",
-    createdByUserId: normalizeDbRecordId(row.created_by_user_id, { fallback: null }),
-    forkedFromProgramId: normalizeDbRecordId(row.forked_from_program_id, { fallback: null })
+    ...row,
+    programTemplateId: readRelatedId(row, "programTemplate", "programTemplateId"),
+    exerciseId: readRelatedId(row, "exercise", "exerciseId")
   };
 }
 
-function mapScheduleEntryRow(row = {}) {
-  return {
-    programId: normalizeDbRecordId(row.program_id, { fallback: null }),
-    dayOfWeek: Number(row.day_of_week || 0),
-    slotNumber: Number(row.slot_number || 0),
-    exerciseId: normalizeDbRecordId(row.exercise_id, { fallback: null }),
-    exerciseName: String(row.exercise_name || "").trim(),
-    workSetsMin: Number(row.work_sets_min || 0),
-    workSetsMax: Number(row.work_sets_max || 0)
-  };
-}
-
-function mapAssignmentRow(row = {}) {
-  return {
-    id: normalizeDbRecordId(row.id, { fallback: null }),
-    userId: normalizeDbRecordId(row.user_id, { fallback: null }),
-    workspaceId: normalizeDbRecordId(row.workspace_id, { fallback: null }),
-    startsOn: normalizeDateOnly(row.starts_on) || "",
-    endsOn: normalizeDateOnly(row.ends_on),
-    status: String(row.status || "").trim().toLowerCase(),
-    createdAt: row.created_at || null,
-    updatedAt: row.updated_at || null
-  };
-}
-
-function mapRevisionRow(row = {}) {
-  return {
-    id: normalizeDbRecordId(row.id, { fallback: null }),
-    userProgramAssignmentId: normalizeDbRecordId(row.user_program_assignment_id, { fallback: null }),
-    programId: normalizeDbRecordId(row.program_id, { fallback: null }),
-    effectiveFromDate: normalizeDateOnly(row.effective_from_date) || "",
-    changeReason: String(row.change_reason || "").trim().toLowerCase(),
-    notes: row.notes == null ? "" : String(row.notes),
-    createdAt: row.created_at || null
-  };
-}
-
-function createRepository({ knex } = {}) {
-  if (!knex) {
-    throw new TypeError("createRepository requires knex.");
+function normalizeOwnedProgramRow(row = null) {
+  if (!row || typeof row !== "object") {
+    return null;
   }
 
-  const withTransaction = createWithTransaction(knex);
+  return {
+    ...row,
+    programTemplateId: readRelatedId(row, "programTemplate", "programTemplateId")
+  };
+}
+
+function normalizeAssignmentRevisionRow(row = null) {
+  if (!row || typeof row !== "object") {
+    return null;
+  }
+
+  return {
+    ...row,
+    userProgramAssignmentId: readRelatedId(row, "userProgramAssignment", "userProgramAssignmentId"),
+    programId: readRelatedId(row, "program", "programId"),
+    effectiveFromDate: normalizeDateOnly(row.effectiveFromDate)
+  };
+}
+
+function normalizeProgramScheduleEntryRow(row = null) {
+  if (!row || typeof row !== "object") {
+    return null;
+  }
+
+  return {
+    ...row,
+    programId: readRelatedId(row, "program", "programId"),
+    exerciseId: readRelatedId(row, "exercise", "exerciseId")
+  };
+}
+
+function normalizeAssignmentRow(row = null) {
+  if (!row || typeof row !== "object") {
+    return null;
+  }
+
+  return {
+    ...row,
+    startsOn: normalizeDateOnly(row.startsOn),
+    endsOn: normalizeDateOnly(row.endsOn)
+  };
+}
+
+async function queryTemplateScheduleEntriesByTemplateIds(api, programTemplateIds = [], options = {}) {
+  const ids = Array.isArray(programTemplateIds) ? programTemplateIds.filter(Boolean) : [];
+  if (ids.length < 1) {
+    return [];
+  }
+
+  return extractJsonRestCollectionRows(
+    await api.resources.programTemplateScheduleEntries.query(
+          {
+        queryParams: {
+          filters: {
+            programTemplateIds: ids
+          },
+              include: ["programTemplate", "exercise"],
+              sort: ["programTemplateId", "dayOfWeek", "slotNumber"],
+              page: {
+                size: 256
+              }
+        },
+        transaction: options?.trx || null,
+        simplified: true
+      },
+      createJsonRestContext(options?.context || null)
+    )
+  ).map((row) => normalizeTemplateScheduleEntryRow(row)).filter(Boolean);
+}
+
+function createRepository({
+  api,
+  programsRepository,
+  programScheduleEntriesRepository,
+  userProgramAssignmentsRepository,
+  userProgramAssignmentRevisionsRepository
+} = {}) {
+  const withTransaction = userProgramAssignmentsRepository.withTransaction;
 
   return Object.freeze({
     withTransaction,
-    async listSelectablePrograms({ userId = null } = {}, options = {}) {
-      const db = resolveRepoClient(knex, options);
-      const rows = await db("programs")
-        .select("id", "slug", "name", "description", "visibility", "created_by_user_id", "forked_from_program_id")
-        .where((builder) => {
-          builder.where("visibility", "system");
-          if (userId) {
-            builder.orWhere("created_by_user_id", userId);
-          }
-        })
-        .orderByRaw(
-          "FIELD(slug, 'new-blood', 'good-behavior', 'veterano', 'supermax') ASC, created_at ASC, id ASC"
-        );
-
-      return rows.map(mapProgramRow);
+    async listProgramTemplates(options = {}) {
+      return extractJsonRestCollectionRows(
+        await api.resources.programTemplates.query(
+          {
+            queryParams: {
+              sort: ["createdAt"],
+              page: {
+                size: 128
+              }
+            },
+            transaction: options?.trx || null,
+            simplified: true
+          },
+          createJsonRestContext(options?.context || null)
+        )
+      );
     },
-    async findSelectableProgramById(programId, { userId = null } = {}, options = {}) {
-      const normalizedProgramId = normalizeDbRecordId(programId, { fallback: null });
-      if (!normalizedProgramId) {
+    async findProgramTemplateById(programTemplateId, options = {}) {
+      if (!programTemplateId) {
         return null;
       }
 
-      const db = resolveRepoClient(knex, options);
-      const row = await db("programs")
-        .select("id", "slug", "name", "description", "visibility", "created_by_user_id", "forked_from_program_id")
-        .where("id", normalizedProgramId)
-        .where((builder) => {
-          builder.where("visibility", "system");
-          if (userId) {
-            builder.orWhere("created_by_user_id", userId);
-          }
-        })
-        .first();
+      const rows = extractJsonRestCollectionRows(
+        await api.resources.programTemplates.query(
+          {
+            queryParams: {
+              filters: {
+                id: programTemplateId
+              },
+              page: {
+                size: 1
+              }
+            },
+            transaction: options?.trx || null,
+            simplified: true
+          },
+          createJsonRestContext(options?.context || null)
+        )
+      );
 
-      return row ? mapProgramRow(row) : null;
+      return rows[0] || null;
     },
-    async listScheduleEntriesForProgramIds(programIds = [], options = {}) {
-      const normalizedIds = programIds
-        .map((entry) => normalizeDbRecordId(entry, { fallback: null }))
-        .filter(Boolean);
-      if (normalizedIds.length < 1) {
+    async listTemplateScheduleEntriesForTemplateIds(programTemplateIds = [], options = {}) {
+      return queryTemplateScheduleEntriesByTemplateIds(api, programTemplateIds, options);
+    },
+    async listTemplateScheduleEntriesForTemplate(programTemplateId, options = {}) {
+      return queryTemplateScheduleEntriesByTemplateIds(api, [programTemplateId], options);
+    },
+    async findOwnedProgramById(programId, options = {}) {
+      if (!programId) {
+        return null;
+      }
+
+      const rows = extractJsonRestCollectionRows(
+        await api.resources.programs.query(
+          {
+            queryParams: {
+              filters: {
+                id: programId
+              },
+              include: ["programTemplate"],
+              page: {
+                size: 1
+              }
+            },
+            transaction: options?.trx || null,
+            simplified: true
+          },
+          createJsonRestContext(options?.context || null)
+        )
+      );
+
+      return normalizeOwnedProgramRow(rows[0] || null);
+    },
+    async listScheduleEntriesForProgram(programId, options = {}) {
+      if (!programId) {
         return [];
       }
 
-      const db = resolveRepoClient(knex, options);
-      const rows = await db("program_schedule_entries as pse")
-        .select(
-          "pse.program_id",
-          "pse.day_of_week",
-          "pse.slot_number",
-          "pse.exercise_id",
-          "pse.work_sets_min",
-          "pse.work_sets_max",
-          "e.name as exercise_name"
+      return extractJsonRestCollectionRows(
+        await api.resources.programScheduleEntries.query(
+          {
+            queryParams: {
+              filters: {
+                program: programId
+              },
+              include: ["program", "exercise"],
+              sort: ["dayOfWeek", "slotNumber"],
+              page: {
+                size: 64
+              }
+            },
+            transaction: options?.trx || null,
+            simplified: true
+          },
+          createJsonRestContext(options?.context || null)
         )
-        .join("exercises as e", "e.id", "pse.exercise_id")
-        .whereIn("pse.program_id", normalizedIds)
-        .orderBy("pse.program_id", "asc")
-        .orderBy("pse.day_of_week", "asc")
-        .orderBy("pse.slot_number", "asc");
-
-      return rows.map(mapScheduleEntryRow);
+      ).map((row) => normalizeProgramScheduleEntryRow(row)).filter(Boolean);
     },
     async findActiveAssignmentByUserId(userId, options = {}) {
-      const normalizedUserId = normalizeDbRecordId(userId, { fallback: null });
-      if (!normalizedUserId) {
+      if (!userId) {
         return null;
       }
 
-      const db = resolveRepoClient(knex, options);
-      const row = await db("user_program_assignments")
-        .select("id", "user_id", "workspace_id", "starts_on", "ends_on", "status", "created_at", "updated_at")
-        .where({
-          user_id: normalizedUserId,
-          status: ACTIVE_ASSIGNMENT_STATUS
-        })
-        .orderBy("created_at", "desc")
-        .first();
+      const rows = extractJsonRestCollectionRows(
+        await api.resources.userProgramAssignments.query(
+          {
+            queryParams: {
+              filters: {
+                userId,
+                status: ACTIVE_ASSIGNMENT_STATUS
+              },
+              sort: ["-createdAt"],
+              page: {
+                size: 1
+              }
+            },
+            transaction: options?.trx || null,
+            simplified: true
+          },
+          createJsonRestContext(options?.context || null)
+        )
+      );
 
-      return row ? mapAssignmentRow(row) : null;
+      return normalizeAssignmentRow(rows[0] || null);
     },
     async findLatestRevisionByAssignmentId(userProgramAssignmentId, options = {}) {
-      const normalizedAssignmentId = normalizeDbRecordId(userProgramAssignmentId, { fallback: null });
-      if (!normalizedAssignmentId) {
+      if (!userProgramAssignmentId) {
         return null;
       }
 
-      const db = resolveRepoClient(knex, options);
-      const row = await db("user_program_assignment_revisions")
-        .select("id", "user_program_assignment_id", "program_id", "effective_from_date", "change_reason", "notes", "created_at")
-        .where("user_program_assignment_id", normalizedAssignmentId)
-        .orderBy("effective_from_date", "desc")
-        .orderBy("created_at", "desc")
-        .first();
+      const rows = extractJsonRestCollectionRows(
+        await api.resources.userProgramAssignmentRevisions.query(
+          {
+            queryParams: {
+              filters: {
+                userProgramAssignment: userProgramAssignmentId
+              },
+              include: ["userProgramAssignment", "program"],
+              sort: ["-effectiveFromDate", "-createdAt"],
+              page: {
+                size: 1
+              }
+            },
+            transaction: options?.trx || null,
+            simplified: true
+          },
+          createJsonRestContext(options?.context || null)
+        )
+      );
 
-      return row ? mapRevisionRow(row) : null;
+      return normalizeAssignmentRevisionRow(rows[0] || null);
     },
-    async findWorkspaceById(workspaceId, options = {}) {
-      const normalizedWorkspaceId = normalizeDbRecordId(workspaceId, { fallback: null });
-      if (!normalizedWorkspaceId) {
-        return null;
+    async createProgramCopy({ programTemplateId = null, name, description = null } = {}, options = {}) {
+      if (!name) {
+        throw new TypeError("createProgramCopy requires a name.");
       }
 
-      const db = resolveRepoClient(knex, options);
-      const row = await db("workspaces")
-        .select("id", "slug", "name")
-        .where("id", normalizedWorkspaceId)
-        .first();
+      const document = await programsRepository.createDocument(
+        {
+          programTemplateId,
+          name,
+          description
+        },
+        {
+          trx: options?.trx || null,
+          context: options?.context || null
+        }
+      );
 
-      if (!row) {
-        return null;
-      }
-
-      return {
-        id: normalizeDbRecordId(row.id, { fallback: null }),
-        slug: String(row.slug || "").trim(),
-        name: String(row.name || "").trim()
-      };
+      return document?.data?.id || null;
     },
-    async createAssignment({ userId, workspaceId = null, startsOn, status = ACTIVE_ASSIGNMENT_STATUS } = {}, options = {}) {
-      const normalizedUserId = normalizeDbRecordId(userId, { fallback: null });
-      if (!normalizedUserId || !startsOn) {
-        throw new TypeError("createAssignment requires userId and startsOn.");
+    async createProgramScheduleEntries(records = [], options = {}) {
+      const normalizedRecords = Array.isArray(records) ? records : [];
+      if (normalizedRecords.length < 1) {
+        return 0;
       }
 
-      const db = resolveRepoClient(knex, options);
-      const insertResult = await db("user_program_assignments").insert({
-        user_id: normalizedUserId,
-        workspace_id: normalizeDbRecordId(workspaceId, { fallback: null }),
-        starts_on: startsOn,
-        status: String(status || ACTIVE_ASSIGNMENT_STATUS).trim().toLowerCase()
-      });
+      for (const record of normalizedRecords) {
+        await programScheduleEntriesRepository.createDocument(
+          record,
+          {
+            trx: options?.trx || null,
+            context: options?.context || null
+          }
+        );
+      }
 
-      return resolveInsertedRecordId(insertResult, { fallback: null });
+      return normalizedRecords.length;
+    },
+    async createAssignment({ workspaceId = null, startsOn, status = ACTIVE_ASSIGNMENT_STATUS } = {}, options = {}) {
+      if (!startsOn) {
+        throw new TypeError("createAssignment requires startsOn.");
+      }
+
+      const document = await userProgramAssignmentsRepository.createDocument(
+        {
+          workspaceId,
+          startsOn,
+          status: String(status || ACTIVE_ASSIGNMENT_STATUS).trim().toLowerCase()
+        },
+        {
+          trx: options?.trx || null,
+          context: options?.context || null
+        }
+      );
+
+      return document?.data?.id || null;
     },
     async createAssignmentRevision(
       {
         userProgramAssignmentId,
+        workspaceId = null,
         programId,
         effectiveFromDate,
         changeReason = "initial",
@@ -249,22 +354,26 @@ function createRepository({ knex } = {}) {
       } = {},
       options = {}
     ) {
-      const normalizedAssignmentId = normalizeDbRecordId(userProgramAssignmentId, { fallback: null });
-      const normalizedProgramId = normalizeDbRecordId(programId, { fallback: null });
-      if (!normalizedAssignmentId || !normalizedProgramId || !effectiveFromDate) {
+      if (!userProgramAssignmentId || !programId || !effectiveFromDate) {
         throw new TypeError("createAssignmentRevision requires assignment id, program id, and effectiveFromDate.");
       }
 
-      const db = resolveRepoClient(knex, options);
-      const insertResult = await db("user_program_assignment_revisions").insert({
-        user_program_assignment_id: normalizedAssignmentId,
-        program_id: normalizedProgramId,
-        effective_from_date: effectiveFromDate,
-        change_reason: String(changeReason || "initial").trim().toLowerCase(),
-        notes: notes == null ? null : String(notes)
-      });
+      const document = await userProgramAssignmentRevisionsRepository.createDocument(
+        {
+          userProgramAssignmentId,
+          workspaceId,
+          programId,
+          effectiveFromDate,
+          changeReason: String(changeReason || "initial").trim().toLowerCase(),
+          notes: notes == null ? null : String(notes)
+        },
+        {
+          trx: options?.trx || null,
+          context: options?.context || null
+        }
+      );
 
-      return resolveInsertedRecordId(insertResult, { fallback: null });
+      return document?.data?.id || null;
     }
   });
 }

@@ -100,7 +100,20 @@
     "vue": "^3.5.13",
     "vue-router": "^5.0.4",
     "vuetify": "^4.0.0",
-    "@local/today": "file:packages/today"
+    "@local/today": "file:packages/today",
+    "@local/exercise-steps": "file:packages/exercise-steps",
+    "@local/exercises": "file:packages/exercises",
+    "@local/program-template-schedule-entries": "file:packages/program-template-schedule-entries",
+    "@local/program-templates": "file:packages/program-templates",
+    "@local/programs": "file:packages/programs",
+    "@local/program-schedule-entries": "file:packages/program-schedule-entries",
+    "@local/user-program-assignments": "file:packages/user-program-assignments",
+    "@local/user-program-assignment-revisions": "file:packages/user-program-assignment-revisions",
+    "@local/personal-step-variations": "file:packages/personal-step-variations",
+    "@local/user-exercise-progress": "file:packages/user-exercise-progress",
+    "@local/workout-occurrences": "file:packages/workout-occurrences",
+    "@local/workout-occurrence-exercises": "file:packages/workout-occurrence-exercises",
+    "@local/workout-set-logs": "file:packages/workout-set-logs"
   },
   "devDependencies": {
     "@jskit-ai/agent-docs": "0.x",

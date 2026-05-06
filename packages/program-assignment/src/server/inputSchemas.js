@@ -17,7 +17,7 @@ const selectionStateQueryInputValidator = composeSchemaDefinitions([
 
 const startProgramBodyInputValidator = deepFreeze({
   schema: createSchema({
-    programId: {
+    programTemplateId: {
       type: "id",
       required: true
     },
@@ -30,7 +30,7 @@ const startProgramCommandInputValidator = composeSchemaDefinitions([
   workspaceSlugParamsValidator,
   deepFreeze({
     schema: createSchema({
-      programId: {
+      programTemplateId: {
         type: "id",
         required: true
       },

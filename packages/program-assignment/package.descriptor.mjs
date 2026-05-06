@@ -6,8 +6,15 @@ export default Object.freeze({
   description: "App-local non-CRUD feature package (program-assignment).",
   dependsOn: [
     "@jskit-ai/kernel",
-    "@jskit-ai/database-runtime",
-    "@jskit-ai/workspaces-core"
+    "@jskit-ai/json-rest-api-core",
+    "@jskit-ai/workspaces-core",
+    "@local/program-templates",
+    "@local/program-template-schedule-entries",
+    "@local/programs",
+    "@local/program-schedule-entries",
+    "@local/exercises",
+    "@local/user-program-assignments",
+    "@local/user-program-assignment-revisions"
   ],
   capabilities: {
     provides: [
@@ -48,8 +55,8 @@ export default Object.freeze({
     },
     jskit: {
       scaffoldShape: "feature-server-v1",
-      scaffoldMode: "custom-knex",
-      lane: "weird-custom"
+      scaffoldMode: "json-rest",
+      lane: "default"
     }
   },
   mutations: {

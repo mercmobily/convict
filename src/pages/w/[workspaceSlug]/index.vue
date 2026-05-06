@@ -27,10 +27,10 @@ const paths = usePaths();
 const router = useRouter();
 
 const selectionModel = reactive({
-  programId: "",
+  programTemplateId: "",
   startsOn: createLocalDateInputValue()
 });
-const selectedProgramId = ref("");
+const selectedProgramTemplateId = ref("");
 const activeProgramExpanded = ref(false);
 const activeStartScheduledForDate = ref("");
 const activeMissedScheduledForDate = ref("");
@@ -47,7 +47,7 @@ const startProgramCommand = useCommand({
   writeMethod: "POST",
   fallbackRunError: "Unable to start this program.",
   buildRawPayload: () => ({
-    programId: selectionModel.programId,
+    programTemplateId: selectionModel.programTemplateId,
     startsOn: selectionModel.startsOn
   }),
   messages: {
@@ -63,18 +63,18 @@ const selectionState = computed(() => {
   const payload = selectionResource.data.value;
   return payload && typeof payload === "object" ? payload : {};
 });
-const programs = computed(() => (Array.isArray(selectionState.value.programs) ? selectionState.value.programs : []));
+const programTemplates = computed(() => (Array.isArray(selectionState.value.programTemplates) ? selectionState.value.programTemplates : []));
 const activeAssignment = computed(() => selectionState.value.activeAssignment || null);
 const hasActiveAssignment = computed(() => Boolean(activeAssignment.value));
 const canStartProgram = computed(() => selectionState.value?.rules?.canStartProgram === true && !hasActiveAssignment.value);
-const selectedProgram = computed(() => {
-  const currentId = String(selectedProgramId.value || "").trim();
-  return programs.value.find((program) => String(program.id) === currentId) || null;
+const selectedProgramTemplate = computed(() => {
+  const currentId = String(selectedProgramTemplateId.value || "").trim();
+  return programTemplates.value.find((programTemplate) => String(programTemplate.id) === currentId) || null;
 });
 const startProgramDisabled = computed(() => {
   return (
     !canStartProgram.value ||
-    !String(selectionModel.programId || "").trim() ||
+    !String(selectionModel.programTemplateId || "").trim() ||
     !String(selectionModel.startsOn || "").trim() ||
     startProgramCommand.isRunning
   );
@@ -144,14 +144,14 @@ function createLocalDateInputValue() {
   return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
 }
 
-function selectProgram(programId) {
-  const normalizedProgramId = String(programId || "").trim();
-  selectedProgramId.value = normalizedProgramId;
-  selectionModel.programId = normalizedProgramId;
+function selectProgramTemplate(programTemplateId) {
+  const normalizedProgramTemplateId = String(programTemplateId || "").trim();
+  selectedProgramTemplateId.value = normalizedProgramTemplateId;
+  selectionModel.programTemplateId = normalizedProgramTemplateId;
 }
 
-function isSelectedProgram(programId) {
-  return String(selectedProgramId.value || "").trim() === String(programId || "").trim();
+function isSelectedProgramTemplate(programTemplateId) {
+  return String(selectedProgramTemplateId.value || "").trim() === String(programTemplateId || "").trim();
 }
 
 function scheduleText(day = {}) {
@@ -853,12 +853,12 @@ function toggleActiveProgramExpanded() {
             </div>
 
             <v-alert
-              v-if="selectedProgram"
+              v-if="selectedProgramTemplate"
               type="info"
               variant="tonal"
               border="start"
-              :title="selectedProgram.name"
-              :text="selectedProgram.summary"
+              :title="selectedProgramTemplate.name"
+              :text="selectedProgramTemplate.summary"
             />
 
             <v-btn
@@ -876,35 +876,35 @@ function toggleActiveProgramExpanded() {
 
         <div class="program-grid">
           <v-card
-            v-for="program in programs"
-            :key="program.id"
+            v-for="programTemplate in programTemplates"
+            :key="programTemplate.id"
             rounded="xl"
             elevation="1"
             border
             class="program-card"
-            :class="{ 'program-card--selected': isSelectedProgram(program.id) }"
-            @click="selectProgram(program.id)"
+            :class="{ 'program-card--selected': isSelectedProgramTemplate(programTemplate.id) }"
+            @click="selectProgramTemplate(programTemplate.id)"
           >
             <v-card-item>
               <template #prepend>
                 <v-avatar
-                  :color="isSelectedProgram(program.id) ? 'primary' : 'surface-variant'"
-                  :variant="isSelectedProgram(program.id) ? 'flat' : 'tonal'"
+                  :color="isSelectedProgramTemplate(programTemplate.id) ? 'primary' : 'surface-variant'"
+                  :variant="isSelectedProgramTemplate(programTemplate.id) ? 'flat' : 'tonal'"
                   rounded="lg"
                 >
-                  <v-icon :icon="isSelectedProgram(program.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
+                  <v-icon :icon="isSelectedProgramTemplate(programTemplate.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
                 </v-avatar>
               </template>
-              <v-card-title class="text-h6">{{ program.name }}</v-card-title>
-              <v-card-subtitle>{{ program.difficultyLabel || "Program" }}</v-card-subtitle>
+              <v-card-title class="text-h6">{{ programTemplate.name }}</v-card-title>
+              <v-card-subtitle>{{ programTemplate.difficultyLabel || "Program" }}</v-card-subtitle>
             </v-card-item>
             <v-card-text class="d-flex flex-column ga-4">
-              <p class="text-body-2 text-medium-emphasis mb-0">{{ program.summary }}</p>
+              <p class="text-body-2 text-medium-emphasis mb-0">{{ programTemplate.summary }}</p>
 
               <v-list lines="two" density="compact" class="program-card__schedule">
                 <v-list-item
-                  v-for="day in program.schedulePreview"
-                  :key="`${program.id}-${day.dayOfWeek}`"
+                  v-for="day in programTemplate.schedulePreview"
+                  :key="`${programTemplate.id}-${day.dayOfWeek}`"
                   :subtitle="scheduleText(day)"
                   class="px-0"
                 >
@@ -925,12 +925,12 @@ function toggleActiveProgramExpanded() {
             </v-card-text>
             <v-card-actions class="px-4 pb-4">
               <v-btn
-                :color="isSelectedProgram(program.id) ? 'primary' : 'default'"
-                :variant="isSelectedProgram(program.id) ? 'flat' : 'outlined'"
+                :color="isSelectedProgramTemplate(programTemplate.id) ? 'primary' : 'default'"
+                :variant="isSelectedProgramTemplate(programTemplate.id) ? 'flat' : 'outlined'"
                 block
-                @click.stop="selectProgram(program.id)"
+                @click.stop="selectProgramTemplate(programTemplate.id)"
               >
-                {{ isSelectedProgram(program.id) ? "Selected" : "Choose" }}
+                {{ isSelectedProgramTemplate(programTemplate.id) ? "Selected" : "Choose" }}
               </v-btn>
             </v-card-actions>
           </v-card>

@@ -39,10 +39,8 @@ const markWorkoutDefinitelyMissedBodyInputValidator = deepFreeze({
 const applyAdvancementBodyInputValidator = deepFreeze({
   schema: createSchema({
     exerciseId: {
-      type: "string",
-      required: true,
-      minLength: 1,
-      maxLength: 50
+      type: "id",
+      required: true
     }
   }),
   mode: "patch"
@@ -51,10 +49,8 @@ const applyAdvancementBodyInputValidator = deepFreeze({
 const saveWorkoutSetLogsBodyInputValidator = deepFreeze({
   schema: createSchema({
     occurrenceExerciseId: {
-      type: "string",
-      required: true,
-      minLength: 1,
-      maxLength: 50
+      type: "id",
+      required: true
     },
     sets: {
       type: "array",

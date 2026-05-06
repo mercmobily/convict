@@ -1,4 +1,5 @@
 import { withActionDefaults } from "@jskit-ai/kernel/shared/actions";
+import { INTERNAL_JSON_REST_API } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
 import { createRepository } from "./repository.js";
 import { createService } from "./service.js";
 import { featureActions } from "./actions.js";
@@ -7,7 +8,24 @@ import { registerRoutes } from "./registerRoutes.js";
 class TodayProvider {
   static id = "feature.today";
 
-  static dependsOn = ["runtime.actions", "runtime.database", "auth.policy.fastify", "workspaces.core", "local.main"];
+  static dependsOn = [
+    "runtime.actions",
+    "json-rest-api.core",
+    "auth.policy.fastify",
+    "workspaces.core",
+    "local.main",
+    "crud.programs",
+    "crud.program_schedule_entries",
+    "crud.exercises",
+    "crud.exercise_steps",
+    "crud.user_program_assignments",
+    "crud.user_program_assignment_revisions",
+    "crud.personal_step_variations",
+    "crud.user_exercise_progress",
+    "crud.workout_occurrences",
+    "crud.workout_occurrence_exercises",
+    "crud.workout_set_logs"
+  ];
 
   register(app) {
     if (
@@ -21,7 +39,11 @@ class TodayProvider {
 
     app.singleton("feature.today.repository", (scope) => {
       return createRepository({
-        knex: scope.make("jskit.database.knex")
+        api: scope.make(INTERNAL_JSON_REST_API),
+        userExerciseProgressRepository: scope.make("repository.user_exercise_progress"),
+        workoutOccurrencesRepository: scope.make("repository.workout_occurrences"),
+        workoutOccurrenceExercisesRepository: scope.make("repository.workout_occurrence_exercises"),
+        workoutSetLogsRepository: scope.make("repository.workout_set_logs")
       });
     });
 

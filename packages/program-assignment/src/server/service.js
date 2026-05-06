@@ -1,5 +1,4 @@
 import { ConflictError, NotFoundError, AppError } from "@jskit-ai/kernel/server/runtime/errors";
-import { normalizeDbRecordId } from "@jskit-ai/database-runtime/shared";
 import { normalizeRecordId, normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
 
 const DAY_LABELS = Object.freeze({
@@ -12,7 +11,7 @@ const DAY_LABELS = Object.freeze({
   7: "Sunday"
 });
 
-const PROGRAM_METADATA = Object.freeze({
+const TEMPLATE_METADATA = Object.freeze({
   "new-blood": Object.freeze({
     summary: "Two short weekly sessions focused on building the habit and covering four of the Big 6.",
     difficultyLabel: "Foundation"
@@ -29,6 +28,13 @@ const PROGRAM_METADATA = Object.freeze({
     summary: "A six-day high-volume template meant for advanced trainees chasing extreme work capacity.",
     difficultyLabel: "Advanced"
   })
+});
+
+const CANONICAL_PROGRAM_ORDER = Object.freeze({
+  "new-blood": 1,
+  "good-behavior": 2,
+  veterano: 3,
+  supermax: 4
 });
 
 function normalizeStartsOn(value = "") {
@@ -48,6 +54,31 @@ function formatWorkSetLabel(min, max) {
   return `${safeMin}-${safeMax} work sets`;
 }
 
+function resolveScheduleExerciseName(entry = {}) {
+  return String(entry?.exercise?.name || entry?.exerciseName || "").trim();
+}
+
+function sortProgramTemplatesForSelection(programTemplates = []) {
+  const rows = Array.isArray(programTemplates) ? programTemplates.slice() : [];
+  rows.sort((left, right) => {
+    const leftRank = CANONICAL_PROGRAM_ORDER[String(left?.slug || "").trim().toLowerCase()] || Number.MAX_SAFE_INTEGER;
+    const rightRank = CANONICAL_PROGRAM_ORDER[String(right?.slug || "").trim().toLowerCase()] || Number.MAX_SAFE_INTEGER;
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+
+    const leftCreatedAt = String(left?.createdAt || "");
+    const rightCreatedAt = String(right?.createdAt || "");
+    if (leftCreatedAt !== rightCreatedAt) {
+      return leftCreatedAt.localeCompare(rightCreatedAt);
+    }
+
+    return String(left?.id || "").localeCompare(String(right?.id || ""));
+  });
+
+  return rows;
+}
+
 function buildSchedulePreview(entries = []) {
   const grouped = new Map();
   for (const entry of entries) {
@@ -58,7 +89,7 @@ function buildSchedulePreview(entries = []) {
     grouped.get(dayOfWeek).push({
       slotNumber: Number(entry.slotNumber || 0),
       exerciseId: entry.exerciseId,
-      exerciseName: String(entry.exerciseName || "").trim(),
+      exerciseName: resolveScheduleExerciseName(entry),
       workSetsMin: Number(entry.workSetsMin || 0),
       workSetsMax: Number(entry.workSetsMax || 0),
       workSetLabel: formatWorkSetLabel(entry.workSetsMin, entry.workSetsMax)
@@ -78,15 +109,29 @@ function buildSchedulePreview(entries = []) {
   return days;
 }
 
-function enrichProgram(program = {}, scheduleEntries = []) {
-  const slug = String(program.slug || "").trim().toLowerCase();
-  const metadata = PROGRAM_METADATA[slug] || {};
+function enrichProgramTemplate(programTemplate = {}, scheduleEntries = []) {
+  const slug = String(programTemplate.slug || "").trim().toLowerCase();
+  const metadata = TEMPLATE_METADATA[slug] || {};
+  const summary = normalizeText(programTemplate.description) || metadata.summary || "";
+
+  return {
+    ...programTemplate,
+    summary,
+    difficultyLabel: metadata.difficultyLabel || "",
+    schedulePreview: buildSchedulePreview(scheduleEntries)
+  };
+}
+
+function enrichAssignedProgram(program = {}, scheduleEntries = [], sourceTemplate = null) {
+  const sourceSlug = String(sourceTemplate?.slug || "").trim().toLowerCase();
+  const metadata = TEMPLATE_METADATA[sourceSlug] || {};
   const summary = normalizeText(program.description) || metadata.summary || "";
 
   return {
     ...program,
     summary,
     difficultyLabel: metadata.difficultyLabel || "",
+    sourceTemplate: sourceTemplate || null,
     schedulePreview: buildSchedulePreview(scheduleEntries)
   };
 }
@@ -106,69 +151,104 @@ function resolveCurrentUserId(context = {}) {
 }
 
 function resolveCurrentWorkspaceId(context = {}) {
-  const workspaceId = normalizeDbRecordId(context?.visibilityContext?.scopeOwnerId, { fallback: null });
-  if (workspaceId) {
-    return workspaceId;
-  }
-
-  throw new AppError(400, "Workspace context is unavailable for this request.");
+  const workspaceId = normalizeRecordId(
+    context?.workspace?.id || context?.requestMeta?.resolvedWorkspaceContext?.workspace?.id,
+    { fallback: null }
+  );
+  return workspaceId;
 }
 
-async function buildSelectionState(programAssignmentRepository, userId) {
-  const [programs, activeAssignment] = await Promise.all([
-    programAssignmentRepository.listSelectablePrograms({ userId }),
-    programAssignmentRepository.findActiveAssignmentByUserId(userId)
-  ]);
-
-  const activeRevision = activeAssignment
-    ? await programAssignmentRepository.findLatestRevisionByAssignmentId(activeAssignment.id)
-    : null;
-
-  const programIds = [
-    ...programs.map((program) => program.id),
-    ...(activeRevision?.programId ? [activeRevision.programId] : [])
-  ].filter(Boolean);
-  const scheduleEntries = await programAssignmentRepository.listScheduleEntriesForProgramIds(programIds);
-  const scheduleEntriesByProgramId = new Map();
-  for (const entry of scheduleEntries) {
-    const programId = String(entry.programId || "");
-    if (!scheduleEntriesByProgramId.has(programId)) {
-      scheduleEntriesByProgramId.set(programId, []);
-    }
-    scheduleEntriesByProgramId.get(programId).push(entry);
+function resolveCurrentWorkspace(context = {}) {
+  const workspace = context?.workspace || context?.requestMeta?.resolvedWorkspaceContext?.workspace || null;
+  if (!workspace || typeof workspace !== "object") {
+    return null;
   }
 
-  const programsForSelection = programs.map((program) =>
-    enrichProgram(program, scheduleEntriesByProgramId.get(String(program.id)) || [])
-  );
-
-  let hydratedActiveAssignment = null;
-  if (activeAssignment && activeRevision) {
-    const activeProgram =
-      programs.find((entry) => String(entry.id) === String(activeRevision.programId)) ||
-      (await programAssignmentRepository.findSelectableProgramById(activeRevision.programId, { userId }));
-    const workspace = activeAssignment.workspaceId
-      ? await programAssignmentRepository.findWorkspaceById(activeAssignment.workspaceId)
-      : null;
-
-    hydratedActiveAssignment = {
-      ...activeAssignment,
-      revision: activeRevision,
-      workspace,
-      program: activeProgram
-        ? enrichProgram(activeProgram, scheduleEntriesByProgramId.get(String(activeProgram.id)) || [])
-        : null
-    };
+  const id = normalizeRecordId(workspace.id, { fallback: null });
+  if (!id) {
+    return null;
   }
 
   return {
-    programs: programsForSelection,
+    ...workspace,
+    id
+  };
+}
+
+function buildTemplateScheduleIndex(rows = []) {
+  const index = new Map();
+  for (const row of rows) {
+    const templateId = String(row.programTemplateId || "");
+    if (!index.has(templateId)) {
+      index.set(templateId, []);
+    }
+    index.get(templateId).push(row);
+  }
+  return index;
+}
+
+async function buildSelectionState(programAssignmentRepository, userId, { workspace = null, context = null } = {}) {
+  const repositoryOptions = context ? { context } : {};
+  const [programTemplates, activeAssignment] = await Promise.all([
+    programAssignmentRepository.listProgramTemplates(repositoryOptions),
+    programAssignmentRepository.findActiveAssignmentByUserId(userId, repositoryOptions)
+  ]);
+
+  const templateScheduleEntries = await programAssignmentRepository.listTemplateScheduleEntriesForTemplateIds(
+    programTemplates.map((programTemplate) => programTemplate.id),
+    repositoryOptions
+  );
+
+  const templateScheduleEntriesByTemplateId = buildTemplateScheduleIndex(templateScheduleEntries);
+  const enrichedProgramTemplates = sortProgramTemplatesForSelection(
+    programTemplates.map((programTemplate) =>
+      enrichProgramTemplate(
+        programTemplate,
+        templateScheduleEntriesByTemplateId.get(String(programTemplate.id || "")) || []
+      )
+    )
+  );
+
+  let hydratedActiveAssignment = null;
+  if (activeAssignment?.id) {
+    const activeRevision = await programAssignmentRepository.findLatestRevisionByAssignmentId(activeAssignment.id, repositoryOptions);
+    if (activeRevision?.id) {
+      const activeProgram = await programAssignmentRepository.findOwnedProgramById(activeRevision.programId, repositoryOptions);
+      const activeProgramScheduleEntries = activeProgram?.id
+        ? await programAssignmentRepository.listScheduleEntriesForProgram(activeProgram.id, repositoryOptions)
+        : [];
+      const sourceTemplate = activeProgram?.programTemplate || null;
+
+      hydratedActiveAssignment = {
+        ...activeAssignment,
+        revision: activeRevision,
+        workspace,
+        program: activeProgram
+          ? enrichAssignedProgram(activeProgram, activeProgramScheduleEntries, sourceTemplate)
+          : null
+      };
+    }
+  }
+
+  return {
+    programTemplates: enrichedProgramTemplates,
     activeAssignment: hydratedActiveAssignment,
     rules: {
       canStartProgram: hydratedActiveAssignment == null,
       switchingAvailable: false
     }
   };
+}
+
+function buildCopiedProgramScheduleEntries(programId, templateScheduleEntries = []) {
+  return templateScheduleEntries.map((entry) => ({
+    programId,
+    dayOfWeek: Number(entry.dayOfWeek || 0),
+    slotNumber: Number(entry.slotNumber || 0),
+    exerciseId: entry.exerciseId,
+    workSetsMin: Number(entry.workSetsMin || 0),
+    workSetsMax: Number(entry.workSetsMax || 0)
+  }));
 }
 
 function createService({ programAssignmentRepository } = {}) {
@@ -179,54 +259,78 @@ function createService({ programAssignmentRepository } = {}) {
   return Object.freeze({
     async readSelectionState(input = {}, options = {}) {
       void input;
-      const userId = resolveCurrentUserId(options?.context);
-      return buildSelectionState(programAssignmentRepository, userId);
+      const context = options?.context || null;
+      const userId = resolveCurrentUserId(context);
+      return buildSelectionState(programAssignmentRepository, userId, {
+        workspace: resolveCurrentWorkspace(context),
+        context
+      });
     },
     async startProgram(input = {}, options = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const workspaceId = resolveCurrentWorkspaceId(context);
-      const programId = normalizeDbRecordId(input?.programId, { fallback: null });
+      const programTemplateId = input?.programTemplateId || null;
       const startsOn = normalizeStartsOn(input?.startsOn);
 
-      if (!programId) {
-        throw new AppError(400, "A valid programId is required.");
+      if (!programTemplateId) {
+        throw new AppError(400, "A valid programTemplateId is required.");
       }
 
-      const selectableProgram = await programAssignmentRepository.findSelectableProgramById(programId, { userId });
-      if (!selectableProgram) {
-        throw new NotFoundError("Program not found.");
+      const [selectedTemplate, templateScheduleEntries] = await Promise.all([
+        programAssignmentRepository.findProgramTemplateById(programTemplateId, { context }),
+        programAssignmentRepository.listTemplateScheduleEntriesForTemplate(programTemplateId, { context })
+      ]);
+      if (!selectedTemplate) {
+        throw new NotFoundError("Program template not found.");
       }
 
       await programAssignmentRepository.withTransaction(async (trx) => {
-        const activeAssignment = await programAssignmentRepository.findActiveAssignmentByUserId(userId, { trx });
+        const activeAssignment = await programAssignmentRepository.findActiveAssignmentByUserId(userId, { trx, context });
         if (activeAssignment) {
           throw new ConflictError("You already have an active program. Switching comes later.");
         }
 
+        const programId = await programAssignmentRepository.createProgramCopy(
+          {
+            programTemplateId: selectedTemplate.id,
+            name: selectedTemplate.name,
+            description: selectedTemplate.description
+          },
+          { trx, context }
+        );
+
+        await programAssignmentRepository.createProgramScheduleEntries(
+          buildCopiedProgramScheduleEntries(programId, templateScheduleEntries),
+          { trx, context }
+        );
+
         const assignmentId = await programAssignmentRepository.createAssignment(
           {
-            userId,
             workspaceId,
             startsOn,
             status: "active"
           },
-          { trx }
+          { trx, context }
         );
 
         await programAssignmentRepository.createAssignmentRevision(
           {
             userProgramAssignmentId: assignmentId,
+            workspaceId,
             programId,
             effectiveFromDate: startsOn,
             changeReason: "initial",
             notes: null
           },
-          { trx }
+          { trx, context }
         );
       });
 
-      return buildSelectionState(programAssignmentRepository, userId);
+      return buildSelectionState(programAssignmentRepository, userId, {
+        workspace: resolveCurrentWorkspace(context),
+        context
+      });
     }
   });
 }

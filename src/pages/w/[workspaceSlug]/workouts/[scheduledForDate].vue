@@ -320,7 +320,7 @@ function occurrenceExerciseKey(exercise = {}) {
 
 const hasUnsavedWorkoutDrafts = computed(() => {
   const exercises = Array.isArray(workout.value?.exercises) ? workout.value.exercises : [];
-  return exercises.some((exercise) => hasUnsavedDrafts(exercise));
+  return exercises.some((exercise) => hasBlockingUnsavedDrafts(exercise));
 });
 
 const savedWorkoutSetCount = computed(() => {
@@ -485,7 +485,7 @@ function normalizeComparableSetRows(rows = [], { fromSaved = false } = {}) {
     .filter((entry) => entry.performedValue !== "");
 }
 
-function hasUnsavedDrafts(exercise = {}) {
+function hasBlockingUnsavedDrafts(exercise = {}) {
   if (workout.value?.status !== "in_progress") {
     return false;
   }
@@ -507,6 +507,17 @@ function hasUnsavedDrafts(exercise = {}) {
       draftRow.performedValue !== savedRow?.performedValue
     );
   });
+}
+
+function shouldShowUnsavedBadge(exercise = {}) {
+  if (workout.value?.status !== "in_progress") {
+    return false;
+  }
+
+  const savedRows = normalizeComparableSetRows(exercise.setLogs, {
+    fromSaved: true
+  });
+  return savedRows.length < 1 || hasBlockingUnsavedDrafts(exercise);
 }
 
 function isSavingExercise(exercise = {}) {
@@ -807,8 +818,8 @@ async function goBackToToday() {
             <div class="exercise-card__save-state-lane">
               <div
                 class="exercise-card__save-state-badge"
-                :class="{ 'exercise-card__save-state-badge--visible': hasUnsavedDrafts(exercise) }"
-                :aria-hidden="String(!hasUnsavedDrafts(exercise))"
+                :class="{ 'exercise-card__save-state-badge--visible': shouldShowUnsavedBadge(exercise) }"
+                :aria-hidden="String(!shouldShowUnsavedBadge(exercise))"
               >
                 LOG NOT SAVED
               </div>
