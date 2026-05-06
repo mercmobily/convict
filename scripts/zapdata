@@ -15,7 +15,7 @@ const envPath = path.join(repoRoot, ".env");
 function printUsage() {
   console.error("Usage: ./scripts/zapdata [--yes] <user-email|ALL>");
   console.error("");
-  console.error("Deletes non-training user data while keeping login rows and all training data.");
+  console.error("Deletes non-training user data while keeping login rows, package bootstrap rows, and all training data.");
 }
 
 function parseArgs(argv = []) {
@@ -77,9 +77,9 @@ async function deleteNonTrainingUserDataForUser(connection, { userId, email }, d
     )
   )[0].affectedRows;
 
-  deletedCounts.consoleSettings += (
+  deletedCounts.consoleSettingsCleared += (
     await connection.query(
-      "DELETE FROM console_settings WHERE owner_user_id = ?",
+      "UPDATE console_settings SET owner_user_id = NULL WHERE owner_user_id = ?",
       [userId]
     )
   )[0].affectedRows;
@@ -144,7 +144,7 @@ async function main() {
 
   const deletedCounts = {
     userSettings: 0,
-    consoleSettings: 0,
+    consoleSettingsCleared: 0,
     assistantMessages: 0,
     assistantConversations: 0,
     workspaceInvites: 0,
