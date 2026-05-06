@@ -23,12 +23,22 @@ import {
 } from "@mdi/js";
 import { useRoute, useRouter } from "vue-router";
 import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
+import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
 const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
+const {
+  exerciseCurrentStepNumber,
+  exerciseDetailLine,
+  formatWorkSetLabel,
+  measurementLabel,
+  progressionTargetLabel,
+  workoutStatusColor,
+  workoutStatusLabel
+} = useConvictWorkoutPresentation();
 const route = useRoute();
 const router = useRouter();
 const paths = usePaths();
@@ -166,49 +176,6 @@ const pageSubtitle = computed(() => {
   return "Review the projected workout and saved set logs.";
 });
 
-function formatWorkSetLabel(min, max) {
-  const safeMin = Number(min || 0);
-  const safeMax = Number(max || 0);
-  if (safeMin > 0 && safeMin === safeMax) {
-    return `${safeMin} work sets`;
-  }
-  return `${safeMin}-${safeMax} work sets`;
-}
-
-function workoutStatusLabel(status = "") {
-  switch (String(status || "").trim().toLowerCase()) {
-    case "scheduled":
-      return "Scheduled";
-    case "overdue":
-      return "Overdue";
-    case "in_progress":
-      return "In progress";
-    case "completed":
-      return "Completed";
-    case "definitely_missed":
-      return "Definitely missed";
-    default:
-      return "Planned";
-  }
-}
-
-function workoutStatusColor(status = "") {
-  switch (String(status || "").trim().toLowerCase()) {
-    case "scheduled":
-      return "primary";
-    case "overdue":
-      return "warning";
-    case "in_progress":
-      return "info";
-    case "completed":
-      return "success";
-    case "definitely_missed":
-      return "error";
-    default:
-      return "default";
-  }
-}
-
 function exerciseStatusLabel(status = "") {
   switch (String(status || "").trim().toLowerCase()) {
     case "completed":
@@ -241,77 +208,8 @@ function exerciseStatusColor(status = "") {
   }
 }
 
-function exerciseCurrentStepNumber(exercise = {}) {
-  const rawValue = exercise.currentProgressStepNumber ?? exercise.currentStepNumber ?? null;
-  const normalizedValue = Number(rawValue || 0);
-  return normalizedValue > 0 ? normalizedValue : null;
-}
-
-function exerciseCurrentStepName(exercise = {}) {
-  return String(exercise.currentProgressStepName || exercise.currentStepName || "").trim();
-}
-
 function exerciseInstructionText(exercise = {}) {
   return String(exercise.currentProgressStepInstruction || exercise.currentStepInstruction || "").trim();
-}
-
-function progressionTargetSetCount(exercise = {}) {
-  const explicitSetCount = Number(exercise.progressionSets || 0);
-  if (explicitSetCount > 0) {
-    return explicitSetCount;
-  }
-
-  return String(exercise.measurementUnit || "").trim().toLowerCase() === "seconds" &&
-    Number(exercise.progressionSeconds || 0) > 0
-    ? 1
-    : null;
-}
-
-function progressionTargetValue(exercise = {}) {
-  if (String(exercise.measurementUnit || "").trim().toLowerCase() === "seconds") {
-    const seconds = Number(exercise.progressionSeconds || 0);
-    return seconds > 0 ? seconds : null;
-  }
-
-  const reps = exercise.progressionRepsMax ?? exercise.progressionRepsMin ?? null;
-  const normalizedReps = Number(reps || 0);
-  return normalizedReps > 0 ? normalizedReps : null;
-}
-
-function progressionTargetLabel(exercise = {}) {
-  const setCount = progressionTargetSetCount(exercise);
-  const targetValue = progressionTargetValue(exercise);
-  if (!targetValue) {
-    return "";
-  }
-
-  const unit = measurementLabel(exercise.measurementUnit);
-  return setCount && setCount > 0
-    ? `${setCount} x ${targetValue} ${unit}`
-    : `${targetValue} ${unit}`;
-}
-
-function exerciseDetailLine(exercise = {}) {
-  const detailParts = [];
-  const currentStepNumber = exerciseCurrentStepNumber(exercise);
-  const currentStepName = exerciseCurrentStepName(exercise);
-  const variationName = String(exercise.activeVariationName || "").trim();
-
-  if (currentStepNumber && currentStepName) {
-    detailParts.push(`Step ${currentStepNumber}: ${currentStepName}`);
-  } else if (currentStepName) {
-    detailParts.push(currentStepName);
-  }
-  if (variationName) {
-    detailParts.push(`Variation: ${variationName}`);
-  }
-
-  return detailParts.join(" • ");
-}
-
-function measurementLabel(unit = "") {
-  const normalized = String(unit || "").trim().toLowerCase();
-  return normalized === "seconds" ? "seconds" : "reps";
 }
 
 function occurrenceExerciseKey(exercise = {}) {
@@ -606,11 +504,9 @@ async function goBackToToday() {
   <section v-else class="workout-detail-page d-flex flex-column ga-6">
     <div class="d-flex justify-space-between align-start flex-wrap ga-3">
       <div class="d-flex flex-column ga-2">
-        <div class="d-flex flex-wrap ga-2 align-center">
-          <v-chip color="primary" size="small" label>Slice 4</v-chip>
-          <v-chip color="secondary" size="small" variant="tonal" label>Submit &amp; Advancement</v-chip>
-          <v-chip v-if="isRefreshing" color="info" size="small" variant="tonal" label>Refreshing</v-chip>
-        </div>
+        <v-chip v-if="isRefreshing" color="info" size="small" variant="tonal" label class="align-self-start">
+          Refreshing
+        </v-chip>
         <div class="d-flex flex-column ga-1">
           <h2 class="text-h4 workout-detail-page__title mb-0">{{ pageTitle }}</h2>
           <p class="text-body-1 text-medium-emphasis mb-0 workout-detail-page__subtitle">

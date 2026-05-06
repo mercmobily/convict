@@ -2,38 +2,21 @@ import {
   createJsonRestContext,
   extractJsonRestCollectionRows
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
-import { normalizeRecordId } from "@jskit-ai/kernel/shared/support/normalize";
+import { normalizeDateOnly } from "@local/main/shared";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
 
-function padDatePart(value) {
-  return String(value).padStart(2, "0");
-}
-
-function normalizeDateOnly(value = null) {
-  if (value == null || value === "") {
+function normalizeAssignmentRevisionRow(row = null) {
+  if (!row || typeof row !== "object") {
     return null;
   }
 
-  const parsedDate = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return null;
-  }
-
-  return [
-    parsedDate.getFullYear(),
-    padDatePart(parsedDate.getMonth() + 1),
-    padDatePart(parsedDate.getDate())
-  ].join("-");
-}
-
-function readRelatedId(row = null, relationKey = "", fieldKey = "") {
-  const directId = normalizeRecordId(row?.[fieldKey], { fallback: null });
-  if (directId) {
-    return directId;
-  }
-
-  return normalizeRecordId(row?.[relationKey]?.id, { fallback: null });
+  return {
+    ...row,
+    userProgramAssignmentId: row.userProgramAssignmentId ?? row.userProgramAssignment?.id ?? null,
+    programId: row.programId ?? row.program?.id ?? null,
+    effectiveFromDate: normalizeDateOnly(row.effectiveFromDate)
+  };
 }
 
 function normalizeTemplateScheduleEntryRow(row = null) {
@@ -43,8 +26,8 @@ function normalizeTemplateScheduleEntryRow(row = null) {
 
   return {
     ...row,
-    programTemplateId: readRelatedId(row, "programTemplate", "programTemplateId"),
-    exerciseId: readRelatedId(row, "exercise", "exerciseId")
+    programTemplateId: row.programTemplateId ?? row.programTemplate?.id ?? null,
+    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
   };
 }
 
@@ -55,20 +38,7 @@ function normalizeOwnedProgramRow(row = null) {
 
   return {
     ...row,
-    programTemplateId: readRelatedId(row, "programTemplate", "programTemplateId")
-  };
-}
-
-function normalizeAssignmentRevisionRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    userProgramAssignmentId: readRelatedId(row, "userProgramAssignment", "userProgramAssignmentId"),
-    programId: readRelatedId(row, "program", "programId"),
-    effectiveFromDate: normalizeDateOnly(row.effectiveFromDate)
+    programTemplateId: row.programTemplateId ?? row.programTemplate?.id ?? null
   };
 }
 
@@ -79,8 +49,8 @@ function normalizeProgramScheduleEntryRow(row = null) {
 
   return {
     ...row,
-    programId: readRelatedId(row, "program", "programId"),
-    exerciseId: readRelatedId(row, "exercise", "exerciseId")
+    programId: row.programId ?? row.program?.id ?? null,
+    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
   };
 }
 
@@ -104,16 +74,16 @@ async function queryTemplateScheduleEntriesByTemplateIds(api, programTemplateIds
 
   return extractJsonRestCollectionRows(
     await api.resources.programTemplateScheduleEntries.query(
-          {
+      {
         queryParams: {
           filters: {
             programTemplateIds: ids
           },
-              include: ["programTemplate", "exercise"],
-              sort: ["programTemplateId", "dayOfWeek", "slotNumber"],
-              page: {
-                size: 256
-              }
+          include: ["programTemplate", "exercise"],
+          sort: ["programTemplateId", "dayOfWeek", "slotNumber"],
+          page: {
+            size: 256
+          }
         },
         transaction: options?.trx || null,
         simplified: true
@@ -204,9 +174,9 @@ function createRepository({
           },
           createJsonRestContext(options?.context || null)
         )
-      );
+      ).map((row) => normalizeOwnedProgramRow(row)).filter(Boolean);
 
-      return normalizeOwnedProgramRow(rows[0] || null);
+      return rows[0] || null;
     },
     async listScheduleEntriesForProgram(programId, options = {}) {
       if (!programId) {

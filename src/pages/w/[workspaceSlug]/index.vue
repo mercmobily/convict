@@ -17,12 +17,21 @@ import {
 } from "@mdi/js";
 import { useRouter } from "vue-router";
 import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
+import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
 const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
+const {
+  exerciseCurrentStepNumber,
+  exerciseDetailLine,
+  formatWorkSetLabel,
+  progressionTargetLabel,
+  workoutStatusColor,
+  workoutStatusLabel
+} = useConvictWorkoutPresentation();
 const paths = usePaths();
 const router = useRouter();
 
@@ -163,57 +172,6 @@ function scheduleText(day = {}) {
     : "";
 }
 
-function formatWorkSetLabel(min, max) {
-  const safeMin = Number(min || 0);
-  const safeMax = Number(max || 0);
-  if (safeMin > 0 && safeMin === safeMax) {
-    return `${safeMin} work sets`;
-  }
-  return `${safeMin}-${safeMax} work sets`;
-}
-
-function workoutStatusLabel(status = "") {
-  switch (String(status || "").trim().toLowerCase()) {
-    case "scheduled":
-      return "Scheduled";
-    case "overdue":
-      return "Overdue";
-    case "in_progress":
-      return "In progress";
-    case "completed":
-      return "Completed";
-    case "definitely_missed":
-      return "Definitely missed";
-    case "rest_day":
-      return "Rest day";
-    case "not_started_yet":
-      return "Starts later";
-    default:
-      return "Planned";
-  }
-}
-
-function workoutStatusColor(status = "") {
-  switch (String(status || "").trim().toLowerCase()) {
-    case "scheduled":
-      return "primary";
-    case "overdue":
-      return "warning";
-    case "in_progress":
-      return "info";
-    case "completed":
-      return "success";
-    case "definitely_missed":
-      return "error";
-    case "rest_day":
-      return "surface-variant";
-    case "not_started_yet":
-      return "secondary";
-    default:
-      return "default";
-  }
-}
-
 function workoutDateLabel(workout = {}) {
   const dayLabel = String(workout.dayLabel || "").trim();
   const scheduledForDate = String(workout.scheduledForDate || "").trim();
@@ -259,69 +217,6 @@ function workoutDetailPagePath(scheduledForDate) {
       scheduledForDate: String(scheduledForDate || "").trim()
     }
   };
-}
-
-function exerciseCurrentStepNumber(exercise = {}) {
-  const rawValue = exercise.currentProgressStepNumber ?? exercise.currentStepNumber ?? null;
-  const normalizedValue = Number(rawValue || 0);
-  return normalizedValue > 0 ? normalizedValue : null;
-}
-
-function exerciseCurrentStepName(exercise = {}) {
-  return String(exercise.currentProgressStepName || exercise.currentStepName || "").trim();
-}
-
-function progressionTargetSetCount(exercise = {}) {
-  const explicitSetCount = Number(exercise.progressionSets || 0);
-  if (explicitSetCount > 0) {
-    return explicitSetCount;
-  }
-
-  return String(exercise.measurementUnit || "").trim().toLowerCase() === "seconds" &&
-    Number(exercise.progressionSeconds || 0) > 0
-    ? 1
-    : null;
-}
-
-function progressionTargetValue(exercise = {}) {
-  if (String(exercise.measurementUnit || "").trim().toLowerCase() === "seconds") {
-    const seconds = Number(exercise.progressionSeconds || 0);
-    return seconds > 0 ? seconds : null;
-  }
-
-  const reps = exercise.progressionRepsMax ?? exercise.progressionRepsMin ?? null;
-  const normalizedReps = Number(reps || 0);
-  return normalizedReps > 0 ? normalizedReps : null;
-}
-
-function progressionTargetLabel(exercise = {}) {
-  const setCount = progressionTargetSetCount(exercise);
-  const targetValue = progressionTargetValue(exercise);
-  if (!targetValue) {
-    return "";
-  }
-
-  return setCount && setCount > 0
-    ? `${setCount} x ${targetValue} ${exercise.measurementUnit}`
-    : `${targetValue} ${exercise.measurementUnit}`;
-}
-
-function exerciseDetailLine(exercise = {}) {
-  const detailParts = [];
-  const currentStepNumber = exerciseCurrentStepNumber(exercise);
-  const currentStepName = exerciseCurrentStepName(exercise);
-  const variationName = String(exercise.activeVariationName || "").trim();
-
-  if (currentStepNumber && currentStepName) {
-    detailParts.push(`Step ${currentStepNumber}: ${currentStepName}`);
-  } else if (currentStepName) {
-    detailParts.push(currentStepName);
-  }
-  if (variationName) {
-    detailParts.push(`Variation: ${variationName}`);
-  }
-
-  return detailParts.join(" • ");
 }
 
 function isStartActionLoading(dateString = "") {

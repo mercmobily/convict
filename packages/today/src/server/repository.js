@@ -2,39 +2,9 @@ import {
   createJsonRestContext,
   extractJsonRestCollectionRows
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
-import { normalizeRecordId } from "@jskit-ai/kernel/shared/support/normalize";
+import { normalizeDateOnly } from "@local/main/shared";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
-
-function padDatePart(value) {
-  return String(value).padStart(2, "0");
-}
-
-function normalizeDateOnly(value = null) {
-  if (value == null || value === "") {
-    return null;
-  }
-
-  const parsedDate = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return null;
-  }
-
-  return [
-    parsedDate.getFullYear(),
-    padDatePart(parsedDate.getMonth() + 1),
-    padDatePart(parsedDate.getDate())
-  ].join("-");
-}
-
-function readRelatedId(row = null, relationKey = "", fieldKey = "") {
-  const directId = normalizeRecordId(row?.[fieldKey], { fallback: null });
-  if (directId) {
-    return directId;
-  }
-
-  return normalizeRecordId(row?.[relationKey]?.id, { fallback: null });
-}
 
 function normalizeAssignmentRevisionRow(row = null) {
   if (!row || typeof row !== "object") {
@@ -43,8 +13,8 @@ function normalizeAssignmentRevisionRow(row = null) {
 
   return {
     ...row,
-    userProgramAssignmentId: readRelatedId(row, "userProgramAssignment", "userProgramAssignmentId"),
-    programId: readRelatedId(row, "program", "programId"),
+    userProgramAssignmentId: row.userProgramAssignmentId ?? row.userProgramAssignment?.id ?? null,
+    programId: row.programId ?? row.program?.id ?? null,
     effectiveFromDate: normalizeDateOnly(row.effectiveFromDate)
   };
 }
@@ -56,8 +26,8 @@ function normalizeProgramScheduleEntryRow(row = null) {
 
   return {
     ...row,
-    programId: readRelatedId(row, "program", "programId"),
-    exerciseId: readRelatedId(row, "exercise", "exerciseId")
+    programId: row.programId ?? row.program?.id ?? null,
+    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
   };
 }
 
@@ -68,8 +38,9 @@ function normalizeOccurrenceRow(row = null) {
 
   return {
     ...row,
-    userProgramAssignmentId: readRelatedId(row, "userProgramAssignment", "userProgramAssignmentId"),
-    userProgramAssignmentRevisionId: readRelatedId(row, "userProgramAssignmentRevision", "userProgramAssignmentRevisionId"),
+    userProgramAssignmentId: row.userProgramAssignmentId ?? row.userProgramAssignment?.id ?? null,
+    userProgramAssignmentRevisionId:
+      row.userProgramAssignmentRevisionId ?? row.userProgramAssignmentRevision?.id ?? null,
     scheduledForDate: normalizeDateOnly(row.scheduledForDate),
     performedOnDate: normalizeDateOnly(row.performedOnDate)
   };
@@ -82,10 +53,10 @@ function normalizeOccurrenceExerciseRow(row = null) {
 
   return {
     ...row,
-    workoutOccurrenceId: readRelatedId(row, "workoutOccurrence", "workoutOccurrenceId"),
-    exerciseId: readRelatedId(row, "exercise", "exerciseId"),
-    canonicalStepId: readRelatedId(row, "canonicalStep", "canonicalStepId"),
-    personalStepVariationId: readRelatedId(row, "personalStepVariation", "personalStepVariationId")
+    workoutOccurrenceId: row.workoutOccurrenceId ?? row.workoutOccurrence?.id ?? null,
+    exerciseId: row.exerciseId ?? row.exercise?.id ?? null,
+    canonicalStepId: row.canonicalStepId ?? row.canonicalStep?.id ?? null,
+    personalStepVariationId: row.personalStepVariationId ?? row.personalStepVariation?.id ?? null
   };
 }
 
@@ -96,7 +67,7 @@ function normalizeSetLogRow(row = null) {
 
   return {
     ...row,
-    workoutOccurrenceExerciseId: readRelatedId(row, "workoutOccurrenceExercise", "workoutOccurrenceExerciseId")
+    workoutOccurrenceExerciseId: row.workoutOccurrenceExerciseId ?? row.workoutOccurrenceExercise?.id ?? null
   };
 }
 
@@ -107,11 +78,11 @@ function normalizeExerciseProgressRow(row = null) {
 
   return {
     ...row,
-    exerciseId: readRelatedId(row, "exercise", "exerciseId"),
-    currentStepId: readRelatedId(row, "currentStep", "currentStepId"),
-    readyToAdvanceStepId: readRelatedId(row, "readyToAdvanceStep", "readyToAdvanceStepId"),
-    activeVariationId: readRelatedId(row, "activeVariation", "activeVariationId"),
-    lastCompletedOccurrenceId: readRelatedId(row, "lastCompletedOccurrence", "lastCompletedOccurrenceId")
+    exerciseId: row.exerciseId ?? row.exercise?.id ?? null,
+    currentStepId: row.currentStepId ?? row.currentStep?.id ?? null,
+    readyToAdvanceStepId: row.readyToAdvanceStepId ?? row.readyToAdvanceStep?.id ?? null,
+    activeVariationId: row.activeVariationId ?? row.activeVariation?.id ?? null,
+    lastCompletedOccurrenceId: row.lastCompletedOccurrenceId ?? row.lastCompletedOccurrence?.id ?? null
   };
 }
 
@@ -122,7 +93,7 @@ function normalizeExerciseStepRow(row = null) {
 
   return {
     ...row,
-    exerciseId: readRelatedId(row, "exercise", "exerciseId")
+    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
   };
 }
 
@@ -302,9 +273,9 @@ function createRepository({
           },
           createJsonRestContext(options?.context || null)
         )
-      );
+      ).map((row) => normalizeOccurrenceRow(row)).filter(Boolean);
 
-      return normalizeOccurrenceRow(rows[0] || null);
+      return rows[0] || null;
     },
     async listOccurrenceExercisesByOccurrenceIds(occurrenceIds = [], options = {}) {
       const ids = Array.isArray(occurrenceIds) ? occurrenceIds.filter(Boolean) : [];

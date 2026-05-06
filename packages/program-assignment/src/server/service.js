@@ -1,5 +1,7 @@
 import { ConflictError, NotFoundError, AppError } from "@jskit-ai/kernel/server/runtime/errors";
-import { normalizeRecordId, normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
+import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
+import { formatWorkSetLabel, resolveScheduleExerciseName } from "@local/main/shared";
+import { resolveCurrentUserId, resolveCurrentWorkspace, resolveCurrentWorkspaceId } from "@local/main/shared/requestContext";
 
 const DAY_LABELS = Object.freeze({
   1: "Monday",
@@ -43,19 +45,6 @@ function normalizeStartsOn(value = "") {
     throw new AppError(400, "startsOn must be a valid YYYY-MM-DD date.");
   }
   return normalized;
-}
-
-function formatWorkSetLabel(min, max) {
-  const safeMin = Number(min || 0);
-  const safeMax = Number(max || 0);
-  if (safeMin > 0 && safeMin === safeMax) {
-    return `${safeMin} work sets`;
-  }
-  return `${safeMin}-${safeMax} work sets`;
-}
-
-function resolveScheduleExerciseName(entry = {}) {
-  return String(entry?.exercise?.name || entry?.exerciseName || "").trim();
 }
 
 function sortProgramTemplatesForSelection(programTemplates = []) {
@@ -133,45 +122,6 @@ function enrichAssignedProgram(program = {}, scheduleEntries = [], sourceTemplat
     difficultyLabel: metadata.difficultyLabel || "",
     sourceTemplate: sourceTemplate || null,
     schedulePreview: buildSchedulePreview(scheduleEntries)
-  };
-}
-
-function resolveCurrentUserId(context = {}) {
-  const visibilityUserId = normalizeRecordId(context?.visibilityContext?.userId, { fallback: null });
-  if (visibilityUserId) {
-    return visibilityUserId;
-  }
-
-  const actorUserId = normalizeRecordId(context?.actor?.id, { fallback: null });
-  if (actorUserId) {
-    return actorUserId;
-  }
-
-  throw new AppError(401, "Authentication is required.");
-}
-
-function resolveCurrentWorkspaceId(context = {}) {
-  const workspaceId = normalizeRecordId(
-    context?.workspace?.id || context?.requestMeta?.resolvedWorkspaceContext?.workspace?.id,
-    { fallback: null }
-  );
-  return workspaceId;
-}
-
-function resolveCurrentWorkspace(context = {}) {
-  const workspace = context?.workspace || context?.requestMeta?.resolvedWorkspaceContext?.workspace || null;
-  if (!workspace || typeof workspace !== "object") {
-    return null;
-  }
-
-  const id = normalizeRecordId(workspace.id, { fallback: null });
-  if (!id) {
-    return null;
-  }
-
-  return {
-    ...workspace,
-    id
   };
 }
 
@@ -261,8 +211,9 @@ function createService({ programAssignmentRepository } = {}) {
       void input;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
+      const workspace = resolveCurrentWorkspace(context);
       return buildSelectionState(programAssignmentRepository, userId, {
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     },
@@ -270,6 +221,7 @@ function createService({ programAssignmentRepository } = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const workspaceId = resolveCurrentWorkspaceId(context);
+      const workspace = resolveCurrentWorkspace(context);
       const programTemplateId = input?.programTemplateId || null;
       const startsOn = normalizeStartsOn(input?.startsOn);
 
@@ -328,7 +280,7 @@ function createService({ programAssignmentRepository } = {}) {
       });
 
       return buildSelectionState(programAssignmentRepository, userId, {
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     }

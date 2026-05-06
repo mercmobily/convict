@@ -1,5 +1,13 @@
 import { AppError, ConflictError, NotFoundError } from "@jskit-ai/kernel/server/runtime/errors";
-import { normalizeRecordId, normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
+import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
+import {
+  addDays,
+  localNowDateTimeString,
+  localTodayDateString,
+  parseDateOnly,
+  resolveScheduleExerciseName
+} from "@local/main/shared";
+import { resolveCurrentUserId, resolveCurrentWorkspace, resolveCurrentWorkspaceId } from "@local/main/shared/requestContext";
 
 const DAY_LABELS = Object.freeze({
   1: "Monday",
@@ -11,51 +19,11 @@ const DAY_LABELS = Object.freeze({
   7: "Sunday"
 });
 
-function padDatePart(value) {
-  return String(value).padStart(2, "0");
-}
-
-function formatLocalDateOnly(date) {
-  return [
-    date.getFullYear(),
-    padDatePart(date.getMonth() + 1),
-    padDatePart(date.getDate())
-  ].join("-");
-}
-
-function parseDateOnly(dateString) {
-  const source = String(dateString || "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(source)) {
-    throw new AppError(400, `Invalid date-only value "${source}".`);
-  }
-
-  const [year, month, day] = source.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function addDays(dateString, dayOffset) {
-  const date = parseDateOnly(dateString);
-  date.setDate(date.getDate() + Number(dayOffset || 0));
-  return formatLocalDateOnly(date);
-}
-
-function localTodayDateString() {
-  return formatLocalDateOnly(new Date());
-}
-
-function formatLocalDateTime(date) {
-  return [
-    formatLocalDateOnly(date),
-    [padDatePart(date.getHours()), padDatePart(date.getMinutes()), padDatePart(date.getSeconds())].join(":")
-  ].join(" ");
-}
-
-function localNowDateTimeString() {
-  return formatLocalDateTime(new Date());
-}
-
 function dayOfWeekFromDate(dateString) {
   const date = parseDateOnly(dateString);
+  if (!date) {
+    throw new AppError(400, `Invalid date-only value "${String(dateString || "").trim()}".`);
+  }
   const jsDay = date.getDay();
   return jsDay === 0 ? 7 : jsDay;
 }
@@ -70,44 +38,6 @@ function normalizeScheduledForDate(value = "") {
     throw new AppError(400, "scheduledForDate must be a valid YYYY-MM-DD date.");
   }
   return normalized;
-}
-
-function resolveCurrentUserId(context = {}) {
-  const visibilityUserId = normalizeRecordId(context?.visibilityContext?.userId, { fallback: null });
-  if (visibilityUserId) {
-    return visibilityUserId;
-  }
-
-  const actorUserId = normalizeRecordId(context?.actor?.id, { fallback: null });
-  if (actorUserId) {
-    return actorUserId;
-  }
-
-  throw new AppError(401, "Authentication is required.");
-}
-
-function resolveCurrentWorkspaceId(context = {}) {
-  return normalizeRecordId(
-    context?.workspace?.id || context?.requestMeta?.resolvedWorkspaceContext?.workspace?.id,
-    { fallback: null }
-  );
-}
-
-function resolveCurrentWorkspace(context = {}) {
-  const workspace = context?.workspace || context?.requestMeta?.resolvedWorkspaceContext?.workspace || null;
-  if (!workspace || typeof workspace !== "object") {
-    return null;
-  }
-
-  const id = normalizeRecordId(workspace.id, { fallback: null });
-  if (!id) {
-    return null;
-  }
-
-  return {
-    ...workspace,
-    id
-  };
 }
 
 function buildProgramIndex(programs = []) {
@@ -259,10 +189,6 @@ function selectMeasurementUnit(progressRow = null, fallbackStep = null) {
   }
 
   return String(progressRow?.currentStep?.measurementUnit || fallbackStep?.measurementUnit || "reps").trim().toLowerCase() || "reps";
-}
-
-function resolveScheduleExerciseName(entry = {}) {
-  return String(entry?.exercise?.name || entry?.exerciseName || "").trim();
 }
 
 function buildDerivedExerciseProjection(scheduleEntry, progressRow = null, firstStep = null) {
@@ -979,10 +905,11 @@ function createService({ todayRepository } = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
+      const workspace = resolveCurrentWorkspace(context);
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     },
@@ -992,6 +919,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const workspace = resolveCurrentWorkspace(context);
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts are not available yet.");
@@ -1001,7 +929,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
 
@@ -1021,6 +949,7 @@ function createService({ todayRepository } = {}) {
       const workspaceId = resolveCurrentWorkspaceId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const workspace = resolveCurrentWorkspace(context);
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts cannot be started yet.");
@@ -1029,7 +958,7 @@ function createService({ todayRepository } = {}) {
       const state = await buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
 
@@ -1049,7 +978,7 @@ function createService({ todayRepository } = {}) {
         return buildTodayState(todayRepository, {
           userId,
           todayDate,
-          workspace: resolveCurrentWorkspace(context),
+          workspace,
           context
         });
       }
@@ -1111,7 +1040,7 @@ function createService({ todayRepository } = {}) {
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     },
@@ -1123,6 +1052,7 @@ function createService({ todayRepository } = {}) {
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
       const occurrenceExerciseId = input?.occurrenceExerciseId || null;
+      const workspace = resolveCurrentWorkspace(context);
       if (!occurrenceExerciseId) {
         throw new AppError(400, "occurrenceExerciseId is required.");
       }
@@ -1131,7 +1061,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
 
@@ -1178,7 +1108,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     },
@@ -1189,12 +1119,13 @@ function createService({ todayRepository } = {}) {
       const workspaceId = resolveCurrentWorkspaceId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const workspace = resolveCurrentWorkspace(context);
 
       const detailState = await buildWorkoutDetailState(todayRepository, {
         userId,
         todayDate,
         scheduledForDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
 
@@ -1333,7 +1264,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     },
@@ -1388,6 +1319,7 @@ function createService({ todayRepository } = {}) {
       const workspaceId = resolveCurrentWorkspaceId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const workspace = resolveCurrentWorkspace(context);
 
       if (scheduledForDate >= todayDate) {
         throw new ConflictError("Only overdue workouts can be marked definitely missed.");
@@ -1396,7 +1328,7 @@ function createService({ todayRepository } = {}) {
       const state = await buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
 
@@ -1467,7 +1399,7 @@ function createService({ todayRepository } = {}) {
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace: resolveCurrentWorkspace(context),
+        workspace,
         context
       });
     }
