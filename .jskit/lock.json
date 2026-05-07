@@ -29,7 +29,7 @@
     },
     "@jskit-ai/shell-web": {
       "packageId": "@jskit-ai/shell-web",
-      "version": "0.1.61",
+      "version": "0.1.64",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/shell-web"
@@ -167,8 +167,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.802Z",
-      "migrationSyncVersion": "0.1.61"
+      "installedAt": "2026-05-07T14:33:29.325Z",
+      "migrationSyncVersion": "0.1.64"
     },
     "@jskit-ai/auth-core": {
       "packageId": "@jskit-ai/auth-core",
@@ -1969,6 +1969,50 @@
       },
       "options": {},
       "installedAt": "2026-05-06T23:42:33.285Z"
+    },
+    "@jskit-ai/mobile-capacitor": {
+      "packageId": "@jskit-ai/mobile-capacitor",
+      "version": "0.1.2",
+      "source": {
+        "type": "npm-installed-package",
+        "packagePath": "node_modules/@jskit-ai/mobile-capacitor",
+        "descriptorPath": "node_modules/@jskit-ai/mobile-capacitor/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [
+          {
+            "path": "capacitor.config.json",
+            "hash": "abefebdb6f34a5c0913d221867cfbefa16187630b190a74db5c0853ec278151a",
+            "hadPrevious": true,
+            "previousContentBase64": "ewogICJhcHBJZCI6ICJhaS5qc2tpdC5jb252aWN0IiwKICAiYXBwTmFtZSI6ICJDb252aWN0IiwKICAid2ViRGlyIjogImRpc3QiLAogICJwbHVnaW5zIjogewogICAgIkNhcGFjaXRvckh0dHAiOiB7CiAgICAgICJlbmFibGVkIjogdHJ1ZQogICAgfQogIH0KfQo=",
+            "preserveOnRemove": false,
+            "reason": "Install Capacitor shell configuration rendered from config.mobile.",
+            "category": "mobile-capacitor",
+            "id": "mobile-capacitor-config"
+          },
+          {
+            "path": ".jskit/mobile-capacitor.md",
+            "hash": "8cb036a7b14e068df0be4cd44b2145d7848daeb6173932168911f797a6bf0f29",
+            "hadPrevious": true,
+            "previousContentBase64": "IyBNb2JpbGUgQ2FwYWNpdG9yCgpUaGlzIGZpbGUgaXMgbWFuYWdlZCBieSBgQGpza2l0LWFpL21vYmlsZS1jYXBhY2l0b3JgLgoKSW5zdGFsbGVkIGNvbnRyYWN0OgoKLSBzdHJhdGVneTogYGNhcGFjaXRvcmAKLSBhc3NldCBtb2RlOiBgYnVuZGxlZGAKLSBkZXYgc2VydmVyIHVybDogYCh1bnVzZWQpYAotIEFQSSBiYXNlIFVSTDogYGh0dHA6Ly8xMjcuMC4wLjE6MzAwMC9gCi0gYXV0aCBjYWxsYmFjayBwYXRoOiBgL2F1dGgvbG9naW5gCi0gY3VzdG9tIHNjaGVtZTogYGNvbnZpY3RgCi0gYXBwIGxpbmsgZG9tYWluczogYChub25lKWAKLSBDYXBhY2l0b3IgYXBwIGlkOiBgYWkuanNraXQuY29udmljdGAKLSBDYXBhY2l0b3IgYXBwIG5hbWU6IGBDb252aWN0YAotIEFuZHJvaWQgcGFja2FnZSBuYW1lOiBgYWkuanNraXQuY29udmljdGAKLSBBbmRyb2lkIG1pbiBTREs6IGAyNmAKLSBBbmRyb2lkIHRhcmdldCBTREs6IGAzNWAKLSBBbmRyb2lkIHZlcnNpb24gY29kZTogYDFgCi0gQW5kcm9pZCB2ZXJzaW9uIG5hbWU6IGAwLjEuMGAKCk93bmVkIGFydGlmYWN0czoKCi0gYGNhcGFjaXRvci5jb25maWcuanNvbmAKLSBgYW5kcm9pZC9gIGFmdGVyIGBqc2tpdCBhZGQgcGFja2FnZSBAanNraXQtYWkvbW9iaWxlLWNhcGFjaXRvcmAgb3IgYGpza2l0IG1vYmlsZSBhZGQgY2FwYWNpdG9yYCBydW5zIGBjYXAgYWRkIGFuZHJvaWRgCi0gYGFuZHJvaWQvYXBwL3NyYy9tYWluL0FuZHJvaWRNYW5pZmVzdC54bWxgIG1hbmFnZWQgZGVlcC1saW5rIGludGVudCBmaWx0ZXIgZm9yIHRoZSBjdXN0b20gc2NoZW1lCgpNYW5hZ2VkIGNvbW1hbmRzOgoKLSBganNraXQgYWRkIHBhY2thZ2UgQGpza2l0LWFpL21vYmlsZS1jYXBhY2l0b3JgCi0gYGpza2l0IG1vYmlsZSBkZXYgYW5kcm9pZCBbLS10YXJnZXQgPGRldmljZS1pZD5dYAotIGBqc2tpdCBtb2JpbGUgZGV2aWNlcyBhbmRyb2lkYAotIGBqc2tpdCBtb2JpbGUgYWRkIGNhcGFjaXRvcmAKLSBganNraXQgbW9iaWxlIHN5bmMgYW5kcm9pZGAKLSBganNraXQgbW9iaWxlIHR1bm5lbCBhbmRyb2lkIC0tdGFyZ2V0IDxkZXZpY2UtaWQ+YAotIGBqc2tpdCBtb2JpbGUgcmVzdGFydCBhbmRyb2lkIC0tdGFyZ2V0IDxkZXZpY2UtaWQ+YAotIGBqc2tpdCBtb2JpbGUgcnVuIGFuZHJvaWQgWy0tdGFyZ2V0IDxkZXZpY2UtaWQ+XWAKLSBganNraXQgbW9iaWxlIGJ1aWxkIGFuZHJvaWRgCi0gYGpza2l0IG1vYmlsZSBkb2N0b3JgCgpDdXJyZW50IFN0YWdlIDEgbGltaXRzOgoKLSBBbmRyb2lkIG9ubHkKLSB3ZWIgYXNzZXRzIHN0YXkgdGhlIEpTS0lUIHdlYiBjbGllbnQKLSBPQXV0aCBzdGFydCB1c2VzIHRoZSBleHRlcm5hbCBicm93c2VyL2N1c3RvbSB0YWIgb25seSB3aGVuIHRoZSBhcHAgaXMgcnVubmluZyBpbnNpZGUgdGhlIENhcGFjaXRvciBzaGVsbAotIGF1dGgvZGVlcC1saW5rIGhhbmRsaW5nIHN0YXlzIHJvdXRlZCB0aHJvdWdoIG5vcm1hbCBKU0tJVCBwYXRocwotIG5hdGl2ZSBhcHAtbGluayB2ZXJpZmljYXRpb24gaXMgc3RpbGwgb3V0IG9mIHNjb3BlIGZvciBTdGFnZSAxCg==",
+            "preserveOnRemove": false,
+            "reason": "Install managed mobile-shell notes for the Capacitor Android integration.",
+            "category": "mobile-capacitor",
+            "id": "mobile-capacitor-notes"
+          }
+        ],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-07T14:33:29.359Z",
+      "migrationSyncVersion": "0.1.2"
     }
   }
 }
