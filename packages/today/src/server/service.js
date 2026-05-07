@@ -2,6 +2,7 @@ import { AppError, ConflictError, NotFoundError } from "@jskit-ai/kernel/server/
 import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
 import {
   addDays,
+  buildProgressDisplayState,
   localNowDateTimeString,
   localTodayDateString,
   parseDateOnly,
@@ -310,28 +311,32 @@ function mergeProgressStateIntoWorkoutProjection(
           const readyStep = readyStepsById.get(String(progressRow?.readyToAdvanceStepId || "")) || null;
           const currentSnapshotStep = currentStepsById.get(String(exercise.currentStepId || "")) || null;
           const currentProgressStep = progressRow?.currentStep || null;
-          const currentProgressStepId = currentProgressStep?.id || exercise.currentStepId || null;
+          const progressDisplayState = buildProgressDisplayState(
+            {
+              progressRow,
+              currentStep: currentProgressStep,
+              fallbackStep: currentSnapshotStep,
+              readyStep,
+              base: exercise
+            },
+            {
+              emptyReadyStepName: null
+            }
+          );
 
           return {
             ...exercise,
-            currentProgressStepId,
-            currentProgressStepNumber: currentProgressStep?.stepNumber ?? currentSnapshotStep?.stepNumber ?? exercise.currentStepNumber ?? null,
-            currentProgressStepName: currentProgressStep?.stepName || currentSnapshotStep?.stepName || exercise.currentStepName || "",
-            currentProgressStepInstruction: currentProgressStep?.instructionText || currentSnapshotStep?.instructionText || exercise.currentStepInstruction || "",
-            readyToAdvanceStepId: progressRow?.readyToAdvanceStepId || exercise.readyToAdvanceStepId || null,
-            readyToAdvanceStepNumber: readyStep?.stepNumber ?? null,
-            readyToAdvanceStepName: readyStep?.stepName || null,
-            readyToAdvanceAt: progressRow?.readyToAdvanceAt || null,
+            ...progressDisplayState,
             canApplyAdvancement: Boolean(
               progressRow?.readyToAdvanceStepId &&
-              currentProgressStepId &&
+              progressDisplayState.currentProgressStepId &&
               exercise.currentStepId &&
-              String(currentProgressStepId) === String(exercise.currentStepId)
+              String(progressDisplayState.currentProgressStepId) === String(exercise.currentStepId)
             ),
             hasProgressStepChanged: Boolean(
-              currentProgressStepId &&
+              progressDisplayState.currentProgressStepId &&
               exercise.currentStepId &&
-              String(currentProgressStepId) !== String(exercise.currentStepId)
+              String(progressDisplayState.currentProgressStepId) !== String(exercise.currentStepId)
             )
           };
         })
@@ -441,6 +446,47 @@ function buildOccurrenceExerciseSnapshots(workoutOccurrenceId, workoutProjection
   }));
 }
 
+async function loadAssignmentProjectionContext(
+  todayRepository,
+  {
+    assignment,
+    userId,
+    context = null
+  } = {}
+) {
+  if (!assignment?.id) {
+    throw new TypeError("loadAssignmentProjectionContext requires an active assignment.");
+  }
+
+  const repositoryOptions = context ? { context } : {};
+  const revisions = await todayRepository.listAssignmentRevisions(assignment.id, repositoryOptions);
+  const programIds = [...new Set(revisions.map((revision) => revision.programId).filter(Boolean))];
+  const [programs, scheduleEntries] = await Promise.all([
+    todayRepository.listProgramsByIds(programIds, repositoryOptions),
+    todayRepository.listScheduleEntriesForProgramIds(programIds, repositoryOptions)
+  ]);
+
+  const exerciseIds = [...new Set(scheduleEntries.map((entry) => entry.exerciseId).filter(Boolean))];
+  const [progressRows, firstSteps] = await Promise.all([
+    exerciseIds.length > 0
+      ? todayRepository.listExerciseProgressByUserAndExerciseIds(userId, exerciseIds, repositoryOptions)
+      : Promise.resolve([]),
+    exerciseIds.length > 0
+      ? todayRepository.listFirstStepsByExerciseIds(exerciseIds, repositoryOptions)
+      : Promise.resolve([])
+  ]);
+
+  return {
+    revisions,
+    programsById: buildProgramIndex(programs),
+    scheduleIndex: buildScheduleIndex(scheduleEntries),
+    progressRows,
+    progressByExerciseId: buildProgressIndex(progressRows),
+    firstSteps,
+    firstStepsByExerciseId: buildFirstStepIndex(firstSteps)
+  };
+}
+
 async function buildTodayState(todayRepository, { userId, todayDate, workspace = null, context = null } = {}) {
   const repositoryOptions = context ? { context } : {};
   const assignment = await todayRepository.findActiveAssignmentByUserId(userId, repositoryOptions);
@@ -459,27 +505,19 @@ async function buildTodayState(todayRepository, { userId, todayDate, workspace =
     };
   }
 
-  const revisions = await todayRepository.listAssignmentRevisions(assignment.id, repositoryOptions);
-  const programIds = [...new Set(revisions.map((revision) => revision.programId).filter(Boolean))];
-  const [programs, scheduleEntries] = await Promise.all([
-    todayRepository.listProgramsByIds(programIds, repositoryOptions),
-    todayRepository.listScheduleEntriesForProgramIds(programIds, repositoryOptions)
-  ]);
-
-  const programsById = buildProgramIndex(programs);
-  const scheduleIndex = buildScheduleIndex(scheduleEntries);
-  const allExerciseIds = [...new Set(scheduleEntries.map((entry) => entry.exerciseId).filter(Boolean))];
-  const [progressRows, firstSteps] = await Promise.all([
-    allExerciseIds.length > 0
-      ? todayRepository.listExerciseProgressByUserAndExerciseIds(userId, allExerciseIds, repositoryOptions)
-      : Promise.resolve([]),
-    allExerciseIds.length > 0
-      ? todayRepository.listFirstStepsByExerciseIds(allExerciseIds, repositoryOptions)
-      : Promise.resolve([])
-  ]);
-
-  const progressByExerciseId = buildProgressIndex(progressRows);
-  const firstStepsByExerciseId = buildFirstStepIndex(firstSteps);
+  const {
+    revisions,
+    programsById,
+    scheduleIndex,
+    progressRows,
+    progressByExerciseId,
+    firstSteps,
+    firstStepsByExerciseId
+  } = await loadAssignmentProjectionContext(todayRepository, {
+    assignment,
+    userId,
+    context
+  });
   const readyStepIds = [...new Set(progressRows.map((row) => row.readyToAdvanceStepId).filter(Boolean))];
   const readyStepRows = readyStepIds.length > 0
     ? await todayRepository.listStepsByIds(readyStepIds, repositoryOptions)
@@ -619,23 +657,12 @@ async function buildWorkoutProjectionByScheduledDate(
   }
 
   const repositoryOptions = context ? { context } : {};
-  const revisions = await todayRepository.listAssignmentRevisions(assignment.id, repositoryOptions);
-  const programIds = [...new Set(revisions.map((revision) => revision.programId).filter(Boolean))];
-  const [programs, scheduleEntries] = await Promise.all([
-    todayRepository.listProgramsByIds(programIds, repositoryOptions),
-    todayRepository.listScheduleEntriesForProgramIds(programIds, repositoryOptions)
-  ]);
-
-  const programsById = buildProgramIndex(programs);
-  const scheduleIndex = buildScheduleIndex(scheduleEntries);
-  const exerciseIds = [...new Set(scheduleEntries.map((entry) => entry.exerciseId).filter(Boolean))];
-  const [progressRows, firstSteps, occurrence] = await Promise.all([
-    exerciseIds.length > 0
-      ? todayRepository.listExerciseProgressByUserAndExerciseIds(userId, exerciseIds, repositoryOptions)
-      : Promise.resolve([]),
-    exerciseIds.length > 0
-      ? todayRepository.listFirstStepsByExerciseIds(exerciseIds, repositoryOptions)
-      : Promise.resolve([]),
+  const [projectionContext, occurrence] = await Promise.all([
+    loadAssignmentProjectionContext(todayRepository, {
+      assignment,
+      userId,
+      context
+    }),
     todayRepository.findOccurrenceByAssignmentAndDate(assignment.id, scheduledForDate, repositoryOptions)
   ]);
 
@@ -645,11 +672,11 @@ async function buildWorkoutProjectionByScheduledDate(
 
   return buildProjectedWorkout(scheduledForDate, {
     todayDate,
-    revisions,
-    programsById,
-    scheduleIndex,
-    progressByExerciseId: buildProgressIndex(progressRows),
-    firstStepsByExerciseId: buildFirstStepIndex(firstSteps),
+    revisions: projectionContext.revisions,
+    programsById: projectionContext.programsById,
+    scheduleIndex: projectionContext.scheduleIndex,
+    progressByExerciseId: projectionContext.progressByExerciseId,
+    firstStepsByExerciseId: projectionContext.firstStepsByExerciseId,
     occurrence,
     occurrenceExercises
   });

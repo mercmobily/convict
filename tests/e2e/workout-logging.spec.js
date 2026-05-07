@@ -127,27 +127,68 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await expect(bridgesCard.getByText(/lift the hips into a short bridge/i)).toBeVisible();
   await expect(handstandCard.locator(".v-chip").filter({ hasText: "seconds" }).first()).toBeVisible();
   await expect(bridgesCard.locator(".v-chip").filter({ hasText: "reps" }).first()).toBeVisible();
-  await expect(handstandCard.getByText("LOG NOT SAVED")).toBeVisible();
-  await expect(bridgesCard.getByText("LOG NOT SAVED")).toBeVisible();
+  await expect(handstandCard.getByText("LOG NOT SAVED")).toHaveCount(0);
+  await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(handstandCard.getByText("Add set 1")).toBeVisible();
   await expect(bridgesCard.getByText("Add set 1")).toBeVisible();
 
+  const pageTitle = page.getByRole("heading", { name: /workout$/i });
+  const titleBoxBeforeRefresh = await pageTitle.boundingBox();
+  if (!titleBoxBeforeRefresh) {
+    throw new Error("Unable to measure the workout page title before refresh.");
+  }
+
+  let delayedRefreshRequest = false;
+  await page.route(`**/api/w/${WORKSPACE_SLUG}/today/workouts/${fixturePlan.targetWorkoutDate}`, async (route, request) => {
+    if (request.method() !== "GET" || delayedRefreshRequest) {
+      await route.continue();
+      return;
+    }
+
+    delayedRefreshRequest = true;
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await route.continue();
+  });
+
   await handstandCard.locator('input[type="number"]').first().fill("35");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
+  const refreshChip = page.locator(".workout-detail-page__refresh-chip");
+  await expect(refreshChip).toBeVisible();
+  await expect(refreshChip).toHaveCSS("position", "fixed");
+  const titleBoxDuringRefresh = await pageTitle.boundingBox();
+  if (!titleBoxDuringRefresh) {
+    throw new Error("Unable to measure the workout page title during refresh.");
+  }
+  expect(Math.abs(titleBoxDuringRefresh.y - titleBoxBeforeRefresh.y)).toBeLessThan(1);
   await expect(handstandCard.getByText("Add set 2")).toBeVisible();
   await handstandCard.locator('input[type="number"]').first().fill("45");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(handstandCard, 2, "45 seconds")).toBeVisible();
   await expect(handstandCard.getByText("Add set 3")).toBeVisible();
-  await expect(handstandCard.getByText("LOG NOT SAVED")).not.toBeVisible();
-  await expect(bridgesCard.getByText("LOG NOT SAVED")).toBeVisible();
+  await expect(handstandCard.getByText("LOG NOT SAVED")).toHaveCount(0);
+  await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
-  const editHandstandSetOne = handstandCard.locator(".set-log-editor").filter({
-    hasText: "Edit set 1"
-  }).first();
   await handstandCard.getByRole("button", { name: "Edit set 1" }).click();
+  const editHandstandSetOne = handstandCard.locator(".set-log-editor").first();
   await expect(editHandstandSetOne).toBeVisible();
+  await expect(editHandstandSetOne).not.toContainText("Edit set 1");
+  await expect(editHandstandSetOne).not.toContainText("Update this saved set.");
+  await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toHaveCount(0);
+  const editInput = editHandstandSetOne.locator('input[type="number"]').first();
+  const editCancelButton = editHandstandSetOne.getByRole("button", { name: "Cancel" });
+  const editSaveButton = editHandstandSetOne.getByRole("button", { name: "Save set" });
+  const editInputBox = await editInput.boundingBox();
+  const editCancelButtonBox = await editCancelButton.boundingBox();
+  const editSaveButtonBox = await editSaveButton.boundingBox();
+  if (!editInputBox || !editCancelButtonBox || !editSaveButtonBox) {
+    throw new Error("Unable to measure the edit set editor layout.");
+  }
+  expect(editInputBox.width).toBeLessThan(220);
+  expect(editCancelButtonBox.x).toBeGreaterThan(editInputBox.x + editInputBox.width - 1);
+  expect(editSaveButtonBox.x).toBeGreaterThan(editCancelButtonBox.x);
+  expect(Math.abs(editCancelButtonBox.y - editInputBox.y)).toBeLessThan(28);
+  expect(Math.abs(editSaveButtonBox.y - editInputBox.y)).toBeLessThan(28);
   await editHandstandSetOne.locator('input[type="number"]').fill("36");
   await editHandstandSetOne.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(handstandCard, 1, "36 seconds")).toBeVisible();
@@ -156,7 +197,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await bridgesCard.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(bridgesCard, 1, "20 reps")).toBeVisible();
   await expect(bridgesCard.getByText("Add set 2")).toBeVisible();
-  await expect(bridgesCard.getByText("LOG NOT SAVED")).not.toBeVisible();
+  await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
   const savedSetLogs = await fetchSavedSetLogs(fixtureState.userId, fixturePlan.targetWorkoutDate);

@@ -151,34 +151,29 @@ function cancel() {
 </script>
 
 <template>
-  <v-card variant="tonal" color="primary" class="set-log-editor">
-    <v-card-text class="d-flex flex-column ga-4">
-      <div class="d-flex align-center justify-space-between ga-3 flex-wrap">
-        <div>
-          <div class="text-body-2 font-weight-medium">
-            {{ isCreateMode ? `Add set ${displaySetNumber}` : `Edit set ${displaySetNumber}` }}
-          </div>
-          <div class="text-body-2 text-medium-emphasis">
-            {{ isCreateMode ? "Save this set to persist it immediately." : "Update this saved set." }}
-          </div>
+  <v-card
+    variant="tonal"
+    color="primary"
+    :class="[
+      'set-log-editor',
+      { 'set-log-editor--inline': !isCreateMode }
+    ]"
+  >
+    <v-card-text
+      :class="[
+        'd-flex',
+        'flex-column',
+        'ga-4',
+        'set-log-editor__content',
+        { 'set-log-editor__content--inline': !isCreateMode }
+      ]"
+    >
+      <div v-if="isCreateMode">
+        <div class="text-body-2 font-weight-medium">
+          {{ `Add set ${displaySetNumber}` }}
         </div>
-        <div class="d-flex align-center ga-2">
-          <v-btn
-            v-if="!isCreateMode"
-            variant="text"
-            color="primary"
-            @click="cancel"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="primary"
-            :loading="addEdit.isSaving"
-            :disabled="addEdit.isSubmitDisabled || !hasEnteredValue"
-            @click="submit"
-          >
-            Save set
-          </v-btn>
+        <div class="text-body-2 text-medium-emphasis">
+          Save this set to persist it immediately.
         </div>
       </div>
 
@@ -191,17 +186,40 @@ function cancel() {
       />
 
       <v-form @submit.prevent="submit" novalidate>
-        <v-text-field
-          v-model="formState.performedValue"
-          :label="measurementUnitLabel"
-          type="number"
-          min="0"
-          step="1"
-          variant="outlined"
-          density="comfortable"
-          :disabled="addEdit.isFieldLocked"
-          :error-messages="resolveFieldErrors('performedValue')"
-        />
+        <div class="set-log-editor__form-row">
+          <v-text-field
+            v-model="formState.performedValue"
+            :label="measurementUnitLabel"
+            type="number"
+            min="0"
+            step="1"
+            variant="outlined"
+            density="comfortable"
+            class="set-log-editor__field"
+            :disabled="addEdit.isFieldLocked"
+            hide-details="auto"
+            :error-messages="resolveFieldErrors('performedValue')"
+          />
+
+          <div class="set-log-editor__actions">
+            <v-btn
+              v-if="!isCreateMode"
+              variant="text"
+              color="primary"
+              @click="cancel"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              type="submit"
+              :loading="addEdit.isSaving"
+              :disabled="addEdit.isSubmitDisabled || !hasEnteredValue"
+            >
+              Save set
+            </v-btn>
+          </div>
+        </div>
       </v-form>
     </v-card-text>
   </v-card>
@@ -210,5 +228,52 @@ function cancel() {
 <style scoped>
 .set-log-editor {
   border-radius: 1rem;
+}
+
+.set-log-editor--inline {
+  background: rgba(var(--v-theme-surface), 0.72);
+  color: inherit;
+}
+
+.set-log-editor__content--inline {
+  padding: 0.75rem 1rem !important;
+}
+
+.set-log-editor__form-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.set-log-editor__field {
+  flex: 0 1 8.5rem;
+  min-width: 7rem;
+}
+
+.set-log-editor__field :deep(.v-input__control) {
+  min-width: 0;
+}
+
+.set-log-editor__actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+  padding-top: 0.125rem;
+}
+
+@media (max-width: 420px) {
+  .set-log-editor__field {
+    flex-basis: 100%;
+    min-width: 100%;
+  }
+
+  .set-log-editor__actions {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 </style>

@@ -8,5 +8,7 @@
  * export * from "./constants/index.js";
  */
 export * from "./convictFormatting.js";
+export * from "./convictProgress.js";
 export * from "./dateOnly.js";
+export * from "./jsonRestRows.js";
 export * from "./requestContext.js";

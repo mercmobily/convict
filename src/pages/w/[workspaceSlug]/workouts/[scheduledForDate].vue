@@ -257,11 +257,19 @@ async function goBackToToday() {
     surface-label="App"
   />
   <section v-else class="workout-detail-page d-flex flex-column ga-6">
+    <v-chip
+      v-if="isRefreshing"
+      color="info"
+      size="small"
+      variant="tonal"
+      label
+      class="workout-detail-page__refresh-chip"
+    >
+      Refreshing
+    </v-chip>
+
     <div class="d-flex justify-space-between align-start flex-wrap ga-3">
-      <div class="d-flex flex-column ga-2">
-        <v-chip v-if="isRefreshing" color="info" size="small" variant="tonal" label class="align-self-start">
-          Refreshing
-        </v-chip>
+      <div class="d-flex flex-column ga-1">
         <div class="d-flex flex-column ga-1">
           <h2 class="text-h4 workout-detail-page__title mb-0">{{ pageTitle }}</h2>
           <p class="text-body-1 text-medium-emphasis mb-0 workout-detail-page__subtitle">
@@ -431,6 +439,14 @@ async function goBackToToday() {
 <style scoped>
 .workout-detail-page__title {
   letter-spacing: -0.03em;
+}
+
+.workout-detail-page__refresh-chip {
+  position: fixed;
+  top: calc(var(--v-layout-top, 0px) + 1rem);
+  right: 1rem;
+  z-index: 20;
+  pointer-events: none;
 }
 
 .workout-detail-page__subtitle {

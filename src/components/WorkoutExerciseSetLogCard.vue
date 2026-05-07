@@ -81,13 +81,6 @@ const nextSequenceValue = computed(() => {
 });
 
 const hasDirtyDraft = computed(() => createEditorDirty.value || editEditorDirty.value);
-const showUnsavedBadge = computed(() => {
-  if (props.workoutStatus !== "in_progress") {
-    return false;
-  }
-
-  return savedSetLogs.value.length < 1 || hasDirtyDraft.value;
-});
 
 watch(
   hasDirtyDraft,
@@ -159,6 +152,13 @@ function isDeletingSetLog(setLog = {}) {
     activeDeleteRecordId.value === String(setLog.id || "")
   );
 }
+
+function isEditingSetLog(setLog = {}) {
+  return Boolean(
+    editState.value &&
+    editState.value.recordId === String(setLog.id || "").trim()
+  );
+}
 </script>
 
 <template>
@@ -213,16 +213,6 @@ function isDeletingSetLog(setLog = {}) {
         </v-chip>
       </div>
 
-      <div class="exercise-card__save-state-lane">
-        <div
-          class="exercise-card__save-state-badge"
-          :class="{ 'exercise-card__save-state-badge--visible': showUnsavedBadge }"
-          :aria-hidden="String(!showUnsavedBadge)"
-        >
-          LOG NOT SAVED
-        </div>
-      </div>
-
       <p
         v-if="exerciseInstructionText()"
         class="text-body-2 text-medium-emphasis mb-0 exercise-card__instruction"
@@ -265,7 +255,7 @@ function isDeletingSetLog(setLog = {}) {
           :key="String(setLog.id || '')"
         >
           <WorkoutSetLogAddEditElement
-            v-if="editState && editState.recordId === String(setLog.id || '')"
+            v-if="isEditingSetLog(setLog)"
             :key="`edit:${editState.recordId}`"
             :exercise="exercise"
             mode="patch"
@@ -278,6 +268,7 @@ function isDeletingSetLog(setLog = {}) {
           />
 
           <WorkoutSetLogListElement
+            v-else
             :set-log="setLog"
             :display-set-number="index + 1"
             :measurement-unit="exercise.measurementUnit"
@@ -318,31 +309,5 @@ function isDeletingSetLog(setLog = {}) {
 
 .exercise-card__instruction {
   line-height: 1.5;
-}
-
-.exercise-card__save-state-lane {
-  min-height: 2.25rem;
-  display: flex;
-  align-items: center;
-}
-
-.exercise-card__save-state-badge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--v-theme-error), 0.4);
-  background: rgba(var(--v-theme-error), 0.1);
-  color: rgb(var(--v-theme-error));
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.14s ease;
-}
-
-.exercise-card__save-state-badge--visible {
-  opacity: 1;
-  visibility: visible;
 }
 </style>

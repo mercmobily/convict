@@ -1,7 +1,9 @@
 import {
+  buildProgressDisplayState,
   localTodayDateString,
   resolveCurrentUserId,
-  resolveCurrentWorkspace
+  resolveCurrentWorkspace,
+  sortCanonicalExercises
 } from "@local/main/shared";
 
 function progressStatus(progressRow = null) {
@@ -63,23 +65,25 @@ function createService({ progressRepository } = {}) {
           .map((row) => [String(row.exerciseId), row])
       );
 
-      const exerciseProgress = exerciseRows.map((exercise) => {
+      const exerciseProgress = sortCanonicalExercises(exerciseRows).map((exercise) => {
         const exerciseId = String(exercise.id || "").trim();
         const progressRow = progressByExerciseId.get(exerciseId) || null;
         const currentStep = progressRow?.currentStep || firstStepByExerciseId.get(exerciseId) || null;
         const readyStep = progressRow?.readyToAdvanceStep || null;
         const lastCompletedOccurrence = progressRow?.lastCompletedOccurrence || null;
         const status = progressStatus(progressRow);
+        const progressDisplayState = buildProgressDisplayState({
+          progressRow,
+          currentStep,
+          readyStep
+        });
 
         return {
           exerciseId,
           exerciseSlug: String(exercise.slug || "").trim(),
           exerciseName: String(exercise.name || "").trim(),
           status,
-          currentProgressStepId: progressRow?.currentStepId || currentStep?.id || null,
-          currentProgressStepNumber: Number(currentStep?.stepNumber || 0) || null,
-          currentProgressStepName: String(currentStep?.stepName || "").trim(),
-          currentProgressStepInstruction: String(currentStep?.instructionText || "").trim(),
+          ...progressDisplayState,
           measurementUnit: String(currentStep?.measurementUnit || "").trim(),
           beginnerSets: currentStep?.beginnerSets ?? null,
           beginnerReps: currentStep?.beginnerReps ?? null,
@@ -93,10 +97,6 @@ function createService({ progressRepository } = {}) {
           progressionSeconds: currentStep?.progressionSeconds ?? null,
           activeVariationId: progressRow?.activeVariationId || null,
           activeVariationName: String(progressRow?.activeVariation?.name || "").trim(),
-          readyToAdvanceStepId: progressRow?.readyToAdvanceStepId || null,
-          readyToAdvanceStepNumber: Number(readyStep?.stepNumber || 0) || null,
-          readyToAdvanceStepName: String(readyStep?.stepName || "").trim(),
-          readyToAdvanceAt: progressRow?.readyToAdvanceAt || null,
           lastCompletedAt: progressRow?.lastCompletedAt || null,
           lastCompletedScheduledForDate: lastCompletedOccurrence?.scheduledForDate || null,
           lastPerformedOnDate: lastCompletedOccurrence?.performedOnDate || null,

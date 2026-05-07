@@ -2,38 +2,36 @@ import {
   createJsonRestContext,
   extractJsonRestCollectionRows
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
-import { normalizeDateOnly } from "@local/main/shared";
+import { normalizeSimplifiedRow } from "@local/main/shared";
 
 function normalizeStepRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      exerciseId: "exercise"
+    }
+  });
 }
 
 function normalizeProgressRow(row = null) {
-  if (!row || typeof row !== "object") {
+  const normalizedRow = normalizeSimplifiedRow(row, {
+    relationIds: {
+      exerciseId: "exercise",
+      currentStepId: "currentStep",
+      readyToAdvanceStepId: "readyToAdvanceStep",
+      activeVariationId: "activeVariation",
+      lastCompletedOccurrenceId: "lastCompletedOccurrence"
+    }
+  });
+
+  if (!normalizedRow) {
     return null;
   }
 
   return {
-    ...row,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null,
-    currentStepId: row.currentStepId ?? row.currentStep?.id ?? null,
-    readyToAdvanceStepId: row.readyToAdvanceStepId ?? row.readyToAdvanceStep?.id ?? null,
-    activeVariationId: row.activeVariationId ?? row.activeVariation?.id ?? null,
-    lastCompletedOccurrenceId: row.lastCompletedOccurrenceId ?? row.lastCompletedOccurrence?.id ?? null,
-    lastCompletedOccurrence: row.lastCompletedOccurrence
-      ? {
-          ...row.lastCompletedOccurrence,
-          scheduledForDate: normalizeDateOnly(row.lastCompletedOccurrence.scheduledForDate),
-          performedOnDate: normalizeDateOnly(row.lastCompletedOccurrence.performedOnDate)
-        }
-      : null
+    ...normalizedRow,
+    lastCompletedOccurrence: normalizeSimplifiedRow(row.lastCompletedOccurrence, {
+      dateOnlyFields: ["scheduledForDate", "performedOnDate"]
+    })
   };
 }
 
@@ -48,7 +46,7 @@ function createRepository({ api } = {}) {
         await api.resources.exercises.query(
           {
             queryParams: {
-              sort: ["createdAt"],
+              sort: ["slug"],
               page: {
                 size: 64
               }

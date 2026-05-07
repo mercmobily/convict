@@ -2,68 +2,50 @@ import {
   createJsonRestContext,
   extractJsonRestCollectionRows
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
-import { normalizeDateOnly } from "@local/main/shared";
+import { normalizeSimplifiedRow } from "@local/main/shared";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
 
 function normalizeAssignmentRevisionRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    userProgramAssignmentId: row.userProgramAssignmentId ?? row.userProgramAssignment?.id ?? null,
-    programId: row.programId ?? row.program?.id ?? null,
-    effectiveFromDate: normalizeDateOnly(row.effectiveFromDate)
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      userProgramAssignmentId: "userProgramAssignment",
+      programId: "program"
+    },
+    dateOnlyFields: ["effectiveFromDate"]
+  });
 }
 
 function normalizeTemplateScheduleEntryRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    programTemplateId: row.programTemplateId ?? row.programTemplate?.id ?? null,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      programTemplateId: "programTemplate",
+      exerciseId: "exercise"
+    }
+  });
 }
 
 function normalizeOwnedProgramRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    programTemplateId: row.programTemplateId ?? row.programTemplate?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      programTemplateId: "programTemplate"
+    }
+  });
 }
 
 function normalizeProgramScheduleEntryRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    programId: row.programId ?? row.program?.id ?? null,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      programId: "program",
+      exerciseId: "exercise"
+    }
+  });
 }
 
 function normalizeAssignmentRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    startsOn: normalizeDateOnly(row.startsOn),
-    endsOn: normalizeDateOnly(row.endsOn)
-  };
+  return normalizeSimplifiedRow(row, {
+    dateOnlyFields: ["startsOn", "endsOn"]
+  });
 }
 
 async function queryTemplateScheduleEntriesByTemplateIds(api, programTemplateIds = [], options = {}) {

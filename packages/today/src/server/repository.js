@@ -2,111 +2,82 @@ import {
   createJsonRestContext,
   extractJsonRestCollectionRows
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
-import { normalizeDateOnly } from "@local/main/shared";
+import { normalizeSimplifiedRow } from "@local/main/shared";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
 
 function normalizeAssignmentRevisionRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    userProgramAssignmentId: row.userProgramAssignmentId ?? row.userProgramAssignment?.id ?? null,
-    programId: row.programId ?? row.program?.id ?? null,
-    effectiveFromDate: normalizeDateOnly(row.effectiveFromDate)
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      userProgramAssignmentId: "userProgramAssignment",
+      programId: "program"
+    },
+    dateOnlyFields: ["effectiveFromDate"]
+  });
 }
 
 function normalizeProgramScheduleEntryRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    programId: row.programId ?? row.program?.id ?? null,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      programId: "program",
+      exerciseId: "exercise"
+    }
+  });
 }
 
 function normalizeOccurrenceRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    userProgramAssignmentId: row.userProgramAssignmentId ?? row.userProgramAssignment?.id ?? null,
-    userProgramAssignmentRevisionId:
-      row.userProgramAssignmentRevisionId ?? row.userProgramAssignmentRevision?.id ?? null,
-    scheduledForDate: normalizeDateOnly(row.scheduledForDate),
-    performedOnDate: normalizeDateOnly(row.performedOnDate)
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      userProgramAssignmentId: "userProgramAssignment",
+      userProgramAssignmentRevisionId: "userProgramAssignmentRevision"
+    },
+    dateOnlyFields: ["scheduledForDate", "performedOnDate"]
+  });
 }
 
 function normalizeOccurrenceExerciseRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    workoutOccurrenceId: row.workoutOccurrenceId ?? row.workoutOccurrence?.id ?? null,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null,
-    canonicalStepId: row.canonicalStepId ?? row.canonicalStep?.id ?? null,
-    personalStepVariationId: row.personalStepVariationId ?? row.personalStepVariation?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      workoutOccurrenceId: "workoutOccurrence",
+      exerciseId: "exercise",
+      canonicalStepId: "canonicalStep",
+      personalStepVariationId: "personalStepVariation"
+    }
+  });
 }
 
 function normalizeSetLogRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    workoutOccurrenceExerciseId: row.workoutOccurrenceExerciseId ?? row.workoutOccurrenceExercise?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      workoutOccurrenceExerciseId: "workoutOccurrenceExercise"
+    }
+  });
 }
 
 function normalizeExerciseProgressRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null,
-    currentStepId: row.currentStepId ?? row.currentStep?.id ?? null,
-    readyToAdvanceStepId: row.readyToAdvanceStepId ?? row.readyToAdvanceStep?.id ?? null,
-    activeVariationId: row.activeVariationId ?? row.activeVariation?.id ?? null,
-    lastCompletedOccurrenceId: row.lastCompletedOccurrenceId ?? row.lastCompletedOccurrence?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      exerciseId: "exercise",
+      currentStepId: "currentStep",
+      readyToAdvanceStepId: "readyToAdvanceStep",
+      activeVariationId: "activeVariation",
+      lastCompletedOccurrenceId: "lastCompletedOccurrence"
+    }
+  });
 }
 
 function normalizeExerciseStepRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    exerciseId: row.exerciseId ?? row.exercise?.id ?? null
-  };
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      exerciseId: "exercise"
+    }
+  });
 }
 
 function normalizeAssignmentRow(row = null) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  return {
-    ...row,
-    startsOn: normalizeDateOnly(row.startsOn),
-    endsOn: normalizeDateOnly(row.endsOn)
-  };
+  return normalizeSimplifiedRow(row, {
+    dateOnlyFields: ["startsOn", "endsOn"]
+  });
 }
 
 function createRepository({
