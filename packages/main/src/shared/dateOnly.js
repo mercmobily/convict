@@ -43,6 +43,20 @@ function parseDateOnly(dateString) {
   return new Date(year, month - 1, day);
 }
 
+function parseMonthKey(monthKey) {
+  const source = String(monthKey || "").trim();
+  if (!/^\d{4}-\d{2}$/.test(source)) {
+    return null;
+  }
+
+  const [year, month] = source.split("-").map(Number);
+  if (month < 1 || month > 12) {
+    return null;
+  }
+
+  return new Date(year, month - 1, 1);
+}
+
 function isoDayOfWeekFromDateOnly(dateString) {
   const date = parseDateOnly(dateString);
   if (!date) {
@@ -86,16 +100,106 @@ function localNowDateTimeString() {
   return formatLocalDateTime(new Date());
 }
 
+function normalizeMonthKey(value = null) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return [value.getFullYear(), padDatePart(value.getMonth() + 1)].join("-");
+  }
+
+  const parsedMonth = parseMonthKey(value);
+  if (!parsedMonth) {
+    return null;
+  }
+
+  return [parsedMonth.getFullYear(), padDatePart(parsedMonth.getMonth() + 1)].join("-");
+}
+
+function monthKeyFromDateOnly(dateString = "") {
+  const parsedDate = parseDateOnly(dateString);
+  if (!parsedDate) {
+    return null;
+  }
+
+  return normalizeMonthKey(parsedDate);
+}
+
+function firstDateOfMonth(monthKey = "") {
+  const monthDate = parseMonthKey(monthKey);
+  if (!monthDate) {
+    return null;
+  }
+
+  return formatLocalDateOnly(monthDate);
+}
+
+function lastDateOfMonth(monthKey = "") {
+  const monthDate = parseMonthKey(monthKey);
+  if (!monthDate) {
+    return null;
+  }
+
+  const lastDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+  return formatLocalDateOnly(lastDate);
+}
+
+function shiftMonthKey(monthKey = "", monthOffset = 0) {
+  const monthDate = parseMonthKey(monthKey);
+  if (!monthDate) {
+    return null;
+  }
+
+  monthDate.setMonth(monthDate.getMonth() + Number(monthOffset || 0));
+  return normalizeMonthKey(monthDate);
+}
+
+function firstDateOfCalendarGrid(monthKey = "") {
+  const firstDate = firstDateOfMonth(monthKey);
+  if (!firstDate) {
+    return null;
+  }
+
+  const isoDay = isoDayOfWeekFromDateOnly(firstDate);
+  if (!isoDay) {
+    return null;
+  }
+
+  return addDays(firstDate, 1 - isoDay);
+}
+
+function lastDateOfCalendarGrid(monthKey = "") {
+  const lastDate = lastDateOfMonth(monthKey);
+  if (!lastDate) {
+    return null;
+  }
+
+  const isoDay = isoDayOfWeekFromDateOnly(lastDate);
+  if (!isoDay) {
+    return null;
+  }
+
+  return addDays(lastDate, 7 - isoDay);
+}
+
 export {
   addDays,
   dayLabelForIsoDayOfWeek,
   dayLabelFromDateOnly,
+  firstDateOfCalendarGrid,
+  firstDateOfMonth,
   formatLocalDateOnly,
   formatLocalDateTime,
   ISO_DAY_LABELS,
   isoDayOfWeekFromDateOnly,
+  lastDateOfCalendarGrid,
+  lastDateOfMonth,
   localNowDateTimeString,
   localTodayDateString,
+  monthKeyFromDateOnly,
   normalizeDateOnly,
-  parseDateOnly
+  normalizeMonthKey,
+  parseDateOnly,
+  shiftMonthKey
 };

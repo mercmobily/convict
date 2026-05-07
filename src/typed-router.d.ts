@@ -141,6 +141,7 @@ declare module 'vue-router/auto-routes' {
       | '/w/[workspaceSlug]/admin/members/'
       | '/w/[workspaceSlug]/admin/workspace/settings'
       | '/w/[workspaceSlug]/admin/workspace/settings/'
+      | '/w/[workspaceSlug]/history/'
       | '/w/[workspaceSlug]/progress/'
       | '/w/[workspaceSlug]/workouts/[scheduledForDate]'
     >,
@@ -193,6 +194,13 @@ declare module 'vue-router/auto-routes' {
     '/w/[workspaceSlug]/admin/workspace/settings/': RouteRecordInfo<
       '/w/[workspaceSlug]/admin/workspace/settings/',
       '/w/:workspaceSlug/admin/workspace/settings',
+      { workspaceSlug: ParamValue<true> },
+      { workspaceSlug: ParamValue<false> },
+      | never
+    >,
+    '/w/[workspaceSlug]/history/': RouteRecordInfo<
+      '/w/[workspaceSlug]/history/',
+      '/w/:workspaceSlug/history',
       { workspaceSlug: ParamValue<true> },
       { workspaceSlug: ParamValue<false> },
       | never
@@ -324,6 +332,7 @@ declare module 'vue-router/auto-routes' {
         | '/w/[workspaceSlug]/admin/members/'
         | '/w/[workspaceSlug]/admin/workspace/settings'
         | '/w/[workspaceSlug]/admin/workspace/settings/'
+        | '/w/[workspaceSlug]/history/'
         | '/w/[workspaceSlug]/progress/'
         | '/w/[workspaceSlug]/workouts/[scheduledForDate]'
       views:
@@ -374,6 +383,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/w/[workspaceSlug]/admin/workspace/settings/index.vue': {
       routes:
         | '/w/[workspaceSlug]/admin/workspace/settings/'
+      views:
+        | never
+    }
+    'src/pages/w/[workspaceSlug]/history/index.vue': {
+      routes:
+        | '/w/[workspaceSlug]/history/'
       views:
         | never
     }

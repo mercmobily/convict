@@ -353,18 +353,21 @@ async function goBackToToday() {
             type="info"
             variant="tonal"
             border="start"
-            text="Open this workout occurrence first. Once it is open, the set log fields below become editable."
           >
-            <template #append>
+            <div class="workout-detail-callout">
+              <p class="text-body-2 mb-0">
+                Open this workout occurrence first. Once it is open, the set log fields below become editable.
+              </p>
               <v-btn
                 color="primary"
                 :prepend-icon="mdiPlayCircleOutline"
                 :loading="startWorkoutCommand.isRunning"
+                class="workout-detail-callout__action"
                 @click="openWorkout"
               >
                 Open workout
               </v-btn>
-            </template>
+            </div>
           </v-alert>
 
           <v-alert
@@ -372,19 +375,22 @@ async function goBackToToday() {
             type="info"
             variant="tonal"
             border="start"
-            :text="finishWorkoutHint"
           >
-            <template #append>
+            <div class="workout-detail-callout">
+              <p class="text-body-2 mb-0">
+                {{ finishWorkoutHint }}
+              </p>
               <v-btn
                 color="success"
                 :prepend-icon="mdiCheckCircleOutline"
                 :loading="submitWorkoutCommand.isRunning"
                 :disabled="!canFinishWorkout"
+                class="workout-detail-callout__action"
                 @click="finishWorkout"
               >
                 Finish workout
               </v-btn>
-            </template>
+            </div>
           </v-alert>
 
           <v-alert
@@ -431,6 +437,30 @@ async function goBackToToday() {
     </template>
   </section>
 </template>
+
+<style scoped>
+.workout-detail-callout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.workout-detail-callout__action {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+  .workout-detail-callout {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workout-detail-callout__action {
+    width: 100%;
+  }
+}
+</style>
 
 <style scoped>
 .workout-detail-page__title {

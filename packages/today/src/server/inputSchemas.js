@@ -18,8 +18,26 @@ const scheduledForDateRouteParamsValidator = deepFreeze({
   mode: "patch"
 });
 
+const historyProjectionQueryRouteValidator = deepFreeze({
+  schema: createSchema({
+    month: {
+      type: "string",
+      required: false,
+      minLength: 7,
+      maxLength: 7,
+      pattern: "^\\d{4}-\\d{2}$"
+    }
+  }),
+  mode: "patch"
+});
+
 const todayProjectionQueryInputValidator = composeSchemaDefinitions([
   workspaceSlugParamsValidator
+]);
+
+const historyProjectionQueryInputValidator = composeSchemaDefinitions([
+  workspaceSlugParamsValidator,
+  historyProjectionQueryRouteValidator
 ]);
 
 const startWorkoutBodyInputValidator = deepFreeze({
@@ -73,6 +91,8 @@ const applyAdvancementCommandInputValidator = composeSchemaDefinitions([
 
 export {
   todayProjectionQueryInputValidator,
+  historyProjectionQueryRouteValidator,
+  historyProjectionQueryInputValidator,
   workoutDetailQueryInputValidator,
   startWorkoutBodyInputValidator,
   markWorkoutDefinitelyMissedBodyInputValidator,

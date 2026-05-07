@@ -152,14 +152,14 @@ function lastCompletedLabel(exercise = {}) {
       </v-alert>
 
       <template v-if="isInitialLoading">
-        <div class="d-grid progress-page__summary-grid mb-4">
+        <div class="progress-page__summary-grid mb-4">
           <v-skeleton-loader
             v-for="summaryCard in 3"
             :key="summaryCard"
             type="article"
           />
         </div>
-        <div class="d-grid progress-page__exercise-grid">
+        <div class="progress-page__exercise-grid">
           <v-skeleton-loader
             v-for="card in 6"
             :key="card"
@@ -169,32 +169,29 @@ function lastCompletedLabel(exercise = {}) {
       </template>
 
       <template v-else>
-        <div class="d-grid progress-page__summary-grid mb-4">
-          <div
+        <div class="progress-page__summary-grid mb-4">
+          <v-card
             v-for="summaryCard in summaryCards"
             :key="summaryCard.key"
             class="progress-summary-card"
             :data-testid="`progress-summary-${summaryCard.key}`"
+            variant="tonal"
+            rounded="xl"
           >
-            <v-card
-              variant="tonal"
-              rounded="xl"
-            >
-              <v-card-text class="d-flex align-center justify-space-between ga-4">
-                <div>
-                  <div class="text-overline text-medium-emphasis">{{ summaryCard.label }}</div>
-                  <div class="text-h4 font-weight-bold">{{ summaryCard.value }}</div>
-                </div>
-                <v-avatar
-                  :color="summaryCard.color"
-                  variant="flat"
-                  size="44"
-                >
-                  <v-icon :icon="summaryCard.icon" />
-                </v-avatar>
-              </v-card-text>
-            </v-card>
-          </div>
+            <v-card-text class="progress-summary-card__body">
+              <div>
+                <div class="text-overline text-medium-emphasis">{{ summaryCard.label }}</div>
+                <div class="text-h4 font-weight-bold">{{ summaryCard.value }}</div>
+              </div>
+              <v-avatar
+                :color="summaryCard.color"
+                variant="flat"
+                size="44"
+              >
+                <v-icon :icon="summaryCard.icon" />
+              </v-avatar>
+            </v-card-text>
+          </v-card>
         </div>
 
         <v-alert
@@ -215,7 +212,7 @@ function lastCompletedLabel(exercise = {}) {
 
         <div
           v-else
-          class="d-grid progress-page__exercise-grid"
+          class="progress-page__exercise-grid"
         >
           <div
             v-for="exercise in progressCards"
@@ -323,12 +320,32 @@ function lastCompletedLabel(exercise = {}) {
 
 <style scoped>
 .progress-page__summary-grid {
+  display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
 }
 
 .progress-page__exercise-grid {
+  display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.progress-summary-card {
+  height: 100%;
+}
+
+.progress-summary-card__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 88px;
+}
+
+@media (max-width: 640px) {
+  .progress-page__summary-grid {
+    gap: 12px;
+  }
 }
 </style>

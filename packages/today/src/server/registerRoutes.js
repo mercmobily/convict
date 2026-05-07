@@ -4,6 +4,7 @@ import { workspaceSlugParamsValidator } from "@jskit-ai/workspaces-core/server/v
 import { buildWorkspaceInputFromRouteParams } from "@jskit-ai/workspaces-core/server/support/workspaceRouteInput";
 import {
   READ_TODAY_PROJECTION,
+  READ_HISTORY_PROJECTION,
   READ_WORKOUT_DETAIL,
   START_WORKOUT_OCCURRENCE,
   SUBMIT_WORKOUT_OCCURRENCE,
@@ -11,6 +12,7 @@ import {
   MARK_WORKOUT_DEFINITELY_MISSED
 } from "./actions.js";
 import {
+  historyProjectionQueryRouteValidator,
   workoutDetailQueryInputValidator,
   startWorkoutBodyInputValidator,
   markWorkoutDefinitelyMissedBodyInputValidator,
@@ -55,6 +57,33 @@ function registerRoutes(
         actionId: READ_TODAY_PROJECTION,
         input: {
           ...buildWorkspaceInputFromRouteParams(request.input.params)
+        }
+      });
+
+      reply.code(200).send(response);
+    }
+  );
+
+  router.register(
+    "GET",
+    `${routeBase}/history`,
+    {
+      auth: "required",
+      surface: normalizedRouteSurface,
+      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      meta: {
+        tags: ["feature"],
+        summary: "Read a month history projection for the current user's active program assignment."
+      },
+      params: workspaceSlugParamsValidator,
+      query: historyProjectionQueryRouteValidator
+    },
+    async function (request, reply) {
+      const response = await request.executeAction({
+        actionId: READ_HISTORY_PROJECTION,
+        input: {
+          ...buildWorkspaceInputFromRouteParams(request.input.params),
+          ...(request.input.query || {})
         }
       });
 

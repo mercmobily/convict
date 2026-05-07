@@ -1,5 +1,6 @@
 import {
   todayProjectionQueryInputValidator,
+  historyProjectionQueryInputValidator,
   workoutDetailQueryInputValidator,
   startWorkoutCommandInputValidator,
   markWorkoutDefinitelyMissedCommandInputValidator,
@@ -8,6 +9,7 @@ import {
 } from "./inputSchemas.js";
 
 const READ_TODAY_PROJECTION = "feature.today.projection.read";
+const READ_HISTORY_PROJECTION = "feature.today.history.read";
 const READ_WORKOUT_DETAIL = "feature.today.workout.read";
 const START_WORKOUT_OCCURRENCE = "feature.today.workout.start";
 const SUBMIT_WORKOUT_OCCURRENCE = "feature.today.workout.submit";
@@ -30,6 +32,25 @@ const featureActions = Object.freeze([
     observability: {},
     async execute(input, context, deps) {
       return deps.todayService.readToday(input, {
+        context
+      });
+    }
+  },
+  {
+    id: READ_HISTORY_PROJECTION,
+    version: 1,
+    kind: "query",
+    channels: ["api", "automation", "internal"],
+    surfaces: ["app"],
+    input: historyProjectionQueryInputValidator,
+    output: null,
+    idempotency: "optional",
+    audit: {
+      actionName: READ_HISTORY_PROJECTION
+    },
+    observability: {},
+    async execute(input, context, deps) {
+      return deps.todayService.readHistory(input, {
         context
       });
     }
@@ -133,6 +154,7 @@ const featureActions = Object.freeze([
 
 export {
   READ_TODAY_PROJECTION,
+  READ_HISTORY_PROJECTION,
   READ_WORKOUT_DETAIL,
   START_WORKOUT_OCCURRENCE,
   SUBMIT_WORKOUT_OCCURRENCE,

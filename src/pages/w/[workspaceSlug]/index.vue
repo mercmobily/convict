@@ -16,6 +16,7 @@ import {
   mdiTimerSand
 } from "@mdi/js";
 import { useRouter } from "vue-router";
+import { useDisplay } from "vuetify";
 import WorkoutExercisePreviewList from "@/components/WorkoutExercisePreviewList.vue";
 import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
@@ -33,6 +34,7 @@ const {
 } = useConvictWorkoutPresentation();
 const paths = usePaths();
 const router = useRouter();
+const { smAndDown } = useDisplay();
 
 const selectionModel = reactive({
   programTemplateId: "",
@@ -476,6 +478,7 @@ function toggleActiveProgramExpanded() {
                     v-if="Array.isArray(todayProjection.exercises) && todayProjection.exercises.length > 0"
                     :exercises="todayProjection.exercises"
                     :key-prefix="`today-${todayProjection.scheduledForDate}`"
+                    :stacked="smAndDown"
                     class="today-card__exercise-list"
                   />
 
@@ -586,6 +589,7 @@ function toggleActiveProgramExpanded() {
                       <WorkoutExercisePreviewList
                         :exercises="workout.exercises"
                         :key-prefix="`overdue-${workout.scheduledForDate}`"
+                        :stacked="smAndDown"
                         class="today-card__exercise-list"
                       />
 

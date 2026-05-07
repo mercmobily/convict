@@ -59,7 +59,7 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 - [x] Build Slice 2: derived today projection plus `Today` UI.
 - [x] Build Slice 3: workout occurrence creation and set logging plus workout detail UI.
 - [x] Build Slice 4: workout submission plus `ready to advance` prompt and manual advancement UI.
-- [ ] Build Slice 5: progress and history UI on top of progress services.
+- [x] Build Slice 5: progress and history UI on top of progress services.
 
 ## Canonical Content
 
@@ -76,7 +76,7 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 ## Progression Engine
 
 - [ ] Build logic to determine the user's current step per exercise family.
-- [ ] Build revision-aware schedule projection for arbitrary date ranges.
+- [x] Build revision-aware schedule projection for arbitrary date ranges.
 - [x] Build logic to fetch today's prescribed workout from the active program.
 - [x] Build logic to show the correct input type: `reps` or `seconds`.
 - [x] Build logic to evaluate whether a logged session met the progression standard.
@@ -101,12 +101,12 @@ It is ordered to be worked top-to-bottom and updated as decisions are locked and
 
 - [ ] Build onboarding: sign up, pick a program, pick a start date.
 - [x] Build the `Today` screen.
-- [ ] Build the calendar from derived schedule projection plus workout occurrence overlays.
+- [x] Build the calendar from derived schedule projection plus workout occurrence overlays.
 - [x] Build a fast logging flow for the scheduled workout.
 - [x] Allow a workout occurrence to remain open and be logged in parts throughout the day.
 - [x] Build the session save flow with minimal friction.
 - [x] Build a progress screen per exercise family.
-- [ ] Build a history or calendar screen.
+- [x] Build a history or calendar screen.
 - [x] Build a `Missed Workouts` or `Overdue Workouts` screen.
 - [x] Allow users to complete overdue workouts on any later date.
 - [x] Allow users to mark an overdue workout as `definitely missed`.

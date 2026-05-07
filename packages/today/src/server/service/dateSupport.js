@@ -2,7 +2,9 @@ import { AppError } from "@jskit-ai/kernel/server/runtime/errors";
 import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
 import {
   dayLabelFromDateOnly,
-  isoDayOfWeekFromDateOnly
+  isoDayOfWeekFromDateOnly,
+  monthKeyFromDateOnly,
+  normalizeMonthKey
 } from "@local/main/shared";
 
 function dayOfWeekFromDate(dateString) {
@@ -27,8 +29,27 @@ function normalizeScheduledForDate(value = "") {
   return normalized;
 }
 
+function normalizeHistoryMonth(value = "", fallbackDate = "") {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) {
+    const fallbackMonth = monthKeyFromDateOnly(fallbackDate);
+    if (!fallbackMonth) {
+      throw new AppError(500, "Unable to determine the current history month.");
+    }
+    return fallbackMonth;
+  }
+
+  const normalizedMonth = normalizeMonthKey(normalizedValue);
+  if (!normalizedMonth) {
+    throw new AppError(400, "month must be a valid YYYY-MM month.");
+  }
+
+  return normalizedMonth;
+}
+
 export {
   dayLabelFromDate,
   dayOfWeekFromDate,
+  normalizeHistoryMonth,
   normalizeScheduledForDate
 };

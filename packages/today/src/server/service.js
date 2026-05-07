@@ -8,7 +8,11 @@ import {
   resolveCurrentWorkspace,
   resolveCurrentWorkspaceId
 } from "@local/main/shared/requestContext";
-import { normalizeScheduledForDate } from "./service/dateSupport.js";
+import {
+  normalizeHistoryMonth,
+  normalizeScheduledForDate
+} from "./service/dateSupport.js";
+import { buildHistoryState } from "./service/historyState.js";
 import {
   attachSetLogsToWorkoutProjection,
   buildNextStepIndex,
@@ -43,6 +47,23 @@ function createService({ todayRepository } = {}) {
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
+        workspace,
+        context
+      });
+    },
+
+    async readHistory(input = {}, options = {}) {
+      void input?.workspaceSlug;
+      const context = options?.context || null;
+      const userId = resolveCurrentUserId(context);
+      const todayDate = localTodayDateString();
+      const historyMonth = normalizeHistoryMonth(input?.month, todayDate);
+      const workspace = resolveCurrentWorkspace(context);
+
+      return buildHistoryState(todayRepository, {
+        userId,
+        todayDate,
+        historyMonth,
         workspace,
         context
       });

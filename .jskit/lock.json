@@ -1590,7 +1590,7 @@
     },
     "@jskit-ai/realtime": {
       "packageId": "@jskit-ai/realtime",
-      "version": "0.1.61",
+      "version": "0.1.58",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/realtime"
@@ -1612,6 +1612,15 @@
             "reason": "Configure optional Redis backplane URL for realtime socket adapter.",
             "category": "runtime-config",
             "id": "realtime-redis-url"
+          },
+          "src/placement.js::realtime-placement-indicator": {
+            "file": "src/placement.js",
+            "op": "append-text",
+            "value": "\naddPlacement({\n  id: \"realtime.connection.indicator\",\n  target: \"shell-layout:top-right\",\n  surfaces: [\"*\"],\n  order: 950,\n  componentToken: \"realtime.web.connection.indicator\"\n});\n",
+            "position": "bottom",
+            "reason": "Append realtime connection indicator placement into app-owned placement registry.",
+            "category": "realtime-web",
+            "id": "realtime-placement-indicator"
           }
         },
         "vite": {

@@ -355,3 +355,30 @@ addPlacement({
     when: ({ auth }) => auth?.authenticated === true
   });
 }
+// jskit:ui-generator.page.link:app:/history
+{
+  addPlacement({
+    id: "ui-generator.page.app.history.link",
+    target: "shell-layout:primary-menu",
+    surfaces: ["app"],
+    order: 155,
+    componentToken: "local.main.ui.surface-aware-menu-link-item",
+    props: {
+      label: "History",
+      icon: "mdi-calendar-month-outline",
+      surface: "app",
+      scopedSuffix: "/history",
+      unscopedSuffix: "/history",
+    },
+    when: ({ auth }) => auth?.authenticated === true
+  });
+}
+
+
+addPlacement({
+  id: "realtime.connection.indicator",
+  target: "shell-layout:top-right",
+  surfaces: ["*"],
+  order: 950,
+  componentToken: "realtime.web.connection.indicator"
+});

@@ -193,6 +193,8 @@ function buildDerivedExerciseProjection(scheduleEntry, progressRow = null, first
 }
 
 function buildOccurrenceExerciseProjection(row = {}) {
+  const canonicalStepNumber = Number(row.canonicalStep?.stepNumber || 0);
+
   return {
     occurrenceExerciseId: row.id,
     slotNumber: Number(row.slotNumber || 0),
@@ -201,7 +203,7 @@ function buildOccurrenceExerciseProjection(row = {}) {
     plannedWorkSetsMin: Number(row.plannedWorkSetsMin || 0),
     plannedWorkSetsMax: Number(row.plannedWorkSetsMax || 0),
     currentStepId: row.canonicalStepId,
-    currentStepNumber: null,
+    currentStepNumber: canonicalStepNumber > 0 ? canonicalStepNumber : null,
     currentStepName: row.canonicalStepNameSnapshot,
     measurementUnit: row.measurementUnitSnapshot,
     activeVariationId: row.personalStepVariationId,
