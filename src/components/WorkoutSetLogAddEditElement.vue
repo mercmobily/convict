@@ -21,10 +21,6 @@ const props = defineProps({
     type: Number,
     default: 1
   },
-  sequenceValue: {
-    type: Number,
-    default: 1
-  },
   initialPerformedValue: {
     type: [String, Number],
     default: ""
@@ -85,7 +81,7 @@ const formRuntime = useCrudAddEdit({
       String(surfaceId || ""),
       String(workspaceSlug || ""),
       String(props.exercise?.occurrenceExerciseId || ""),
-      normalizedRecordId.value || String(props.sequenceValue || "")
+      normalizedRecordId.value || "create"
     ],
     routeRecordId: normalizedRecordId,
     readEnabled: false,
@@ -107,7 +103,6 @@ const formRuntime = useCrudAddEdit({
     if (isCreateMode.value) {
       return {
         workoutOccurrenceExerciseId: String(props.exercise?.occurrenceExerciseId || "").trim(),
-        setNumber: Number(props.sequenceValue || 1),
         side: "both",
         measurementUnitSnapshot: String(props.exercise?.measurementUnit || "").trim().toLowerCase() || "reps",
         performedValue

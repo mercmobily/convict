@@ -9,7 +9,7 @@
 </route>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import {
   mdiChartTimelineVariant,
   mdiFlagCheckered,
@@ -17,17 +17,15 @@ import {
   mdiStairsUp
 } from "@mdi/js";
 import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
+import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
-import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
 const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
 const { exerciseDetailLine, progressionTargetLabel } = useConvictWorkoutPresentation();
 const paths = usePaths();
-
-const activeAdvancingExerciseId = ref("");
 
 const progressApiPath = computed(() => paths.api("/progress"));
 const progressResource = useEndpointResource({
@@ -36,18 +34,8 @@ const progressResource = useEndpointResource({
   fallbackLoadError: "Unable to load progress."
 });
 
-const applyAdvancementCommand = useCommand({
-  apiSuffix: "/today/progress/apply-advancement",
-  writeMethod: "POST",
-  fallbackRunError: "Unable to apply this advancement.",
-  buildRawPayload: () => ({
-    exerciseId: String(activeAdvancingExerciseId.value || "").trim()
-  }),
-  messages: {
-    success: "Advancement applied.",
-    error: "Unable to apply this advancement."
-  },
-  async onRunSuccess() {
+const { applyAdvancement, isApplyingAdvancement } = useApplyAdvancementCommand({
+  async onSuccess() {
     await progressResource.reload();
   }
 });
@@ -127,21 +115,6 @@ function lastCompletedLabel(exercise = {}) {
   return "No completed workout yet.";
 }
 
-function isApplyingAdvancement(exercise = {}) {
-  return Boolean(
-    applyAdvancementCommand.isRunning &&
-    activeAdvancingExerciseId.value === String(exercise.exerciseId || "").trim()
-  );
-}
-
-async function applyAdvancement(exercise = {}) {
-  activeAdvancingExerciseId.value = String(exercise.exerciseId || "").trim();
-  try {
-    await applyAdvancementCommand.run();
-  } finally {
-    activeAdvancingExerciseId.value = "";
-  }
-}
 </script>
 
 <template>

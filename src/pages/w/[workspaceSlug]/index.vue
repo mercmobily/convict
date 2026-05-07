@@ -16,19 +16,18 @@ import {
   mdiTimerSand
 } from "@mdi/js";
 import { useRouter } from "vue-router";
+import WorkoutExercisePreviewList from "@/components/WorkoutExercisePreviewList.vue";
 import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
+import { localTodayDateString } from "@local/main/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
 const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
 const {
-  exerciseCurrentStepNumber,
-  exerciseDetailLine,
   formatWorkSetLabel,
-  progressionTargetLabel,
   workoutStatusColor,
   workoutStatusLabel
 } = useConvictWorkoutPresentation();
@@ -37,7 +36,7 @@ const router = useRouter();
 
 const selectionModel = reactive({
   programTemplateId: "",
-  startsOn: createLocalDateInputValue()
+  startsOn: localTodayDateString()
 });
 const selectedProgramTemplateId = ref("");
 const activeProgramExpanded = ref(false);
@@ -146,12 +145,6 @@ const todayLoadError = computed(() => String(todayResource.loadError.value || ""
 const isTodayLoading = computed(() => Boolean(hasActiveAssignment.value && todayResource.isInitialLoading.value));
 const todayDate = computed(() => String(todayState.value.date || "").trim());
 const activeProgramToggleLabel = computed(() => (activeProgramExpanded.value ? "Hide details" : "Show details"));
-
-function createLocalDateInputValue() {
-  const now = new Date();
-  const offsetMs = now.getTimezoneOffset() * 60_000;
-  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
-}
 
 function selectProgramTemplate(programTemplateId) {
   const normalizedProgramTemplateId = String(programTemplateId || "").trim();
@@ -479,48 +472,12 @@ function toggleActiveProgramExpanded() {
                     {{ workoutSummary(todayProjection) }}
                   </p>
 
-                  <v-list
+                  <WorkoutExercisePreviewList
                     v-if="Array.isArray(todayProjection.exercises) && todayProjection.exercises.length > 0"
-                    lines="two"
-                    density="comfortable"
+                    :exercises="todayProjection.exercises"
+                    :key-prefix="`today-${todayProjection.scheduledForDate}`"
                     class="today-card__exercise-list"
-                  >
-                    <v-list-item
-                      v-for="exercise in todayProjection.exercises"
-                      :key="`today-${todayProjection.scheduledForDate}-${exercise.slotNumber}`"
-                      :subtitle="exerciseDetailLine(exercise)"
-                    >
-                      <v-list-item-title>{{ exercise.exerciseName }}</v-list-item-title>
-                      <template #append>
-                        <div class="d-flex flex-wrap ga-2 justify-end">
-                          <v-chip color="primary" variant="tonal" size="small" label>
-                            {{ formatWorkSetLabel(exercise.plannedWorkSetsMin, exercise.plannedWorkSetsMax) }}
-                          </v-chip>
-                          <v-chip
-                            v-if="exerciseCurrentStepNumber(exercise)"
-                            color="info"
-                            variant="tonal"
-                            size="small"
-                            label
-                          >
-                            Step {{ exerciseCurrentStepNumber(exercise) }}
-                          </v-chip>
-                          <v-chip
-                            v-if="progressionTargetLabel(exercise)"
-                            color="success"
-                            variant="tonal"
-                            size="small"
-                            label
-                          >
-                            Progression {{ progressionTargetLabel(exercise) }}
-                          </v-chip>
-                          <v-chip color="secondary" variant="tonal" size="small" label>
-                            {{ exercise.measurementUnit }}
-                          </v-chip>
-                        </div>
-                      </template>
-                    </v-list-item>
-                  </v-list>
+                  />
 
                   <div
                     v-if="todayProjection.status === 'scheduled'"
@@ -626,47 +583,11 @@ function toggleActiveProgramExpanded() {
                         </v-chip>
                       </div>
 
-                      <v-list
-                        lines="two"
-                        density="comfortable"
+                      <WorkoutExercisePreviewList
+                        :exercises="workout.exercises"
+                        :key-prefix="`overdue-${workout.scheduledForDate}`"
                         class="today-card__exercise-list"
-                      >
-                        <v-list-item
-                          v-for="exercise in workout.exercises"
-                          :key="`overdue-${workout.scheduledForDate}-${exercise.slotNumber}`"
-                          :subtitle="exerciseDetailLine(exercise)"
-                        >
-                          <v-list-item-title>{{ exercise.exerciseName }}</v-list-item-title>
-                          <template #append>
-                            <div class="d-flex flex-wrap ga-2 justify-end">
-                              <v-chip color="primary" variant="tonal" size="small" label>
-                                {{ formatWorkSetLabel(exercise.plannedWorkSetsMin, exercise.plannedWorkSetsMax) }}
-                              </v-chip>
-                              <v-chip
-                                v-if="exerciseCurrentStepNumber(exercise)"
-                                color="info"
-                                variant="tonal"
-                                size="small"
-                                label
-                              >
-                                Step {{ exerciseCurrentStepNumber(exercise) }}
-                              </v-chip>
-                              <v-chip
-                                v-if="progressionTargetLabel(exercise)"
-                                color="success"
-                                variant="tonal"
-                                size="small"
-                                label
-                              >
-                                Progression {{ progressionTargetLabel(exercise) }}
-                              </v-chip>
-                              <v-chip color="secondary" variant="tonal" size="small" label>
-                                {{ exercise.measurementUnit }}
-                              </v-chip>
-                            </div>
-                          </template>
-                        </v-list-item>
-                      </v-list>
+                      />
 
                       <div
                         v-if="workout.status === 'overdue'"

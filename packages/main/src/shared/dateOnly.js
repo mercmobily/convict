@@ -2,6 +2,16 @@ function padDatePart(value) {
   return String(value).padStart(2, "0");
 }
 
+const ISO_DAY_LABELS = Object.freeze({
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  7: "Sunday"
+});
+
 function formatLocalDateOnly(date) {
   return [
     date.getFullYear(),
@@ -33,6 +43,24 @@ function parseDateOnly(dateString) {
   return new Date(year, month - 1, day);
 }
 
+function isoDayOfWeekFromDateOnly(dateString) {
+  const date = parseDateOnly(dateString);
+  if (!date) {
+    return null;
+  }
+
+  const jsDay = date.getDay();
+  return jsDay === 0 ? 7 : jsDay;
+}
+
+function dayLabelForIsoDayOfWeek(dayOfWeek) {
+  return ISO_DAY_LABELS[Number(dayOfWeek || 0)] || "";
+}
+
+function dayLabelFromDateOnly(dateString) {
+  return dayLabelForIsoDayOfWeek(isoDayOfWeekFromDateOnly(dateString));
+}
+
 function addDays(dateString, dayOffset) {
   const date = parseDateOnly(dateString);
   if (!date) {
@@ -60,8 +88,12 @@ function localNowDateTimeString() {
 
 export {
   addDays,
+  dayLabelForIsoDayOfWeek,
+  dayLabelFromDateOnly,
   formatLocalDateOnly,
   formatLocalDateTime,
+  ISO_DAY_LABELS,
+  isoDayOfWeekFromDateOnly,
   localNowDateTimeString,
   localTodayDateString,
   normalizeDateOnly,

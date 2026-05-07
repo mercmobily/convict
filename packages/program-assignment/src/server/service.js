@@ -1,17 +1,7 @@
 import { ConflictError, NotFoundError, AppError } from "@jskit-ai/kernel/server/runtime/errors";
 import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
-import { formatWorkSetLabel, resolveScheduleExerciseName } from "@local/main/shared";
+import { dayLabelForIsoDayOfWeek, formatWorkSetLabel, resolveScheduleExerciseName } from "@local/main/shared";
 import { resolveCurrentUserId, resolveCurrentWorkspace, resolveCurrentWorkspaceId } from "@local/main/shared/requestContext";
-
-const DAY_LABELS = Object.freeze({
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  7: "Sunday"
-});
 
 const TEMPLATE_METADATA = Object.freeze({
   "new-blood": Object.freeze({
@@ -90,7 +80,7 @@ function buildSchedulePreview(entries = []) {
     const items = (grouped.get(dayOfWeek) || []).sort((left, right) => left.slotNumber - right.slotNumber);
     days.push({
       dayOfWeek,
-      dayLabel: DAY_LABELS[dayOfWeek] || `Day ${dayOfWeek}`,
+      dayLabel: dayLabelForIsoDayOfWeek(dayOfWeek) || `Day ${dayOfWeek}`,
       isRestDay: items.length < 1,
       items
     });

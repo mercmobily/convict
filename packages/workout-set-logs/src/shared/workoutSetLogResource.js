@@ -32,17 +32,6 @@ const resource = defineCrudResource({
     hidden: true,
     operations: {}
   },
-  setNumber: {
-    type: "integer",
-    min: 0,
-    required: true,
-    search: true,
-    operations: {
-      output: { required: true },
-      create: { required: true },
-      patch: { required: false }
-    }
-  },
   side: {
     type: "string",
     maxLength: 16,
@@ -117,7 +106,7 @@ const resource = defineCrudResource({
     workoutOccurrenceExerciseIds: { type: "array", actualField: "workoutOccurrenceExerciseId", filterOperator: "in" },
     q: { type: "string", oneOf: ["side","measurementUnitSnapshot"], filterOperator: "like", splitBy: " ", matchAll: true },
   },
-  defaultSort: ["-createdAt"],
+  defaultSort: ["loggedAt", "id"],
   autofilter: "user",
   messages: {
     validation: "Fix invalid values and try again.",

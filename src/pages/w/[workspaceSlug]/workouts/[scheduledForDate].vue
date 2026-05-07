@@ -9,7 +9,7 @@
 </route>
 
 <script setup>
-import { computed, reactive, ref, watch } from "vue";
+import { computed, reactive, watch } from "vue";
 import {
   mdiArrowLeft,
   mdiCalendarClock,
@@ -19,6 +19,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vue";
 import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
+import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
@@ -35,7 +36,7 @@ const router = useRouter();
 const paths = usePaths();
 
 const dirtyExerciseByKey = reactive({});
-const activeAdvancingExerciseId = ref("");
+const syncingExerciseByKey = reactive({});
 
 const scheduledForDate = computed(() => String(route.params.scheduledForDate || "").trim());
 const homePagePath = computed(() => paths.page("/"));
@@ -77,18 +78,8 @@ const submitWorkoutCommand = useCommand({
   }
 });
 
-const applyAdvancementCommand = useCommand({
-  apiSuffix: "/today/progress/apply-advancement",
-  writeMethod: "POST",
-  fallbackRunError: "Unable to apply this advancement.",
-  buildRawPayload: () => ({
-    exerciseId: String(activeAdvancingExerciseId.value || "").trim()
-  }),
-  messages: {
-    success: "Advancement applied.",
-    error: "Unable to apply this advancement."
-  },
-  async onRunSuccess() {
+const { applyAdvancement, isApplyingAdvancement } = useApplyAdvancementCommand({
+  async onSuccess() {
     await workoutDetailResource.reload();
   }
 });
@@ -113,6 +104,12 @@ watch(
     for (const key of Object.keys(dirtyExerciseByKey)) {
       if (!activeKeys.has(key)) {
         delete dirtyExerciseByKey[key];
+      }
+    }
+
+    for (const key of Object.keys(syncingExerciseByKey)) {
+      if (!activeKeys.has(key)) {
+        delete syncingExerciseByKey[key];
       }
     }
   },
@@ -165,6 +162,12 @@ function exerciseCardKey(exercise = {}) {
 }
 
 const hasUnsavedWorkoutDrafts = computed(() => Object.values(dirtyExerciseByKey).some(Boolean));
+const isWorkoutSyncing = computed(() => {
+  return Boolean(
+    workoutDetailResource.isRefetching.value ||
+    Object.values(syncingExerciseByKey).some(Boolean)
+  );
+});
 
 const savedWorkoutSetCount = computed(() => {
   const exercises = Array.isArray(workout.value?.exercises) ? workout.value.exercises : [];
@@ -183,7 +186,7 @@ const incompleteExerciseCount = computed(() => {
 });
 
 const canFinishWorkout = computed(() => {
-  if (workout.value?.status !== "in_progress" || hasUnsavedWorkoutDrafts.value) {
+  if (workout.value?.status !== "in_progress" || hasUnsavedWorkoutDrafts.value || isWorkoutSyncing.value) {
     return false;
   }
 
@@ -191,6 +194,10 @@ const canFinishWorkout = computed(() => {
 });
 
 const finishWorkoutHint = computed(() => {
+  if (isWorkoutSyncing.value) {
+    return "Wait for the latest saved set changes to finish syncing before you finish this workout.";
+  }
+
   if (hasUnsavedWorkoutDrafts.value) {
     return "Wait for every changed exercise card to finish saving before you finish this workout.";
   }
@@ -220,29 +227,18 @@ function handleExerciseDirtyState(exercise = {}, isDirty = false) {
   dirtyExerciseByKey[exerciseCardKey(exercise)] = Boolean(isDirty);
 }
 
-async function handleExerciseLogsChanged() {
-  await workoutDetailResource.reload();
-}
-
-function isApplyingAdvancement(exercise = {}) {
-  return Boolean(
-    applyAdvancementCommand.isRunning &&
-    activeAdvancingExerciseId.value === String(exercise.exerciseId || "")
-  );
+async function handleExerciseLogsChanged(exercise = {}) {
+  const key = exerciseCardKey(exercise);
+  syncingExerciseByKey[key] = true;
+  try {
+    await workoutDetailResource.reload();
+  } finally {
+    syncingExerciseByKey[key] = false;
+  }
 }
 
 async function handleExerciseAdvanceRequested(exercise = {}) {
-  const exerciseId = String(exercise.exerciseId || "").trim();
-  if (!exerciseId) {
-    return;
-  }
-
-  activeAdvancingExerciseId.value = exerciseId;
-  try {
-    await applyAdvancementCommand.run();
-  } finally {
-    activeAdvancingExerciseId.value = "";
-  }
+  await applyAdvancement(exercise);
 }
 
 async function goBackToToday() {

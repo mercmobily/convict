@@ -1,10 +1,9 @@
 import {
   buildProgressDisplayState,
   localTodayDateString,
-  resolveCurrentUserId,
-  resolveCurrentWorkspace,
   sortCanonicalExercises
 } from "@local/main/shared";
+import { resolveCurrentUserId, resolveCurrentWorkspace } from "@local/main/shared/requestContext";
 
 function progressStatus(progressRow = null) {
   if (progressRow?.readyToAdvanceStepId) {

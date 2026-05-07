@@ -287,7 +287,7 @@ function createRepository({
                 workoutOccurrenceExerciseIds: ids
               },
               include: ["workoutOccurrenceExercise"],
-              sort: ["workoutOccurrenceExerciseId", "setNumber", "side", "id"],
+              sort: ["workoutOccurrenceExerciseId", "loggedAt", "id"],
               page: {
                 size: 4096
               }

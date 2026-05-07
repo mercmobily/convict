@@ -18,7 +18,7 @@ const drawerDefaultOpenModel = computed({
   <section class="d-flex flex-column ga-4">
     <div>
       <h2 class="text-h6 mb-2">General</h2>
-      <p class="text-body-2 text-medium-emphasis mb-0">These starter settings live in this browser only.</p>
+      <p class="text-body-2 text-medium-emphasis mb-0">These preferences are stored in this browser for this device.</p>
     </div>
 
     <v-switch
@@ -30,8 +30,7 @@ const drawerDefaultOpenModel = computed({
     />
 
     <p class="text-body-2 text-medium-emphasis mb-0">
-      This tiny example exists to prove that shell-level settings can work without auth or a database. Real apps will
-      usually replace it.
+      This controls the default shell behavior for the public surface without changing account or workspace data.
     </p>
   </section>
 </template>

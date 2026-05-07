@@ -17,12 +17,12 @@ const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFou
         <v-chip color="primary" size="small" label>Admin</v-chip>
       </template>
       <v-card-title class="text-h5">Workspace Admin</v-card-title>
-      <v-card-subtitle>Privileged workspace workflows.</v-card-subtitle>
+      <v-card-subtitle>Members, assistant tools, and workspace controls.</v-card-subtitle>
     </v-card-item>
     <v-divider />
     <v-card-text class="d-flex flex-column ga-4">
       <p class="text-medium-emphasis mb-0">
-        Use this area for workspace administration modules.
+        Use this area to manage workspace membership, assistant features, and operator-facing settings for this cell.
       </p>
     </v-card-text>
   </v-card>

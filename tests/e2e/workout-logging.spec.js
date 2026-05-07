@@ -53,7 +53,6 @@ async function fetchSavedSetLogs(userId, scheduledForDate) {
       [
         "SELECT",
         "  woe.exercise_name_snapshot AS exerciseName,",
-        "  wsl.set_number AS setNumber,",
         "  wsl.measurement_unit_snapshot AS measurementUnit,",
         "  wsl.performed_value AS performedValue",
         "FROM workout_occurrences wo",
@@ -63,14 +62,13 @@ async function fetchSavedSetLogs(userId, scheduledForDate) {
         "ON wsl.workout_occurrence_exercise_id = woe.id",
         "WHERE wo.user_id = ?",
         "AND wo.scheduled_for_date = ?",
-        "ORDER BY woe.slot_number ASC, wsl.set_number ASC"
+        "ORDER BY woe.slot_number ASC, wsl.logged_at ASC, wsl.id ASC"
       ].join(" "),
       [userId, scheduledForDate]
     );
 
     return rows.map((row) => ({
       exerciseName: String(row.exerciseName || "").trim(),
-      setNumber: Number(row.setNumber || 0),
       measurementUnit: String(row.measurementUnit || "").trim().toLowerCase(),
       performedValue: Number(row.performedValue || 0)
     }));
@@ -204,19 +202,16 @@ test("user can log reps and seconds on an in-progress workout and see them after
   expect(savedSetLogs).toEqual([
     {
       exerciseName: "Handstand Push-ups",
-      setNumber: 1,
       measurementUnit: "seconds",
       performedValue: 36
     },
     {
       exerciseName: "Handstand Push-ups",
-      setNumber: 2,
       measurementUnit: "seconds",
       performedValue: 45
     },
     {
       exerciseName: "Bridges",
-      setNumber: 1,
       measurementUnit: "reps",
       performedValue: 20
     }

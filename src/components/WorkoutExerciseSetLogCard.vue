@@ -42,7 +42,6 @@ const {
 
 const activeDeleteRecordId = ref("");
 const createEditorDirty = ref(false);
-const createEditorResetKey = ref(0);
 const editEditorDirty = ref(false);
 const editState = ref(null);
 
@@ -56,29 +55,16 @@ const deleteSetLogCommand = useCommand({
   suppressSuccessMessage: true,
   fallbackRunError: "Unable to delete this set.",
   async onRunSuccess() {
-    emit("logs-changed");
+    emit("logs-changed", props.exercise);
   }
 });
 
 const savedSetLogs = computed(() => {
   const items = Array.isArray(props.exercise?.setLogs) ? props.exercise.setLogs : [];
-  return items.slice().sort((left, right) => {
-    const setNumberDelta = Number(left?.setNumber || 0) - Number(right?.setNumber || 0);
-    if (setNumberDelta !== 0) {
-      return setNumberDelta;
-    }
-
-    return String(left?.id || "").localeCompare(String(right?.id || ""));
-  });
+  return items.slice();
 });
 
 const nextDisplaySetNumber = computed(() => savedSetLogs.value.length + 1);
-const nextSequenceValue = computed(() => {
-  return savedSetLogs.value.reduce((maxValue, setLog) => {
-    const currentValue = Number(setLog?.setNumber || 0);
-    return currentValue > maxValue ? currentValue : maxValue;
-  }, 0) + 1;
-});
 
 const hasDirtyDraft = computed(() => createEditorDirty.value || editEditorDirty.value);
 
@@ -119,13 +105,12 @@ function closeEditEditor() {
 
 async function handleCreateSaved() {
   createEditorDirty.value = false;
-  createEditorResetKey.value += 1;
-  emit("logs-changed");
+  emit("logs-changed", props.exercise);
 }
 
 async function handleEditSaved() {
   closeEditEditor();
-  emit("logs-changed");
+  emit("logs-changed", props.exercise);
 }
 
 async function deleteSetLog(setLog = {}) {
@@ -289,11 +274,9 @@ function isEditingSetLog(setLog = {}) {
 
         <WorkoutSetLogAddEditElement
           v-if="canEdit"
-          :key="`create:${createEditorResetKey}`"
           :exercise="exercise"
           mode="create"
           :display-set-number="nextDisplaySetNumber"
-          :sequence-value="nextSequenceValue"
           @saved="handleCreateSaved"
           @dirty-state-changed="createEditorDirty = $event"
         />
