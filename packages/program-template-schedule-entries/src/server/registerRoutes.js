@@ -3,8 +3,6 @@ import { createCrudJsonApiRouteContracts } from "@jskit-ai/crud-core/server/rout
 import { checkRouteVisibility } from "@jskit-ai/kernel/shared/support/visibility";
 import { resolveScopedApiBasePath } from "@jskit-ai/kernel/shared/surface";
 import { resource } from "../shared/programTemplateScheduleEntryResource.js";
-import { routeParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
-import { buildWorkspaceInputFromRouteParams } from "@jskit-ai/workspaces-core/server/support/workspaceRouteInput";
 
 const {
   listRouteContract,
@@ -14,8 +12,7 @@ const {
   deleteRouteContract,
   recordRouteParamsValidator
 } = createCrudJsonApiRouteContracts({
-  resource,
-  routeParamsValidator
+  resource
 });
 
 function registerRoutes(
@@ -29,7 +26,7 @@ function registerRoutes(
   const router = app.make("jskit.http.router");
   const normalizedRouteSurface = normalizeSurfaceId(routeSurface);
   const routeBase = resolveScopedApiBasePath({
-    routeBase: "/w/:workspaceSlug",
+    routeBase: "/",
     relativePath: routeRelativePath,
     strictParams: false
   });
@@ -46,11 +43,9 @@ function registerRoutes(
         summary: "List records."
       },
       ...listRouteContract,
-      params: routeParamsValidator,
     },
     async function (request, reply) {
       const listInput = {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           ...(request.input.query || {})
       };
       const response = await request.executeAction({
@@ -79,7 +74,6 @@ function registerRoutes(
       const response = await request.executeAction({
         actionId: "crud.program_template_schedule_entries.view",
         input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           recordId: request.input.params.recordId,
           ...(request.input.query || {})
         }
@@ -100,13 +94,11 @@ function registerRoutes(
         summary: "Create a record."
       },
       ...createRouteContract,
-      params: routeParamsValidator,
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: "crud.program_template_schedule_entries.create",
         input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           ...(request.input.body || {})
         }
       });
@@ -132,7 +124,6 @@ function registerRoutes(
       const response = await request.executeAction({
         actionId: "crud.program_template_schedule_entries.update",
         input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           recordId: request.input.params.recordId,
           ...(request.input.body || {})
         }
@@ -159,7 +150,6 @@ function registerRoutes(
       const response = await request.executeAction({
         actionId: "crud.program_template_schedule_entries.delete",
         input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           recordId: request.input.params.recordId
         }
       });

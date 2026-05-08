@@ -18,15 +18,12 @@ import {
 } from "@mdi/js";
 import { useRoute, useRouter } from "vue-router";
 import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vue";
-import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
 import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
-import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
-const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
 const {
   workoutStatusColor,
   workoutStatusLabel
@@ -247,12 +244,7 @@ async function goBackToToday() {
 </script>
 
 <template>
-  <WorkspaceNotFoundCard
-    v-if="workspaceUnavailable"
-    :message="workspaceUnavailableMessage"
-    surface-label="App"
-  />
-  <section v-else class="workout-detail-page d-flex flex-column ga-6">
+  <section class="workout-detail-page d-flex flex-column ga-6">
     <v-chip
       v-if="isRefreshing"
       color="info"
@@ -342,9 +334,6 @@ async function goBackToToday() {
             </v-chip>
             <v-chip v-if="workout.performedOnDate" color="info" variant="tonal" label>
               Performed {{ workout.performedOnDate }}
-            </v-chip>
-            <v-chip v-if="assignment?.workspace?.name" color="secondary" variant="tonal" label>
-              Cell {{ assignment.workspace.name }}
             </v-chip>
           </div>
 

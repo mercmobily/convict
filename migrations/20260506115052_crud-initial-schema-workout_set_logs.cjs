@@ -10,7 +10,6 @@ exports.up = async function up(knex) {
     table.bigIncrements("id").unsigned().primary();
     table.bigInteger("workout_occurrence_exercise_id").unsigned().notNullable();
     table.bigInteger("user_id").unsigned().notNullable();
-    table.bigInteger("workspace_id").unsigned().nullable();
     table.smallint("set_number").unsigned().notNullable();
     table.string("side", 16).notNullable().defaultTo("both");
     table.string("measurement_unit_snapshot", 16).notNullable();
@@ -21,11 +20,9 @@ exports.up = async function up(knex) {
     table.timestamp("updated_at").notNullable().defaultTo(knex.raw("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"));
     table.index(["logged_at"], "idx_workout_set_logs_logged_at");
     table.index(["user_id"], "idx_workout_set_logs_user_id");
-    table.index(["workspace_id"], "idx_workout_set_logs_workspace_id");
     table.unique(["workout_occurrence_exercise_id","set_number","side"], "uq_workout_set_logs_occurrence_exercise_set_side");
     table.foreign(["workout_occurrence_exercise_id"], "fk_workout_set_logs_occurrence_exercise_id").references(["id"]).inTable("workout_occurrence_exercises").onUpdate("RESTRICT").onDelete("CASCADE");
     table.foreign(["user_id"], "fk_workout_set_logs_user_id").references(["id"]).inTable("users").onUpdate("RESTRICT").onDelete("CASCADE");
-    table.foreign(["workspace_id"], "fk_workout_set_logs_workspace_id").references(["id"]).inTable("workspaces").onUpdate("RESTRICT").onDelete("SET NULL");
   });
 
 };

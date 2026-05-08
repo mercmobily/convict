@@ -8,7 +8,16 @@ import { registerRoutes } from "./registerRoutes.js";
 class ProgressProvider {
   static id = "feature.progress";
 
-  static dependsOn = ["runtime.actions", "json-rest-api.core"];
+  static dependsOn = [
+    "runtime.actions",
+    "json-rest-api.core",
+    "auth.policy.fastify",
+    "crud.exercises",
+    "crud.exercise_steps",
+    "crud.personal_step_variations",
+    "crud.user_exercise_progress",
+    "crud.workout_occurrences"
+  ];
 
   register(app) {
     if (
@@ -46,8 +55,7 @@ class ProgressProvider {
   boot(app) {
     registerRoutes(app, {
       routeRelativePath: "progress",
-      routeSurface: "app",
-      routeSurfaceRequiresWorkspace: true
+      routeSurface: "app"
     });
   }
 }

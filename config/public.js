@@ -1,9 +1,7 @@
-import { roleCatalog } from "./roles.js";
-
 import { surfaceAccessPolicies } from "./surfaceAccessPolicies.js";
 
 export const config = {};
-config.tenancyMode = "personal";
+config.tenancyMode = "none";
 
 
 config.surfaceModeAll = "all";
@@ -62,42 +60,12 @@ config.surfaceDefinitions.console = {
 config.surfaceDefinitions.app = {
   id: "app",
   label: "App",
-  pagesRoot: "w/[workspaceSlug]",
+  pagesRoot: "app",
   enabled: true,
   requiresAuth: true,
-  requiresWorkspace: true,
-  accessPolicyId: "workspace_member",
+  requiresWorkspace: false,
+  accessPolicyId: "authenticated",
   origin: ""
-};
-
-config.surfaceDefinitions.admin = {
-  id: "admin",
-  label: "Admin",
-  pagesRoot: "w/[workspaceSlug]/admin",
-  enabled: true,
-  requiresAuth: true,
-  requiresWorkspace: true,
-  accessPolicyId: "workspace_member",
-  origin: ""
-};
-
-
-config.workspaceSwitching = true;
-config.workspaceInvitations = {
-  enabled: true,
-  allowInPersonalMode: true
-};
-
-
-config.roleCatalog = roleCatalog;
-
-
-config.assistantSurfaces ||= {};
-
-
-config.assistantSurfaces.admin = {
-  settingsSurfaceId: "console",
-  configScope: "global"
 };
 
 // jskit-mobile-capacitor:config:start

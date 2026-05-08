@@ -22,8 +22,6 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 import HistoryDayDetailCard from "@/components/HistoryDayDetailCard.vue";
-import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
-import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import {
   ISO_DAY_LABELS,
@@ -35,7 +33,6 @@ import {
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
-const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
 const { workoutStatusColor } = useConvictWorkoutPresentation();
 const route = useRoute();
 const router = useRouter();
@@ -307,14 +304,7 @@ async function selectDay(day = {}) {
 </script>
 
 <template>
-  <WorkspaceNotFoundCard
-    v-if="workspaceUnavailable"
-    :message="workspaceUnavailableMessage"
-    surface-label="App"
-  />
-
   <section
-    v-else
     class="history-page d-flex flex-column ga-6"
   >
     <div class="d-flex flex-wrap align-center justify-space-between ga-3">

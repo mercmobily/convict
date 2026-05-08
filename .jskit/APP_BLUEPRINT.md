@@ -3,7 +3,7 @@
 ## Product
 
 - App purpose:
-  Personal Convict Conditioning tracker with optional cell-based accountability through JSKIT workspaces.
+  Personal Convict Conditioning tracker focused on one authenticated user's program, workout logs, progress, and history.
 - Primary users:
   Individual trainees following Convict Conditioning programs.
 - Success criteria:
@@ -12,20 +12,20 @@
 ## Platform Choices
 
 - Tenancy mode:
-  `personal`
+  `none`
 - Database engine:
   MariaDB / MySQL
 - Auth provider:
   Supabase
 - Optional extras:
-  Workspaces enabled and repurposed as `cells`; assistant/realtime/social scoring deferred beyond v1
+  Realtime remains available for app/runtime status. Workspaces are not part of the Convict product model. Assistant/social scoring deferred beyond v1.
 
 ## Actors And Access
 
 - Actor list:
-  Guest, authenticated user, cell member, cell admin, console admin
+  Guest, authenticated user, console admin
 - Permission boundaries:
-  Training data is user-owned. Cell membership governs social visibility, not ownership of progress.
+  Training data is user-owned. Workspace membership is not part of access control for Convict training data.
 - Console/admin-only areas:
   Internal admin and support tooling only
 
@@ -33,10 +33,10 @@
 
 - Global surfaces:
   `home`, `auth`, `account`, `console`
-- Workspace surfaces:
-  `app` for day-to-day cell participation and personal training views
+- App surfaces:
+  `app` for authenticated personal training views at `/app`
 - Settings surfaces:
-  `account` for personal settings, `admin` for cell settings and membership
+  `account` for personal settings, `console` for operator tooling
 
 ## Data Model
 
@@ -64,30 +64,28 @@
   Profile, reminders, export, visibility preferences
 - Console routes:
   Internal admin/support only
-- Workspace app routes:
-  Today, History, Progress, Members
-- Workspace admin routes:
-  Cell settings, invites, member management
+- App routes:
+  Today, History, Progress, Workout detail
 
 ## Package Plan
 
 - Baseline runtime packages:
-  Existing JSKIT users/auth/workspaces/database stack already installed
+  Existing JSKIT users/auth/database stack already installed
 - Optional runtime packages:
   None required for the MVP rules stage
 - Generator packages to use:
   `crud-server-generator` for every persisted app-owned table first; `feature-server-generator` only for true workflow/orchestration packages that sit on top of generated resources
 - Package-owned workflows to accept as baseline:
-  JSKIT workspace membership and invitation flows
+  JSKIT users/auth/session flows
 - Package-owned workflows to override or extend:
-  Workspaces are relabeled conceptually as `cells`
+  None for Convict training.
 
 ## Implementation Notes
 
 - CRUDs to scaffold:
   `exercises`, `exercise_steps`, `program_templates`, `program_template_schedule_entries`, `programs`, `program_schedule_entries`, `user_program_assignments`, `user_program_assignment_revisions`, `personal_step_variations`, `user_exercise_progress`, `workout_occurrences`, `workout_occurrence_exercises`, and `workout_set_logs`
 - Non-CRUD pages to scaffold:
-  Today, Choose Program, Progress, History, Missed Workouts, Cell Members
+  Today, Choose Program, Progress, History, Missed Workouts
 - Custom code areas:
   Progression engine, revision-aware schedule projection, overdue workflow, workout submission/advancement orchestration, adherence calculations
 - CRUD-first rule:
@@ -113,7 +111,6 @@
 | --- | --- | --- |
 | `id` | `bigint unsigned` | Primary key |
 | `user_id` | `bigint unsigned` | FK to `users.id`, `ON DELETE CASCADE` |
-| `workspace_id` | `bigint unsigned nullable` | FK to `workspaces.id`, `ON DELETE SET NULL`; optional social context only |
 | `starts_on` | `date` | First date this assignment can produce scheduled workouts |
 | `ends_on` | `date nullable` | Null while active |
 | `status` | `varchar(32)` | `active` or `archived` |
@@ -123,7 +120,6 @@
 Keys and constraints:
 - Primary key on `id`
 - Index on `user_id`
-- Index on `workspace_id`
 - Index on `(user_id, status)`
 
 Notes:
@@ -214,7 +210,6 @@ Notes:
 | `user_id` | `bigint unsigned` | FK to `users.id`, `ON DELETE CASCADE` |
 | `user_program_assignment_id` | `bigint unsigned` | FK to `user_program_assignments.id`; protect history with `RESTRICT` / default no-action |
 | `user_program_assignment_revision_id` | `bigint unsigned` | FK to `user_program_assignment_revisions.id`; protects the source revision used |
-| `workspace_id` | `bigint unsigned nullable` | FK to `workspaces.id`, `ON DELETE SET NULL` |
 | `scheduled_for_date` | `date` | When this workout should have happened |
 | `performed_on_date` | `date nullable` | When it actually happened |
 | `status` | `varchar(32)` | `in_progress`, `completed`, or `definitely_missed` |
@@ -343,9 +338,9 @@ Notes:
   Users may attach a personal variation to a canonical step for injury, rehab, or practical substitution reasons.
   Logs store both the canonical step and the optional active variation.
   When a personal variation is active, progression prompts remain advisory and the user keeps explicit control over whether to stay or advance.
-- Cell visibility in v1:
-  Cell members can see display name, active program name, weekly adherence, streak, last completed workout date, and milestone headlines.
-  Raw set logs, private notes, and exact reps/seconds are private by default.
+- Sharing visibility in v1:
+  Personal training data stays in the unscoped authenticated app surface and is owned by the current user.
+  Shared adherence, milestone, or leaderboard views are deferred until a specific collaboration slice exists.
 - Future scoring principle:
   Competition later should weight adherence first and progression second.
   The primary signals are completed scheduled days, weekly adherence percentage, and streaks.
@@ -373,7 +368,7 @@ Notes:
 | 5 | Workout Logging slice | custom local code + UI | 2, 4 | User can start a workout occurrence and log reps or seconds against the prescribed exercises |
 | 6 | Submit And Advancement slice | custom local code + UI | 2, 5 | User can submit a workout, earn `ready to advance`, and choose whether to apply advancement |
 | 7 | Progress And History slice | custom local code + UI | 2, 6 | User can inspect current progress, earned advancement, and calendar/history detail |
-| 8 | Cell Visibility slice | custom local code + UI | 4, 7 | Cell members can see adherence and milestone summaries without private set logs |
+| 8 | Optional Sharing slice | custom local code + UI | 4, 7 | If enabled later, selected viewers can see adherence and milestone summaries without private set logs |
 
 ## Verification
 
@@ -386,4 +381,4 @@ Notes:
 - UI review expectations:
   Mobile-first day logging flow with explicit step/unit/target visibility
 - Known open questions:
-  Multi-cell membership in v1, exact future scoring formula, and how much automatic guidance to show for personal variations remain deferred
+  Collaboration/visibility in a future slice, exact future scoring formula, and how much automatic guidance to show for personal variations remain deferred

@@ -7,12 +7,12 @@ import {
   formatLocalDateOnly,
   normalizeDbDateOnly,
   seedProgramCopyAssignment,
-  withUserWorkspaceFixture
+  withUserFixture
 } from "./support/convictTestSupport.js";
 
 const DEV_USER_EMAIL = "slice2-playwright@convict.local";
-const WORKSPACE_SLUG = "slice2-playwright";
-const WORKSPACE_NAME = "Slice 2 Playwright";
+const USERNAME = "slice2-playwright";
+const DISPLAY_NAME = "Slice 2 Playwright";
 const SUPERMAX_SCHEDULE = Object.freeze({
   1: ["Pull-ups", "Squats"],
   2: ["Push-ups", "Leg Raises"],
@@ -53,19 +53,18 @@ function buildTodayFixturePlan() {
 
 async function ensureTodayFixture({
   email,
-  workspaceSlug,
-  workspaceName,
+  username,
+  displayName,
   startOn
 }) {
-  return withUserWorkspaceFixture(
+  return withUserFixture(
     {
       email,
-      workspaceSlug,
-      workspaceName
+      username,
+      displayName
     },
-    async ({ connection, userId, workspaceId }) => seedProgramCopyAssignment(connection, {
+    async ({ connection, userId }) => seedProgramCopyAssignment(connection, {
       userId,
-      workspaceId,
       programSlug: "supermax",
       startOn
     })
@@ -124,8 +123,8 @@ test("active assignment shows today's projection and resolves overdue workouts",
   const fixturePlan = buildTodayFixturePlan();
   const fixtureState = await ensureTodayFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -133,22 +132,18 @@ test("active assignment shows today's projection and resolves overdue workouts",
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+  await page.goto("/app");
 
   const activeProgramCard = page.locator(".active-program-card");
   const todayCard = page.locator(".today-card");
   const overdueCard = page.locator(".overdue-card");
-  await expect(page.getByRole("heading", { name: "Your active program" })).toBeVisible();
+  await expect(activeProgramCard.getByRole("heading", { name: "Supermax" })).toBeVisible();
   await expect(activeProgramCard.getByText("Supermax").first()).toBeVisible();
   await expect(todayCard.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
   await expect(overdueCard.getByRole("heading", { name: "Missed workouts", exact: true })).toBeVisible();
 
-  const primaryOverdueCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.primaryOverdueDate
-  }).first();
-  const secondaryOverdueCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.secondaryOverdueDate
-  }).first();
+  const primaryOverdueCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.primaryOverdueDate}"]`).first();
+  const secondaryOverdueCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.secondaryOverdueDate}"]`).first();
 
   await expect(primaryOverdueCard).toBeVisible();
   await expect(secondaryOverdueCard).toBeVisible();
@@ -165,7 +160,7 @@ test("active assignment shows today's projection and resolves overdue workouts",
 
     await todayCard.getByRole("button", { name: "Start today's workout" }).click();
 
-    await expect(page).toHaveURL(new RegExp(`/w/${WORKSPACE_SLUG}/workouts/${fixturePlan.todayDate}$`));
+    await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.todayDate}$`));
     await expect(page.getByRole("button", { name: "Back to today" })).toBeVisible();
 
     const todayOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.todayDate);
@@ -179,12 +174,12 @@ test("active assignment shows today's projection and resolves overdue workouts",
     await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
   } else {
     await expect(todayCard.getByText("Rest day")).toBeVisible();
-    await expect(todayCard.getByText("Today is a rest day")).toBeVisible();
+    await expect(todayCard.getByText("No prescribed work today.")).toBeVisible();
   }
 
   await primaryOverdueCard.getByRole("button", { name: "Start overdue workout" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/w/${WORKSPACE_SLUG}/workouts/${fixturePlan.primaryOverdueDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.primaryOverdueDate}$`));
   await expect(page.getByRole("button", { name: "Back to today" })).toBeVisible();
 
   const overdueOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.primaryOverdueDate);
@@ -196,16 +191,12 @@ test("active assignment shows today's projection and resolves overdue workouts",
 
   await page.getByRole("button", { name: "Back to today" }).click();
   await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
-  await expect(
-    primaryOverdueCard.getByText("This overdue workout is already open. Resume it to keep logging sets.")
-  ).toBeVisible();
+  await expect(primaryOverdueCard.getByText("Open workout")).toBeVisible();
 
   await secondaryOverdueCard.getByRole("button", { name: "Mark definitely missed" }).click();
 
   await expect(page.getByRole("status").getByText("Workout marked definitely missed.")).toBeVisible();
-  await expect(page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.secondaryOverdueDate
-  })).toHaveCount(0);
+  await expect(page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.secondaryOverdueDate}"]`)).toHaveCount(0);
 
   const missedOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.secondaryOverdueDate);
   expect(missedOccurrence?.status).toBe("definitely_missed");

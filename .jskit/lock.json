@@ -182,7 +182,7 @@
     },
     "@jskit-ai/auth-core": {
       "packageId": "@jskit-ai/auth-core",
-      "version": "0.1.61",
+      "version": "0.1.65",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/auth-core"
@@ -199,8 +199,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.792Z",
-      "migrationSyncVersion": "0.1.61"
+      "installedAt": "2026-05-08T10:26:21.140Z",
+      "migrationSyncVersion": "0.1.65"
     },
     "@jskit-ai/auth-provider-supabase-core": {
       "packageId": "@jskit-ai/auth-provider-supabase-core",
@@ -305,7 +305,7 @@
     },
     "@jskit-ai/http-runtime": {
       "packageId": "@jskit-ai/http-runtime",
-      "version": "0.1.61",
+      "version": "0.1.65",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/http-runtime"
@@ -322,8 +322,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.795Z",
-      "migrationSyncVersion": "0.1.61"
+      "installedAt": "2026-05-08T10:26:21.147Z",
+      "migrationSyncVersion": "0.1.65"
     },
     "@jskit-ai/auth-web": {
       "packageId": "@jskit-ai/auth-web",
@@ -396,7 +396,7 @@
     },
     "@jskit-ai/database-runtime": {
       "packageId": "@jskit-ai/database-runtime",
-      "version": "0.1.62",
+      "version": "0.1.66",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/database-runtime"
@@ -434,8 +434,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.829Z",
-      "migrationSyncVersion": "0.1.62"
+      "installedAt": "2026-05-08T10:26:21.142Z",
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/database-runtime-mysql": {
       "packageId": "@jskit-ai/database-runtime-mysql",
@@ -545,7 +545,7 @@
     },
     "@jskit-ai/uploads-runtime": {
       "packageId": "@jskit-ai/uploads-runtime",
-      "version": "0.1.40",
+      "version": "0.1.44",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/uploads-runtime"
@@ -562,8 +562,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.831Z",
-      "migrationSyncVersion": "0.1.40"
+      "installedAt": "2026-05-08T10:26:21.147Z",
+      "migrationSyncVersion": "0.1.44"
     },
     "@jskit-ai/uploads-image-web": {
       "packageId": "@jskit-ai/uploads-image-web",
@@ -589,7 +589,7 @@
     },
     "@jskit-ai/json-rest-api-core": {
       "packageId": "@jskit-ai/json-rest-api-core",
-      "version": "0.1.7",
+      "version": "0.1.11",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/json-rest-api-core"
@@ -606,12 +606,12 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.831Z",
-      "migrationSyncVersion": "0.1.7"
+      "installedAt": "2026-05-08T10:26:21.147Z",
+      "migrationSyncVersion": "0.1.11"
     },
     "@jskit-ai/resource-core": {
       "packageId": "@jskit-ai/resource-core",
-      "version": "0.1.7",
+      "version": "0.1.11",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/resource-core"
@@ -628,12 +628,12 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.801Z",
-      "migrationSyncVersion": "0.1.7"
+      "installedAt": "2026-05-08T10:26:21.147Z",
+      "migrationSyncVersion": "0.1.11"
     },
     "@jskit-ai/resource-crud-core": {
       "packageId": "@jskit-ai/resource-crud-core",
-      "version": "0.1.7",
+      "version": "0.1.11",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/resource-crud-core"
@@ -650,12 +650,12 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.802Z",
-      "migrationSyncVersion": "0.1.7"
+      "installedAt": "2026-05-08T10:26:21.147Z",
+      "migrationSyncVersion": "0.1.11"
     },
     "@jskit-ai/storage-runtime": {
       "packageId": "@jskit-ai/storage-runtime",
-      "version": "0.1.61",
+      "version": "0.1.65",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/storage-runtime"
@@ -672,15 +672,16 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.832Z",
-      "migrationSyncVersion": "0.1.61"
+      "installedAt": "2026-05-08T10:26:21.147Z",
+      "migrationSyncVersion": "0.1.65"
     },
     "@jskit-ai/users-core": {
       "packageId": "@jskit-ai/users-core",
-      "version": "0.1.72",
+      "version": "0.1.76",
       "source": {
-        "type": "catalog",
-        "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/users-core"
+        "type": "npm-installed-package",
+        "packagePath": "node_modules/@jskit-ai/users-core",
+        "descriptorPath": "node_modules/@jskit-ai/users-core/package.descriptor.mjs"
       },
       "managed": {
         "packageJson": {
@@ -719,9 +720,9 @@
             "hadPrevious": false,
             "previousContentBase64": "",
             "preserveOnRemove": true,
-            "reason": "Install app-owned users package descriptor for workspace tenancy.",
+            "reason": "Install app-owned users package descriptor for non-workspace tenancy.",
             "category": "users-core",
-            "id": "users-core-users-package-descriptor-workspace"
+            "id": "users-core-users-package-descriptor-base"
           },
           {
             "path": "packages/users/src/server/UsersProvider.js",
@@ -729,9 +730,9 @@
             "hadPrevious": true,
             "previousContentBase64": "aW1wb3J0IHsgcmVzb2x2ZUFwcENvbmZpZyB9IGZyb20gIkBqc2tpdC1haS9rZXJuZWwvc2VydmVyL3N1cHBvcnQiOwppbXBvcnQgeyByZXNvbHZlQ3J1ZFN1cmZhY2VQb2xpY3lGcm9tQXBwQ29uZmlnIH0gZnJvbSAiQGpza2l0LWFpL2NydWQtY29yZS9zZXJ2ZXIvY3J1ZE1vZHVsZUNvbmZpZyI7CmltcG9ydCB7CiAgSU5URVJOQUxfSlNPTl9SRVNUX0FQSSwKICBhZGRSZXNvdXJjZUlmTWlzc2luZywKICBjcmVhdGVKc29uUmVzdFJlc291cmNlU2NvcGVPcHRpb25zCn0gZnJvbSAiQGpza2l0LWFpL2pzb24tcmVzdC1hcGktY29yZS9zZXJ2ZXIvanNvblJlc3RBcGlIb3N0IjsKaW1wb3J0IHsgd2l0aEFjdGlvbkRlZmF1bHRzIH0gZnJvbSAiQGpza2l0LWFpL2tlcm5lbC9zaGFyZWQvYWN0aW9ucyI7CmltcG9ydCB7IHRvRGF0YWJhc2VEYXRlVGltZVV0YyB9IGZyb20gIkBqc2tpdC1haS9kYXRhYmFzZS1ydW50aW1lL3NoYXJlZCI7CmltcG9ydCB7IGNyZWF0ZVJlcG9zaXRvcnkgfSBmcm9tICIuL3JlcG9zaXRvcnkuanMiOwppbXBvcnQgeyBjcmVhdGVTZXJ2aWNlIH0gZnJvbSAiLi9zZXJ2aWNlLmpzIjsKaW1wb3J0IHsgY3JlYXRlQWN0aW9ucyB9IGZyb20gIi4vYWN0aW9ucy5qcyI7CmltcG9ydCB7IHJlZ2lzdGVyUm91dGVzIH0gZnJvbSAiLi9yZWdpc3RlclJvdXRlcy5qcyI7CmltcG9ydCB7IHJlc291cmNlIH0gZnJvbSAiLi4vc2hhcmVkL3VzZXJSZXNvdXJjZS5qcyI7Cgpjb25zdCBDUlVEX01PRFVMRV9DT05GSUcgPSBPYmplY3QuZnJlZXplKHsKICBuYW1lc3BhY2U6ICJ1c2VycyIsCiAgc3VyZmFjZTogImFkbWluIiwKICBvd25lcnNoaXBGaWx0ZXI6ICJwdWJsaWMiLAogIHJlbGF0aXZlUGF0aDogIi91c2VycyIKfSk7CgpmdW5jdGlvbiByZXNvbHZlQ3J1ZFBvbGljeUZyb21BcHAoYXBwKSB7CiAgcmV0dXJuIHJlc29sdmVDcnVkU3VyZmFjZVBvbGljeUZyb21BcHBDb25maWcoQ1JVRF9NT0RVTEVfQ09ORklHLCByZXNvbHZlQXBwQ29uZmlnKGFwcCksIHsKICAgIGNvbnRleHQ6ICJVc2Vyc1Byb3ZpZGVyIgogIH0pOwp9CgpjbGFzcyBVc2Vyc1Byb3ZpZGVyIHsKICBzdGF0aWMgaWQgPSAiY3J1ZC51c2VycyI7CgogIHN0YXRpYyBkZXBlbmRzT24gPSBbInJ1bnRpbWUuYWN0aW9ucyIsICJydW50aW1lLmRhdGFiYXNlIiwgImF1dGgucG9saWN5LmZhc3RpZnkiLCAibG9jYWwubWFpbiIsICJqc29uLXJlc3QtYXBpLmNvcmUiXTsKCiAgcmVnaXN0ZXIoYXBwKSB7CiAgICBjb25zdCBjcnVkUG9saWN5ID0gcmVzb2x2ZUNydWRQb2xpY3lGcm9tQXBwKGFwcCk7CgogICAgYXBwLnNpbmdsZXRvbigicmVwb3NpdG9yeS51c2VycyIsIChzY29wZSkgPT4gewogICAgICBjb25zdCBhcGkgPSBzY29wZS5tYWtlKElOVEVSTkFMX0pTT05fUkVTVF9BUEkpOwogICAgICBjb25zdCBrbmV4ID0gc2NvcGUubWFrZSgianNraXQuZGF0YWJhc2Uua25leCIpOwogICAgICByZXR1cm4gY3JlYXRlUmVwb3NpdG9yeSh7CiAgICAgICAgYXBpLAogICAgICAgIGtuZXgKICAgICAgfSk7CiAgICB9KTsKCiAgICBhcHAuc2VydmljZSgKICAgICAgImNydWQudXNlcnMiLAogICAgICAoc2NvcGUpID0+IHsKICAgICAgICByZXR1cm4gY3JlYXRlU2VydmljZSh7CiAgICAgICAgICB1c2Vyc1JlcG9zaXRvcnk6IHNjb3BlLm1ha2UoInJlcG9zaXRvcnkudXNlcnMiKQogICAgICAgIH0pOwogICAgICB9CiAgICApOwoKICAgIGFwcC5hY3Rpb25zKAogICAgICB3aXRoQWN0aW9uRGVmYXVsdHMoCiAgICAgICAgY3JlYXRlQWN0aW9ucyh7CiAgICAgICAgICBzdXJmYWNlOiBjcnVkUG9saWN5LnN1cmZhY2VJZAogICAgICAgIH0pLAogICAgICAgIHsKICAgICAgICAgIGRvbWFpbjogImNydWQiLAogICAgICAgICAgZGVwZW5kZW5jaWVzOiB7CiAgICAgICAgICAgIHVzZXJzU2VydmljZTogImNydWQudXNlcnMiCiAgICAgICAgICB9CiAgICAgICAgfQogICAgICApCiAgICApOwogIH0KCiAgYXN5bmMgYm9vdChhcHApIHsKICAgIGNvbnN0IGNydWRQb2xpY3kgPSByZXNvbHZlQ3J1ZFBvbGljeUZyb21BcHAoYXBwKTsKICAgIGNvbnN0IGFwaSA9IGFwcC5tYWtlKElOVEVSTkFMX0pTT05fUkVTVF9BUEkpOwogICAgYXdhaXQgYWRkUmVzb3VyY2VJZk1pc3NpbmcoCiAgICAgIGFwaSwKICAgICAgInVzZXJzIiwKICAgICAgY3JlYXRlSnNvblJlc3RSZXNvdXJjZVNjb3BlT3B0aW9ucyhyZXNvdXJjZSwgewogICAgICAgIHdyaXRlU2VyaWFsaXplcnM6IHsKICAgICAgICAgICJkYXRldGltZS11dGMiOiB0b0RhdGFiYXNlRGF0ZVRpbWVVdGMKICAgICAgICB9CiAgICAgIH0pCiAgICApOwogICAgcmVnaXN0ZXJSb3V0ZXMoYXBwLCB7CiAgICAgIHJvdXRlT3duZXJzaGlwRmlsdGVyOiBjcnVkUG9saWN5Lm93bmVyc2hpcEZpbHRlciwKICAgICAgcm91dGVTdXJmYWNlOiBjcnVkUG9saWN5LnN1cmZhY2VJZCwKICAgICAgcm91dGVTdXJmYWNlUmVxdWlyZXNXb3Jrc3BhY2U6IGNydWRQb2xpY3kuc3VyZmFjZURlZmluaXRpb24ucmVxdWlyZXNXb3Jrc3BhY2UgPT09IHRydWUsCiAgICAgIHJvdXRlUmVsYXRpdmVQYXRoOiBjcnVkUG9saWN5LnJlbGF0aXZlUGF0aAogICAgfSk7CiAgfQp9CgpleHBvcnQgeyBVc2Vyc1Byb3ZpZGVyIH07Cg==",
             "preserveOnRemove": true,
-            "reason": "Install app-owned users CRUD provider for workspace tenancy.",
+            "reason": "Install app-owned users CRUD provider for non-workspace tenancy.",
             "category": "users-core",
-            "id": "users-core-users-provider-workspace"
+            "id": "users-core-users-provider-base"
           },
           {
             "path": "packages/users/src/server/actions.js",
@@ -739,9 +740,9 @@
             "hadPrevious": true,
             "previousContentBase64": "aW1wb3J0IHsKICBjb21wb3NlU2NoZW1hRGVmaW5pdGlvbnMsCiAgcmVjb3JkSWRQYXJhbXNWYWxpZGF0b3IKfSBmcm9tICJAanNraXQtYWkva2VybmVsL3NoYXJlZC92YWxpZGF0b3JzIjsKaW1wb3J0IHsKICBjcmVhdGVDcnVkQ3Vyc29yUGFnaW5hdGlvblF1ZXJ5VmFsaWRhdG9yLAogIGxpc3RTZWFyY2hRdWVyeVZhbGlkYXRvcgp9IGZyb20gIkBqc2tpdC1haS9jcnVkLWNvcmUvc2VydmVyL2xpc3RRdWVyeVZhbGlkYXRvcnMiOwppbXBvcnQgeyB3b3Jrc3BhY2VTbHVnUGFyYW1zVmFsaWRhdG9yIH0gZnJvbSAiQGpza2l0LWFpL3dvcmtzcGFjZXMtY29yZS9zZXJ2ZXIvdmFsaWRhdG9ycy9yb3V0ZVBhcmFtc1ZhbGlkYXRvciI7CmltcG9ydCB7IHJlc291cmNlIH0gZnJvbSAiLi4vc2hhcmVkL3VzZXJSZXNvdXJjZS5qcyI7Cgpjb25zdCBsaXN0Q3Vyc29yUGFnaW5hdGlvblF1ZXJ5VmFsaWRhdG9yID0gY3JlYXRlQ3J1ZEN1cnNvclBhZ2luYXRpb25RdWVyeVZhbGlkYXRvcih7CiAgb3JkZXJCeTogcmVzb3VyY2UuZGVmYXVsdFNvcnQKfSk7CmNvbnN0IGF1dGhlbnRpY2F0ZWRQZXJtaXNzaW9uID0gT2JqZWN0LmZyZWV6ZSh7CiAgcmVxdWlyZTogImF1dGhlbnRpY2F0ZWQiCn0pOwoKZnVuY3Rpb24gY3JlYXRlQWN0aW9ucyh7IHN1cmZhY2UgfSA9IHt9KSB7CiAgcmV0dXJuIE9iamVjdC5mcmVlemUoWwogICAgewogICAgICBpZDogImNydWQudXNlcnMubGlzdCIsCiAgICAgIHZlcnNpb246IDEsCiAgICAgIGtpbmQ6ICJxdWVyeSIsCiAgICAgIGNoYW5uZWxzOiBbImFwaSIsICJhdXRvbWF0aW9uIiwgImludGVybmFsIl0sCiAgICAgIHN1cmZhY2VzOiBbc3VyZmFjZV0sCiAgICAgIHBlcm1pc3Npb246IGF1dGhlbnRpY2F0ZWRQZXJtaXNzaW9uLAogICAgICBpbnB1dDogY29tcG9zZVNjaGVtYURlZmluaXRpb25zKFsKICAgICAgICB3b3Jrc3BhY2VTbHVnUGFyYW1zVmFsaWRhdG9yLAogICAgICAgIGxpc3RDdXJzb3JQYWdpbmF0aW9uUXVlcnlWYWxpZGF0b3IsCiAgICAgICAgbGlzdFNlYXJjaFF1ZXJ5VmFsaWRhdG9yCiAgICAgIF0pLAogICAgICBvdXRwdXQ6IG51bGwsCiAgICAgIGlkZW1wb3RlbmN5OiAibm9uZSIsCiAgICAgIGF1ZGl0OiB7CiAgICAgICAgYWN0aW9uTmFtZTogImNydWQudXNlcnMubGlzdCIKICAgICAgfSwKICAgICAgb2JzZXJ2YWJpbGl0eToge30sCiAgICAgIGFzeW5jIGV4ZWN1dGUoaW5wdXQsIGNvbnRleHQsIGRlcHMpIHsKICAgICAgICBjb25zdCB7IHdvcmtzcGFjZVNsdWcsIC4uLnF1ZXJ5IH0gPSBpbnB1dCB8fCB7fTsKICAgICAgICByZXR1cm4gZGVwcy51c2Vyc1NlcnZpY2UucXVlcnlEb2N1bWVudHMocXVlcnksIHsKICAgICAgICAgIGNvbnRleHQsCiAgICAgICAgICB2aXNpYmlsaXR5Q29udGV4dDogY29udGV4dD8udmlzaWJpbGl0eUNvbnRleHQKICAgICAgICB9KTsKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgaWQ6ICJjcnVkLnVzZXJzLnZpZXciLAogICAgICB2ZXJzaW9uOiAxLAogICAgICBraW5kOiAicXVlcnkiLAogICAgICBjaGFubmVsczogWyJhcGkiLCAiYXV0b21hdGlvbiIsICJpbnRlcm5hbCJdLAogICAgICBzdXJmYWNlczogW3N1cmZhY2VdLAogICAgICBwZXJtaXNzaW9uOiBhdXRoZW50aWNhdGVkUGVybWlzc2lvbiwKICAgICAgaW5wdXQ6IGNvbXBvc2VTY2hlbWFEZWZpbml0aW9ucyhbCiAgICAgICAgd29ya3NwYWNlU2x1Z1BhcmFtc1ZhbGlkYXRvciwKICAgICAgICByZWNvcmRJZFBhcmFtc1ZhbGlkYXRvcgogICAgICBdKSwKICAgICAgb3V0cHV0OiBudWxsLAogICAgICBpZGVtcG90ZW5jeTogIm5vbmUiLAogICAgICBhdWRpdDogewogICAgICAgIGFjdGlvbk5hbWU6ICJjcnVkLnVzZXJzLnZpZXciCiAgICAgIH0sCiAgICAgIG9ic2VydmFiaWxpdHk6IHt9LAogICAgICBhc3luYyBleGVjdXRlKGlucHV0LCBjb250ZXh0LCBkZXBzKSB7CiAgICAgICAgcmV0dXJuIGRlcHMudXNlcnNTZXJ2aWNlLmdldERvY3VtZW50QnlJZChpbnB1dC5yZWNvcmRJZCwgewogICAgICAgICAgY29udGV4dCwKICAgICAgICAgIHZpc2liaWxpdHlDb250ZXh0OiBjb250ZXh0Py52aXNpYmlsaXR5Q29udGV4dAogICAgICAgIH0pOwogICAgICB9CiAgICB9CiAgXSk7Cn0KCmV4cG9ydCB7IGNyZWF0ZUFjdGlvbnMgfTsK",
             "preserveOnRemove": true,
-            "reason": "Install app-owned users CRUD actions for workspace tenancy.",
+            "reason": "Install app-owned users CRUD actions for non-workspace tenancy.",
             "category": "users-core",
-            "id": "users-core-users-actions-workspace"
+            "id": "users-core-users-actions-base"
           },
           {
             "path": "packages/users/src/server/registerRoutes.js",
@@ -749,9 +750,9 @@
             "hadPrevious": true,
             "previousContentBase64": "aW1wb3J0IHsgY3JlYXRlSnNvbkFwaVJlc291cmNlUm91dGVDb250cmFjdCB9IGZyb20gIkBqc2tpdC1haS9odHRwLXJ1bnRpbWUvc2hhcmVkL3ZhbGlkYXRvcnMvanNvbkFwaVJvdXRlVHJhbnNwb3J0IjsKaW1wb3J0IHsgbm9ybWFsaXplU3VyZmFjZUlkIH0gZnJvbSAiQGpza2l0LWFpL2tlcm5lbC9zaGFyZWQvc3VyZmFjZS9yZWdpc3RyeSI7CmltcG9ydCB7CiAgY3JlYXRlQ3J1ZEN1cnNvclBhZ2luYXRpb25RdWVyeVZhbGlkYXRvciwKICBsaXN0U2VhcmNoUXVlcnlWYWxpZGF0b3IKfSBmcm9tICJAanNraXQtYWkvY3J1ZC1jb3JlL3NlcnZlci9saXN0UXVlcnlWYWxpZGF0b3JzIjsKaW1wb3J0IHsgcmVzb2x2ZVNjb3BlZEFwaUJhc2VQYXRoIH0gZnJvbSAiQGpza2l0LWFpL2tlcm5lbC9zaGFyZWQvc3VyZmFjZSI7CmltcG9ydCB7IGNoZWNrUm91dGVWaXNpYmlsaXR5IH0gZnJvbSAiQGpza2l0LWFpL2tlcm5lbC9zaGFyZWQvc3VwcG9ydC92aXNpYmlsaXR5IjsKaW1wb3J0IHsKICBjb21wb3NlU2NoZW1hRGVmaW5pdGlvbnMsCiAgcmVjb3JkSWRQYXJhbXNWYWxpZGF0b3IKfSBmcm9tICJAanNraXQtYWkva2VybmVsL3NoYXJlZC92YWxpZGF0b3JzIjsKaW1wb3J0IHsgcm91dGVQYXJhbXNWYWxpZGF0b3IgfSBmcm9tICJAanNraXQtYWkvd29ya3NwYWNlcy1jb3JlL3NlcnZlci92YWxpZGF0b3JzL3JvdXRlUGFyYW1zVmFsaWRhdG9yIjsKaW1wb3J0IHsgYnVpbGRXb3Jrc3BhY2VJbnB1dEZyb21Sb3V0ZVBhcmFtcyB9IGZyb20gIkBqc2tpdC1haS93b3Jrc3BhY2VzLWNvcmUvc2VydmVyL3N1cHBvcnQvd29ya3NwYWNlUm91dGVJbnB1dCI7CmltcG9ydCB7IHJlc291cmNlIH0gZnJvbSAiLi4vc2hhcmVkL3VzZXJSZXNvdXJjZS5qcyI7Cgpjb25zdCBsaXN0Q3Vyc29yUGFnaW5hdGlvblF1ZXJ5VmFsaWRhdG9yID0gY3JlYXRlQ3J1ZEN1cnNvclBhZ2luYXRpb25RdWVyeVZhbGlkYXRvcih7CiAgb3JkZXJCeTogcmVzb3VyY2UuZGVmYXVsdFNvcnQKfSk7CmNvbnN0IGxpc3RSb3V0ZVF1ZXJ5VmFsaWRhdG9yID0gY29tcG9zZVNjaGVtYURlZmluaXRpb25zKFsKICBsaXN0Q3Vyc29yUGFnaW5hdGlvblF1ZXJ5VmFsaWRhdG9yLAogIGxpc3RTZWFyY2hRdWVyeVZhbGlkYXRvcgpdKTsKY29uc3QgUkVTT1VSQ0VfUk9VVEVfQ09OVFJBQ1RfVFlQRSA9IHJlc291cmNlLm5hbWVzcGFjZTsKY29uc3QgbGlzdFJvdXRlQ29udHJhY3QgPSBjcmVhdGVKc29uQXBpUmVzb3VyY2VSb3V0ZUNvbnRyYWN0KHsKICB0eXBlOiBSRVNPVVJDRV9ST1VURV9DT05UUkFDVF9UWVBFLAogIHF1ZXJ5OiBsaXN0Um91dGVRdWVyeVZhbGlkYXRvciwKICBvdXRwdXQ6IHJlc291cmNlLm9wZXJhdGlvbnMudmlldy5vdXRwdXQsCiAgb3V0cHV0S2luZDogImNvbGxlY3Rpb24iCn0pOwpjb25zdCB2aWV3Um91dGVDb250cmFjdCA9IGNyZWF0ZUpzb25BcGlSZXNvdXJjZVJvdXRlQ29udHJhY3QoewogIHR5cGU6IFJFU09VUkNFX1JPVVRFX0NPTlRSQUNUX1RZUEUsCiAgb3V0cHV0OiByZXNvdXJjZS5vcGVyYXRpb25zLnZpZXcub3V0cHV0LAogIG91dHB1dEtpbmQ6ICJyZWNvcmQiCn0pOwpjb25zdCB2aWV3Um91dGVQYXJhbXNWYWxpZGF0b3IgPSBjb21wb3NlU2NoZW1hRGVmaW5pdGlvbnMoWwogIHJvdXRlUGFyYW1zVmFsaWRhdG9yLAogIHJlY29yZElkUGFyYW1zVmFsaWRhdG9yCl0pOwoKZnVuY3Rpb24gcmVnaXN0ZXJSb3V0ZXMoCiAgYXBwLAogIHsKICAgIHJvdXRlT3duZXJzaGlwRmlsdGVyID0gInB1YmxpYyIsCiAgICByb3V0ZVN1cmZhY2UgPSAiIiwKICAgIHJvdXRlU3VyZmFjZVJlcXVpcmVzV29ya3NwYWNlID0gZmFsc2UsCiAgICByb3V0ZVJlbGF0aXZlUGF0aCA9ICIiCiAgfSA9IHt9CikgewogIGNvbnN0IHJvdXRlciA9IGFwcC5tYWtlKCJqc2tpdC5odHRwLnJvdXRlciIpOwogIGNvbnN0IG5vcm1hbGl6ZWRSb3V0ZVN1cmZhY2UgPSBub3JtYWxpemVTdXJmYWNlSWQocm91dGVTdXJmYWNlKTsKICBjb25zdCByb3V0ZUJhc2UgPSByZXNvbHZlU2NvcGVkQXBpQmFzZVBhdGgoewogICAgcm91dGVCYXNlOiByb3V0ZVN1cmZhY2VSZXF1aXJlc1dvcmtzcGFjZSA9PT0gdHJ1ZSA/ICIvdy86d29ya3NwYWNlU2x1ZyIgOiAiLyIsCiAgICByZWxhdGl2ZVBhdGg6IHJvdXRlUmVsYXRpdmVQYXRoLAogICAgc3RyaWN0UGFyYW1zOiBmYWxzZQogIH0pOwoKICByb3V0ZXIucmVnaXN0ZXIoCiAgICAiR0VUIiwKICAgIHJvdXRlQmFzZSwKICAgIHsKICAgICAgYXV0aDogInJlcXVpcmVkIiwKICAgICAgc3VyZmFjZTogbm9ybWFsaXplZFJvdXRlU3VyZmFjZSwKICAgICAgdmlzaWJpbGl0eTogY2hlY2tSb3V0ZVZpc2liaWxpdHkocm91dGVPd25lcnNoaXBGaWx0ZXIpLAogICAgICBtZXRhOiB7CiAgICAgICAgdGFnczogWyJjcnVkIl0sCiAgICAgICAgc3VtbWFyeTogIkxpc3QgdXNlcnMuIgogICAgICB9LAogICAgICAuLi5saXN0Um91dGVDb250cmFjdCwKICAgICAgcGFyYW1zOiByb3V0ZVBhcmFtc1ZhbGlkYXRvcgogICAgfSwKICAgIGFzeW5jIGZ1bmN0aW9uIChyZXF1ZXN0LCByZXBseSkgewogICAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IHJlcXVlc3QuZXhlY3V0ZUFjdGlvbih7CiAgICAgICAgYWN0aW9uSWQ6ICJjcnVkLnVzZXJzLmxpc3QiLAogICAgICAgIGlucHV0OiB7CiAgICAgICAgICAuLi5idWlsZFdvcmtzcGFjZUlucHV0RnJvbVJvdXRlUGFyYW1zKHJlcXVlc3QuaW5wdXQucGFyYW1zKSwKICAgICAgICAgIC4uLihyZXF1ZXN0LmlucHV0LnF1ZXJ5IHx8IHt9KQogICAgICAgIH0KICAgICAgfSk7CiAgICAgIHJlcGx5LmNvZGUoMjAwKS5zZW5kKHJlc3BvbnNlKTsKICAgIH0KICApOwoKICByb3V0ZXIucmVnaXN0ZXIoCiAgICAiR0VUIiwKICAgIGAke3JvdXRlQmFzZX0vOnJlY29yZElkYCwKICAgIHsKICAgICAgYXV0aDogInJlcXVpcmVkIiwKICAgICAgc3VyZmFjZTogbm9ybWFsaXplZFJvdXRlU3VyZmFjZSwKICAgICAgdmlzaWJpbGl0eTogY2hlY2tSb3V0ZVZpc2liaWxpdHkocm91dGVPd25lcnNoaXBGaWx0ZXIpLAogICAgICBtZXRhOiB7CiAgICAgICAgdGFnczogWyJjcnVkIl0sCiAgICAgICAgc3VtbWFyeTogIlZpZXcgYSB1c2VyLiIKICAgICAgfSwKICAgICAgLi4udmlld1JvdXRlQ29udHJhY3QsCiAgICAgIHBhcmFtczogdmlld1JvdXRlUGFyYW1zVmFsaWRhdG9yCiAgICB9LAogICAgYXN5bmMgZnVuY3Rpb24gKHJlcXVlc3QsIHJlcGx5KSB7CiAgICAgIGNvbnN0IHJlc3BvbnNlID0gYXdhaXQgcmVxdWVzdC5leGVjdXRlQWN0aW9uKHsKICAgICAgICBhY3Rpb25JZDogImNydWQudXNlcnMudmlldyIsCiAgICAgICAgaW5wdXQ6IHsKICAgICAgICAgIC4uLmJ1aWxkV29ya3NwYWNlSW5wdXRGcm9tUm91dGVQYXJhbXMocmVxdWVzdC5pbnB1dC5wYXJhbXMpLAogICAgICAgICAgcmVjb3JkSWQ6IHJlcXVlc3QuaW5wdXQucGFyYW1zLnJlY29yZElkCiAgICAgICAgfQogICAgICB9KTsKICAgICAgcmVwbHkuY29kZSgyMDApLnNlbmQocmVzcG9uc2UpOwogICAgfQogICk7Cn0KCmV4cG9ydCB7IHJlZ2lzdGVyUm91dGVzIH07Cg==",
             "preserveOnRemove": true,
-            "reason": "Install app-owned users CRUD routes for workspace tenancy.",
+            "reason": "Install app-owned users CRUD routes for non-workspace tenancy.",
             "category": "users-core",
-            "id": "users-core-users-routes-workspace"
+            "id": "users-core-users-routes-base"
           },
           {
             "path": "packages/users/src/server/repository.js",
@@ -814,8 +815,8 @@
         ]
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.832Z",
-      "migrationSyncVersion": "0.1.72",
+      "installedAt": "2026-05-08T10:26:21.148Z",
+      "migrationSyncVersion": "0.1.76",
       "warnings": [
         "@jskit-ai/users-core: skipped migration users-core-generic-initial-schema (already managed at migrations/20260505154452_users-core-generic-initial-schema.cjs).",
         "@jskit-ai/users-core: skipped migration users-core-profile-username-schema (already managed at migrations/20260505154452_users-core-profile-username-schema.cjs)."
@@ -1064,495 +1065,6 @@
       "options": {},
       "installedAt": "2026-05-05T15:45:15.326Z",
       "migrationSyncVersion": "0.1.27"
-    },
-    "@jskit-ai/workspaces-core": {
-      "packageId": "@jskit-ai/workspaces-core",
-      "version": "0.1.35",
-      "source": {
-        "type": "catalog",
-        "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/workspaces-core"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {
-            "@jskit-ai/workspaces-core": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "0.x"
-            }
-          },
-          "devDependencies": {},
-          "scripts": {
-            "server:app": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "SERVER_SURFACE=app node ./bin/server.js"
-            },
-            "server:admin": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "SERVER_SURFACE=admin node ./bin/server.js"
-            }
-          }
-        },
-        "text": {
-          "config/public.js::users-core-role-catalog-public-import": {
-            "file": "config/public.js",
-            "op": "append-text",
-            "value": "import { roleCatalog } from \"./roles.js\";\n",
-            "position": "top",
-            "reason": "Load app-owned role catalog from dedicated config file.",
-            "category": "workspaces-core",
-            "id": "users-core-role-catalog-public-import"
-          },
-          "config/surfaceAccessPolicies.js::users-core-surface-access-policies-workspace-member": {
-            "file": "config/surfaceAccessPolicies.js",
-            "op": "append-text",
-            "value": "\nsurfaceAccessPolicies.workspace_member = {\n  requireAuth: true,\n  requireWorkspaceMembership: true\n};\n",
-            "position": "bottom",
-            "reason": "Register workspace-member surface access policy for workspace surfaces.",
-            "category": "workspaces-core",
-            "id": "users-core-surface-access-policies-workspace-member"
-          },
-          "config/public.js::users-core-surface-config-workspace": {
-            "file": "config/public.js",
-            "op": "append-text",
-            "value": "\nconfig.surfaceDefinitions.app = {\n  id: \"app\",\n  label: \"App\",\n  pagesRoot: \"w/[workspaceSlug]\",\n  enabled: true,\n  requiresAuth: true,\n  requiresWorkspace: true,\n  accessPolicyId: \"workspace_member\",\n  origin: \"\"\n};\n\nconfig.surfaceDefinitions.admin = {\n  id: \"admin\",\n  label: \"Admin\",\n  pagesRoot: \"w/[workspaceSlug]/admin\",\n  enabled: true,\n  requiresAuth: true,\n  requiresWorkspace: true,\n  accessPolicyId: \"workspace_member\",\n  origin: \"\"\n};\n",
-            "position": "bottom",
-            "reason": "Append workspace surface topology when tenancy enables workspace routing.",
-            "category": "workspaces-core",
-            "id": "users-core-surface-config-workspace"
-          },
-          "config/public.js::users-core-public-config": {
-            "file": "config/public.js",
-            "op": "append-text",
-            "value": "\nconfig.workspaceSwitching = true;\nconfig.workspaceInvitations = {\n  enabled: true,\n  allowInPersonalMode: true\n};\n",
-            "position": "bottom",
-            "reason": "Append default workspace feature toggles into app-owned config.",
-            "category": "workspaces-core",
-            "id": "users-core-public-config"
-          },
-          "config/public.js::users-core-role-catalog-public-config": {
-            "file": "config/public.js",
-            "op": "append-text",
-            "value": "\nconfig.roleCatalog = roleCatalog;\n",
-            "position": "bottom",
-            "reason": "Bind app-owned role catalog onto public config.",
-            "category": "workspaces-core",
-            "id": "users-core-role-catalog-public-config"
-          },
-          "config/server.js::users-core-server-config": {
-            "file": "config/server.js",
-            "op": "append-text",
-            "value": "\nconfig.workspaceColor = \"#1867C0\";\n",
-            "position": "bottom",
-            "reason": "Append default workspace server settings into app-owned config.",
-            "category": "workspaces-core",
-            "id": "users-core-server-config"
-          },
-          "config/server.js::users-core-workspace-settings-server-config": {
-            "file": "config/server.js",
-            "op": "append-text",
-            "value": "\nconfig.workspaceSettings = {\n  defaults: {\n    invitesEnabled: true\n  }\n};\n",
-            "position": "bottom",
-            "reason": "Append app-owned workspace settings defaults into the server config.",
-            "category": "workspaces-core",
-            "id": "users-core-workspace-settings-server-config"
-          },
-          "config/server.js::users-core-workspace-members-server-config": {
-            "file": "config/server.js",
-            "op": "append-text",
-            "value": "\nconfig.workspaceMembers = {\n  defaults: {\n    inviteExpiresInMs: 604800000\n  }\n};\n",
-            "position": "bottom",
-            "reason": "Append app-owned workspace member invite policy defaults into the server config.",
-            "category": "workspaces-core",
-            "id": "users-core-workspace-members-server-config"
-          }
-        },
-        "vite": {},
-        "files": [
-          {
-            "path": "config/roles.js",
-            "hash": "c87a74c2afc2d05671b9599123e8a778e33746f8cf1111508771a26fc597c109",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": true,
-            "reason": "Install app-owned role catalog in a dedicated config file.",
-            "category": "workspaces-core",
-            "id": "users-core-app-owned-role-catalog-config"
-          }
-        ],
-        "migrations": [
-          {
-            "id": "workspaces-core-initial-schema",
-            "path": "migrations/20260505154518_workspaces-core-initial-schema.cjs",
-            "hash": "5ab2057d00f5b334dc2eae1c25bfa9e07169c00b17eefb210e84033ede32e513",
-            "skipped": false,
-            "reason": "Install workspace tenancy schema migration.",
-            "category": "migration"
-          },
-          {
-            "id": "users-core-workspace-settings-single-name-source",
-            "path": "migrations/20260505154518_users-core-workspace-settings-single-name-source.cjs",
-            "hash": "7185a321eca4a88c520b6e14bbcfa6e7148ef0a8174775e3fb1f02ea768bf756",
-            "skipped": false,
-            "reason": "Remove workspace_settings name/avatar fields so workspace identity data comes from workspaces only.",
-            "category": "migration"
-          },
-          {
-            "id": "users-core-workspaces-drop-color",
-            "path": "migrations/20260505154518_users-core-workspaces-drop-color.cjs",
-            "hash": "f71d415421f8135944a009d54a5842c6763dbe8750c5da9465d53b8eb4849cb2",
-            "skipped": false,
-            "reason": "Drop workspaces.color now that workspace theme colors live in workspace_settings.",
-            "category": "migration"
-          }
-        ]
-      },
-      "options": {},
-      "installedAt": "2026-05-05T15:45:18.432Z",
-      "migrationSyncVersion": "0.1.35"
-    },
-    "@jskit-ai/workspaces-web": {
-      "packageId": "@jskit-ai/workspaces-web",
-      "version": "0.1.35",
-      "source": {
-        "type": "catalog",
-        "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/workspaces-web"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {
-            "@jskit-ai/workspaces-web": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "0.x"
-            }
-          },
-          "devDependencies": {},
-          "scripts": {
-            "dev:app": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "VITE_SURFACE=app vite"
-            },
-            "dev:admin": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "VITE_SURFACE=admin vite"
-            },
-            "build:app": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "VITE_SURFACE=app vite build"
-            },
-            "build:admin": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "VITE_SURFACE=admin vite build"
-            }
-          }
-        },
-        "text": {
-          "src/placement.js::workspaces-web-profile-surface-switch-placement": {
-            "file": "src/placement.js",
-            "op": "append-text",
-            "value": "\naddPlacement({\n  id: \"workspaces.profile.menu.surface-switch\",\n  target: \"auth-profile-menu:primary-menu\",\n  surfaces: [\"*\"],\n  order: 100,\n  componentToken: \"workspaces.web.profile.menu.surface-switch-item\",\n  when: ({ auth }) => auth?.authenticated === true\n});\n",
-            "position": "bottom",
-            "reason": "Append workspaces-web profile surface switch placement into app-owned placement registry.",
-            "category": "workspaces-web",
-            "id": "workspaces-web-profile-surface-switch-placement"
-          },
-          "src/placement.js::workspaces-web-placement-block": {
-            "file": "src/placement.js",
-            "op": "append-text",
-            "value": "\naddPlacement({\n  id: \"workspaces.workspace.menu.app\",\n  target: \"shell-layout:primary-menu\",\n  surfaces: [\"app\"],\n  order: 50,\n  componentToken: \"local.main.ui.surface-aware-menu-link-item\",\n  props: {\n    label: \"Home\",\n    surface: \"app\",\n    scopedSuffix: \"/\",\n    unscopedSuffix: \"/\",\n    exact: true\n  },\n  when: ({ auth }) => auth?.authenticated === true\n});\n\naddPlacement({\n  id: \"workspaces.workspace.menu.admin\",\n  target: \"shell-layout:primary-menu\",\n  surfaces: [\"admin\"],\n  order: 60,\n  componentToken: \"local.main.ui.surface-aware-menu-link-item\",\n  props: {\n    label: \"Home\",\n    surface: \"admin\",\n    scopedSuffix: \"/\",\n    unscopedSuffix: \"/\",\n    exact: true\n  },\n  when: ({ auth }) => auth?.authenticated === true\n});\n\naddPlacement({\n  id: \"workspaces.workspace.selector\",\n  target: \"shell-layout:top-left\",\n  surfaces: [\"*\"],\n  order: 200,\n  componentToken: \"workspaces.web.workspace.selector\",\n  props: {\n    allowOnNonWorkspaceSurface: true,\n    targetSurfaceId: \"app\"\n  },\n  when: ({ auth }) => auth?.authenticated === true\n});\n\naddPlacement({\n  id: \"workspaces.account.invites.cue\",\n  target: \"shell-layout:top-right\",\n  surfaces: [\"*\"],\n  order: 850,\n  componentToken: \"local.main.account.pending-invites.cue\",\n  when: ({ auth }) => auth?.authenticated === true\n});\n\naddPlacement({\n  id: \"workspaces.workspace.tools.widget\",\n  target: \"shell-layout:top-right\",\n  surfaces: [\"admin\"],\n  order: 900,\n  componentToken: \"workspaces.web.workspace.tools.widget\"\n});\n\naddPlacement({\n  id: \"workspaces.workspace.menu.workspace-settings\",\n  target: \"admin-cog:primary-menu\",\n  surfaces: [\"admin\"],\n  order: 100,\n  componentToken: \"workspaces.web.workspace-settings.menu-item\"\n});\n\naddPlacement({\n  id: \"workspaces.workspace.menu.members\",\n  target: \"admin-cog:primary-menu\",\n  surfaces: [\"admin\"],\n  order: 200,\n  componentToken: \"workspaces.web.workspace-members.menu-item\"\n});\n",
-            "position": "bottom",
-            "reason": "Append workspace placement entries into app-owned placement registry.",
-            "category": "workspaces-web",
-            "id": "workspaces-web-placement-block"
-          },
-          "src/placement.js::workspaces-web-account-settings-placement": {
-            "file": "src/placement.js",
-            "op": "append-text",
-            "value": "\naddPlacement({\n  id: \"workspaces.account.settings.invites\",\n  target: \"account-settings:sections\",\n  surfaces: [\"account\"],\n  order: 400,\n  componentToken: \"local.main.account-settings.section.invites\",\n  props: {\n    title: \"Invites\",\n    value: \"invites\",\n    usesSharedRuntime: false\n  },\n  when: ({ auth, workspaceInvitesEnabled }) => auth?.authenticated === true && workspaceInvitesEnabled === true\n});\n",
-            "position": "bottom",
-            "reason": "Append workspaces-web account settings invites section placement into app-owned placement registry.",
-            "category": "workspaces-web",
-            "id": "workspaces-web-account-settings-placement"
-          },
-          "packages/main/src/client/providers/MainClientProvider.js::users-web-main-client-provider-account-invites-import": {
-            "file": "packages/main/src/client/providers/MainClientProvider.js",
-            "op": "append-text",
-            "value": "import AccountPendingInvitesCue from \"../components/AccountPendingInvitesCue.vue\";\n",
-            "position": "top",
-            "reason": "Bind app-owned account pending invites cue component into local main client provider imports.",
-            "category": "workspaces-web",
-            "id": "users-web-main-client-provider-account-invites-import"
-          },
-          "packages/main/src/client/providers/MainClientProvider.js::users-web-main-client-provider-account-settings-section-import": {
-            "file": "packages/main/src/client/providers/MainClientProvider.js",
-            "op": "append-text",
-            "value": "import AccountSettingsInvitesSection from \"../components/AccountSettingsInvitesSection.vue\";\n",
-            "position": "top",
-            "reason": "Bind app-owned account invites section component into local main client provider imports.",
-            "category": "workspaces-web",
-            "id": "users-web-main-client-provider-account-settings-section-import"
-          },
-          "packages/main/src/client/providers/MainClientProvider.js::users-web-main-client-provider-account-invites-register": {
-            "file": "packages/main/src/client/providers/MainClientProvider.js",
-            "op": "append-text",
-            "value": "\nregisterMainClientComponent(\"local.main.account.pending-invites.cue\", () => AccountPendingInvitesCue);\n",
-            "position": "bottom",
-            "reason": "Bind app-owned account pending invites cue component token into local main client provider registry.",
-            "category": "workspaces-web",
-            "id": "users-web-main-client-provider-account-invites-register"
-          },
-          "packages/main/src/client/providers/MainClientProvider.js::users-web-main-client-provider-account-settings-section-register": {
-            "file": "packages/main/src/client/providers/MainClientProvider.js",
-            "op": "append-text",
-            "value": "\nregisterMainClientComponent(\"local.main.account-settings.section.invites\", () => AccountSettingsInvitesSection);\n",
-            "position": "bottom",
-            "reason": "Bind app-owned account invites section component token into local main client provider registry.",
-            "category": "workspaces-web",
-            "id": "users-web-main-client-provider-account-settings-section-register"
-          }
-        },
-        "vite": {},
-        "files": [
-          {
-            "path": "packages/main/src/client/components/AccountPendingInvitesCue.vue",
-            "hash": "4e7d5123fd95fa77b587a02ede00dfc91a27b563e27999ab59752841b8004206",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install app-owned account pending invites cue component scaffold.",
-            "category": "workspaces-web",
-            "id": "users-web-main-component-account-pending-invites-cue"
-          },
-          {
-            "path": "packages/main/src/client/components/AccountSettingsInvitesSection.vue",
-            "hash": "f28fe3b38e1e04578f33159e3beb4643f47ed3ba84eb88a3d5012fe088284883",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install app-owned account invites section scaffold for multihoming account settings.",
-            "category": "workspaces-web",
-            "id": "users-web-main-component-account-settings-invites-section"
-          },
-          {
-            "path": "src/components/WorkspaceNotFoundCard.vue",
-            "hash": "d4b942cc8230e0a0abc9c8eee9a13daa116f651a85ab0d4fb1751d53f222473f",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install app-owned workspace not-found card component used by workspace-dependent surfaces.",
-            "category": "workspaces-web",
-            "id": "users-web-component-workspace-not-found-card"
-          },
-          {
-            "path": "src/composables/useWorkspaceNotFoundState.js",
-            "hash": "e18afdfb1abc4324f1b67d7317fdb96d6f0c73b674b7a97e6476923708612e87",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install app-owned workspace bootstrap status composable for workspace-dependent surfaces.",
-            "category": "workspaces-web",
-            "id": "users-web-composable-workspace-not-found-state"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug].vue",
-            "hash": "11b652f5c6b2413bd06e34bc2c8fe47a2d860e72659c7b46b46f221db086c43b",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install workspace app surface wrapper shell for workspaces-web.",
-            "category": "workspaces-web",
-            "id": "users-web-page-app-wrapper"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug]/index.vue",
-            "hash": "d7030e5f14eac8552732449d6a02594efd95d64fe77e08b7c3bdcd65b1c9c6e6",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install workspace app surface starter page scaffold for workspaces-web.",
-            "category": "workspaces-web",
-            "id": "users-web-page-app-index"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug]/admin.vue",
-            "hash": "40134c7e9880711410f2523b6aba08adeb38609a9f67bf337c3b49d67ff3f2fc",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install workspace admin surface wrapper shell for workspaces-web.",
-            "category": "workspaces-web",
-            "id": "users-web-page-admin-wrapper"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug]/admin/index.vue",
-            "hash": "154ea579161efe632e6aa9ed9bb0d446ab224c65af439ee65b6dc86f5d8149c6",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install workspace admin surface starter page scaffold for workspaces-web.",
-            "category": "workspaces-web",
-            "id": "users-web-page-admin-index"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug]/admin/members/index.vue",
-            "hash": "eae30a04835a18a1ca1608cbf4e83ab2427836ba200c08784c3328b79c161d65",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install admin members starter page scaffold for workspaces-web members UI.",
-            "category": "workspaces-web",
-            "id": "users-web-page-admin-members"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug]/admin/workspace/settings.vue",
-            "hash": "06748375548feb07251d65b44f4fce11f0a6128de3dcaf00a73f52463923c8d8",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install workspace settings shell route scaffold for workspaces-web workspace admin UI.",
-            "category": "workspaces-web",
-            "id": "users-web-page-admin-workspace-settings-shell"
-          },
-          {
-            "path": "src/pages/w/[workspaceSlug]/admin/workspace/settings/index.vue",
-            "hash": "51a2420efb162fc86284e2c77bd2410702468d9db56d70740dece7fbcbde4e75",
-            "hadPrevious": false,
-            "previousContentBase64": "",
-            "preserveOnRemove": false,
-            "reason": "Install workspace settings index stub scaffold for app-owned landing or redirect behavior.",
-            "category": "workspaces-web",
-            "id": "users-web-page-admin-workspace-settings"
-          }
-        ],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-05T15:45:27.912Z",
-      "migrationSyncVersion": "0.1.35"
-    },
-    "@jskit-ai/assistant-core": {
-      "packageId": "@jskit-ai/assistant-core",
-      "version": "0.1.35",
-      "source": {
-        "type": "catalog",
-        "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/assistant-core"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {
-            "@tanstack/vue-query": {
-              "hadPrevious": true,
-              "previousValue": "5.92.12",
-              "value": "^5.90.5"
-            },
-            "dompurify": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "^3.3.3"
-            },
-            "json-rest-schema": {
-              "hadPrevious": true,
-              "previousValue": "^1.0.13",
-              "value": "1.x.x"
-            },
-            "marked": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "^17.0.4"
-            },
-            "openai": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "^6.22.0"
-            },
-            "@jskit-ai/assistant-core": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "0.x"
-            }
-          },
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-05T15:45:35.419Z",
-      "migrationSyncVersion": "0.1.35"
-    },
-    "@jskit-ai/assistant-runtime": {
-      "packageId": "@jskit-ai/assistant-runtime",
-      "version": "0.1.30",
-      "source": {
-        "type": "catalog",
-        "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/assistant-runtime"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {
-            "@jskit-ai/assistant-runtime": {
-              "hadPrevious": false,
-              "previousValue": "",
-              "value": "0.x"
-            }
-          },
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {
-          "config/public.js::assistant-runtime-public-surface-registry-init": {
-            "file": "config/public.js",
-            "op": "append-text",
-            "value": "\nconfig.assistantSurfaces ||= {};\n",
-            "position": "bottom",
-            "reason": "Initialize the shared assistant surface registry in public app config.",
-            "category": "assistant-runtime",
-            "id": "assistant-runtime-public-surface-registry-init"
-          },
-          "config/server.js::assistant-runtime-server-surface-registry-init": {
-            "file": "config/server.js",
-            "op": "append-text",
-            "value": "\nconfig.assistantServer ||= {};\n",
-            "position": "bottom",
-            "reason": "Initialize the shared assistant server config registry.",
-            "category": "assistant-runtime",
-            "id": "assistant-runtime-server-surface-registry-init"
-          }
-        },
-        "vite": {},
-        "files": [],
-        "migrations": [
-          {
-            "id": "assistant-runtime-config-initial-schema",
-            "path": "migrations/20260505154544_assistant-runtime-config-initial-schema.cjs",
-            "hash": "06644bdbe4150d3ae03f148009e6f3643d6cbbcc3e4337912aac5bdf97122a00",
-            "skipped": false,
-            "reason": "Install assistant configuration schema migration.",
-            "category": "assistant-runtime"
-          },
-          {
-            "id": "assistant-runtime-transcripts-initial-schema",
-            "path": "migrations/20260505154544_assistant-runtime-transcripts-initial-schema.cjs",
-            "hash": "ca2599534f6abd45e46f6e6b38ab9e2a587f372fb3a5753a8d0b37aefead9006",
-            "skipped": false,
-            "reason": "Install assistant transcript schema migration.",
-            "category": "assistant-runtime"
-          }
-        ]
-      },
-      "options": {},
-      "installedAt": "2026-05-05T15:45:44.559Z",
-      "migrationSyncVersion": "0.1.30"
     },
     "@local/program-assignment": {
       "packageId": "@local/program-assignment",
@@ -2021,7 +1533,7 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-08T08:31:58.904Z",
+      "installedAt": "2026-05-08T14:42:29.198Z",
       "migrationSyncVersion": "0.1.3"
     }
   }

@@ -4,9 +4,7 @@ import {
   localTodayDateString
 } from "@local/main/shared";
 import {
-  resolveCurrentUserId,
-  resolveCurrentWorkspace,
-  resolveCurrentWorkspaceId
+  resolveCurrentUserId
 } from "@local/main/shared/requestContext";
 import {
   normalizeHistoryMonth,
@@ -42,40 +40,33 @@ function createService({ todayRepository } = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
-      const workspace = resolveCurrentWorkspace(context);
 
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace,
         context
       });
     },
 
     async readHistory(input = {}, options = {}) {
-      void input?.workspaceSlug;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const historyMonth = normalizeHistoryMonth(input?.month, todayDate);
-      const workspace = resolveCurrentWorkspace(context);
 
       return buildHistoryState(todayRepository, {
         userId,
         todayDate,
         historyMonth,
-        workspace,
         context
       });
     },
 
     async readWorkoutDetail(input = {}, options = {}) {
-      void input?.workspaceSlug;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const workspace = resolveCurrentWorkspace(context);
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts are not available yet.");
@@ -85,7 +76,6 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        workspace,
         context
       });
 
@@ -103,10 +93,8 @@ function createService({ todayRepository } = {}) {
     async startWorkout(input = {}, options = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const workspaceId = resolveCurrentWorkspaceId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const workspace = resolveCurrentWorkspace(context);
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts cannot be started yet.");
@@ -115,7 +103,6 @@ function createService({ todayRepository } = {}) {
       const state = await buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace,
         context
       });
 
@@ -135,7 +122,6 @@ function createService({ todayRepository } = {}) {
         return buildTodayState(todayRepository, {
           userId,
           todayDate,
-          workspace,
           context
         });
       }
@@ -170,7 +156,6 @@ function createService({ todayRepository } = {}) {
         const occurrenceId = await todayRepository.createOccurrence(
           {
             userId,
-            workspaceId,
             userProgramAssignmentId: state.assignment.id,
             userProgramAssignmentRevisionId: targetWorkout.revisionId,
             scheduledForDate,
@@ -185,10 +170,7 @@ function createService({ todayRepository } = {}) {
         const snapshotRows = buildOccurrenceExerciseSnapshots(occurrenceId, targetWorkout);
         if (snapshotRows.length > 0) {
           await todayRepository.createOccurrenceExercises(
-            snapshotRows.map((row) => ({
-              ...row,
-              workspaceId
-            })),
+            snapshotRows,
             { trx, context }
           );
         }
@@ -197,25 +179,20 @@ function createService({ todayRepository } = {}) {
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace,
         context
       });
     },
 
     async submitWorkout(input = {}, options = {}) {
-      void input?.workspaceSlug;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const workspaceId = resolveCurrentWorkspaceId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const workspace = resolveCurrentWorkspace(context);
 
       const detailState = await buildWorkoutDetailState(todayRepository, {
         userId,
         todayDate,
         scheduledForDate,
-        workspace,
         context
       });
 
@@ -309,7 +286,6 @@ function createService({ todayRepository } = {}) {
             await todayRepository.createExerciseProgress(
               {
                 userId,
-                workspaceId,
                 exerciseId: exercise.exerciseId,
                 currentStepId: exercise.currentStepId,
                 readyToAdvanceStepId: earnedReadyStepId,
@@ -325,7 +301,6 @@ function createService({ todayRepository } = {}) {
           }
 
           const updateFields = {
-            workspaceId,
             lastCompletedOccurrenceId: workoutOccurrenceId,
             lastCompletedAt: submittedAt
           };
@@ -350,13 +325,11 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        workspace,
         context
       });
     },
 
     async applyAdvancement(input = {}, options = {}) {
-      void input?.workspaceSlug;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
       const exerciseId = input?.exerciseId || null;
@@ -404,10 +377,8 @@ function createService({ todayRepository } = {}) {
     async markWorkoutDefinitelyMissed(input = {}, options = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const workspaceId = resolveCurrentWorkspaceId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const workspace = resolveCurrentWorkspace(context);
 
       if (scheduledForDate >= todayDate) {
         throw new ConflictError("Only overdue workouts can be marked definitely missed.");
@@ -416,7 +387,6 @@ function createService({ todayRepository } = {}) {
       const state = await buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace,
         context
       });
 
@@ -459,7 +429,6 @@ function createService({ todayRepository } = {}) {
         const occurrenceId = await todayRepository.createOccurrence(
           {
             userId,
-            workspaceId,
             userProgramAssignmentId: state.assignment.id,
             userProgramAssignmentRevisionId: targetWorkout.revisionId,
             scheduledForDate,
@@ -476,7 +445,6 @@ function createService({ todayRepository } = {}) {
           await todayRepository.createOccurrenceExercises(
             snapshotRows.map((row) => ({
               ...row,
-              workspaceId,
               status: "definitely_missed"
             })),
             { trx, context }
@@ -487,7 +455,6 @@ function createService({ todayRepository } = {}) {
       return buildTodayState(todayRepository, {
         userId,
         todayDate,
-        workspace,
         context
       });
     }

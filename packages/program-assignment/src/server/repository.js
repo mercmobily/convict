@@ -276,14 +276,13 @@ function createRepository({
 
       return normalizedRecords.length;
     },
-    async createAssignment({ workspaceId = null, startsOn, status = ACTIVE_ASSIGNMENT_STATUS } = {}, options = {}) {
+    async createAssignment({ startsOn, status = ACTIVE_ASSIGNMENT_STATUS } = {}, options = {}) {
       if (!startsOn) {
         throw new TypeError("createAssignment requires startsOn.");
       }
 
       const document = await userProgramAssignmentsRepository.createDocument(
         {
-          workspaceId,
           startsOn,
           status: String(status || ACTIVE_ASSIGNMENT_STATUS).trim().toLowerCase()
         },
@@ -298,7 +297,6 @@ function createRepository({
     async createAssignmentRevision(
       {
         userProgramAssignmentId,
-        workspaceId = null,
         programId,
         effectiveFromDate,
         changeReason = "initial",
@@ -313,7 +311,6 @@ function createRepository({
       const document = await userProgramAssignmentRevisionsRepository.createDocument(
         {
           userProgramAssignmentId,
-          workspaceId,
           programId,
           effectiveFromDate,
           changeReason: String(changeReason || "initial").trim().toLowerCase(),

@@ -11,13 +11,6 @@ const resource = defineCrudResource({
     hidden: true,
     operations: {}
   },
-  workspaceId: {
-    type: "id",
-    nullable: true,
-    search: true,
-    hidden: true,
-    operations: {}
-  },
   startsOn: {
     type: "date",
     required: true,

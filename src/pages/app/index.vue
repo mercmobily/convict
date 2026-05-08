@@ -11,22 +11,18 @@ import {
   mdiDumbbell,
   mdiFlagCheckered,
   mdiPlayCircleOutline,
-  mdiSkipForwardOutline,
   mdiSleep,
   mdiTimerSand
 } from "@mdi/js";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 import WorkoutExercisePreviewList from "@/components/WorkoutExercisePreviewList.vue";
-import WorkspaceNotFoundCard from "@/components/WorkspaceNotFoundCard.vue";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
-import { useWorkspaceNotFoundState } from "@/composables/useWorkspaceNotFoundState";
-import { localTodayDateString } from "@local/main/shared";
+import { localTodayDateString, parseDateOnly } from "@local/main/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
-const { workspaceUnavailable, workspaceUnavailableMessage } = useWorkspaceNotFoundState();
 const {
   formatWorkSetLabel,
   workoutStatusColor,
@@ -147,6 +143,14 @@ const todayLoadError = computed(() => String(todayResource.loadError.value || ""
 const isTodayLoading = computed(() => Boolean(hasActiveAssignment.value && todayResource.isInitialLoading.value));
 const todayDate = computed(() => String(todayState.value.date || "").trim());
 const activeProgramToggleLabel = computed(() => (activeProgramExpanded.value ? "Hide details" : "Show details"));
+const activeProgramName = computed(() => String(activeAssignment.value?.program?.name || "Active program").trim());
+const activeProgramSummary = computed(() => cleanProgramSummary(activeAssignment.value?.program));
+const activeProgramStartedLabel = computed(() => formatStartedDate(activeAssignment.value?.startsOn));
+const activeProgramSchedule = computed(() => (
+  Array.isArray(activeAssignment.value?.program?.schedulePreview)
+    ? activeAssignment.value.program.schedulePreview
+    : []
+));
 
 function selectProgramTemplate(programTemplateId) {
   const normalizedProgramTemplateId = String(programTemplateId || "").trim();
@@ -167,51 +171,115 @@ function scheduleText(day = {}) {
     : "";
 }
 
-function workoutDateLabel(workout = {}) {
-  const dayLabel = String(workout.dayLabel || "").trim();
-  const scheduledForDate = String(workout.scheduledForDate || "").trim();
-  return [dayLabel, scheduledForDate].filter(Boolean).join(" • ");
+function cleanProgramSummary(program = {}) {
+  const rawSummary = String(program?.summary || program?.description || "").trim();
+  const withoutCanonicalPrefix = rawSummary
+    .replace(/^Canonical Convict Conditioning template:\s*/i, "")
+    .trim();
+
+  return withoutCanonicalPrefix
+    ? `${withoutCanonicalPrefix.slice(0, 1).toUpperCase()}${withoutCanonicalPrefix.slice(1)}`
+    : "";
 }
 
-function workoutSummary(workout = {}) {
+function formatStartedDate(dateString = "") {
+  const date = parseDateOnly(dateString);
+  if (!date) {
+    return "";
+  }
+
+  const weekday = date.toLocaleDateString("en-AU", { weekday: "long" });
+  const formattedDate = date.toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  return `Started ${weekday}, ${formattedDate}`;
+}
+
+function workSetLabel(item = {}) {
+  const min = Number(item?.workSetsMin || 0);
+  const max = Number(item?.workSetsMax || 0);
+  return min > 0 && min === max ? `${min} working sets` : `${min}-${max} working sets`;
+}
+
+function formatDateLabel(dateString = "", { includeYear = false } = {}) {
+  const date = parseDateOnly(dateString);
+  if (!date) {
+    return String(dateString || "").trim();
+  }
+
+  return date.toLocaleDateString("en-AU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    ...(includeYear ? { year: "numeric" } : {})
+  });
+}
+
+function workoutDateLine(workout = {}) {
+  return formatDateLabel(workout.scheduledForDate);
+}
+
+function workoutHeadline(workout = {}) {
   const status = String(workout.status || "").trim().toLowerCase();
+
+  if (status === "rest_day") {
+    return "Rest day";
+  }
+  if (status === "not_started_yet") {
+    return "Starts later";
+  }
+  if (status === "in_progress") {
+    return "Open workout";
+  }
+  if (status === "completed") {
+    return "Completed";
+  }
+  if (status === "definitely_missed") {
+    return "Definitely missed";
+  }
+  if (status === "overdue") {
+    return "Overdue";
+  }
+
+  return "Ready to train";
+}
+
+function workoutSupportLine(workout = {}) {
+  const status = String(workout.status || "").trim().toLowerCase();
+
   if (status === "rest_day") {
     return overdueWorkouts.value.length > 0
-      ? "Today is a rest day, but you still have overdue work waiting below."
-      : "No prescribed work today. Use the day to rest and recover.";
+      ? "Rest today. Clear older open work below when you are ready."
+      : "No prescribed work today.";
   }
-
   if (status === "not_started_yet") {
-    return `Your assignment starts on ${workout.scheduledForDate}. No workout is scheduled before then.`;
+    return activeAssignment.value?.startsOn
+      ? `Your program starts ${formatDateLabel(activeAssignment.value.startsOn, { includeYear: true })}.`
+      : "This program has not started yet.";
   }
-
   if (status === "in_progress") {
-    return "This workout occurrence is open. Resume it to keep logging sets.";
+    return "Keep logging sets.";
   }
-
   if (status === "completed") {
-    return `Completed${workout.performedOnDate ? ` on ${workout.performedOnDate}` : ""}.`;
+    return workout.performedOnDate
+      ? `Finished ${formatDateLabel(workout.performedOnDate)}.`
+      : "Finished.";
   }
-
   if (status === "definitely_missed") {
-    return "This workout was explicitly marked definitely missed.";
+    return "Marked missed.";
   }
-
   if (status === "overdue") {
-    return "This workout should have happened earlier and is still available to complete.";
+    return "Still available to complete.";
   }
 
-  return "This workout is ready to be opened.";
+  return "Start when ready.";
 }
 
 function workoutDetailPagePath(scheduledForDate) {
-  return {
-    name: "/w/[workspaceSlug]/workouts/[scheduledForDate]",
-    params: {
-      workspaceSlug: String(paths.routeParams.value.workspaceSlug || "").trim(),
-      scheduledForDate: String(scheduledForDate || "").trim()
-    }
-  };
+  return paths.page(`/workouts/${String(scheduledForDate || "").trim()}`);
 }
 
 function isStartActionLoading(dateString = "") {
@@ -261,12 +329,7 @@ function toggleActiveProgramExpanded() {
 </script>
 
 <template>
-  <WorkspaceNotFoundCard
-    v-if="workspaceUnavailable"
-    :message="workspaceUnavailableMessage"
-    surface-label="App"
-  />
-  <section v-else class="program-home-page d-flex flex-column ga-6">
+  <section class="program-home-page d-flex flex-column ga-6">
     <v-alert
       v-if="selectionLoadError"
       type="error"
@@ -336,29 +399,21 @@ function toggleActiveProgramExpanded() {
             border
             class="active-program-card"
           >
-            <v-card-item>
+            <v-card-item class="active-program-card__header">
               <template #prepend>
-                <v-avatar color="primary" variant="tonal" rounded="lg">
+                <v-avatar color="primary" variant="flat" rounded="lg" class="active-program-card__icon">
                   <v-icon :icon="mdiDumbbell" />
                 </v-avatar>
               </template>
-              <div class="d-flex flex-column ga-1">
-                <h3 class="text-h5 mb-0">Your active program</h3>
-                <p v-if="activeProgramExpanded" class="text-body-2 text-medium-emphasis mb-0">
-                  This assignment now drives the daily Today view and overdue projection for this cell.
+              <div class="active-program-card__title-block">
+                <h2 class="active-program-card__title">{{ activeProgramName }}</h2>
+                <p v-if="activeProgramExpanded && activeProgramStartedLabel" class="active-program-card__started mb-0">
+                  {{ activeProgramStartedLabel }}
                 </p>
-                <div v-else class="d-flex flex-wrap ga-2 align-center">
-                  <v-chip color="primary" variant="tonal" size="small" label>
-                    {{ activeAssignment?.program?.name || "Active" }}
-                  </v-chip>
-                  <v-chip color="secondary" variant="tonal" size="small" label>
-                    Starts {{ activeAssignment?.startsOn }}
-                  </v-chip>
-                </div>
               </div>
               <template #append>
                 <v-btn
-                  variant="text"
+                  variant="tonal"
                   color="primary"
                   size="small"
                   :append-icon="activeProgramExpanded ? mdiChevronUp : mdiChevronDown"
@@ -372,46 +427,32 @@ function toggleActiveProgramExpanded() {
             <v-expand-transition>
               <div v-if="activeProgramExpanded">
                 <v-divider />
-                <v-card-text class="d-flex flex-column ga-5">
-                  <div class="d-flex flex-wrap ga-3 align-center">
-                    <div class="d-flex flex-column ga-1">
-                      <span class="text-overline text-medium-emphasis">Program</span>
-                      <strong class="text-h6">{{ activeAssignment?.program?.name }}</strong>
-                    </div>
-                    <v-chip color="primary" variant="tonal" label>
-                      {{ activeAssignment?.program?.difficultyLabel || "Active" }}
-                    </v-chip>
-                    <v-chip color="secondary" variant="tonal" label>
-                      Starts {{ activeAssignment?.startsOn }}
-                    </v-chip>
-                    <v-chip v-if="activeAssignment?.workspace?.name" color="info" variant="tonal" label>
-                      Cell {{ activeAssignment.workspace.name }}
-                    </v-chip>
-                  </div>
-
-                  <p class="text-body-1 text-medium-emphasis mb-0">
-                    {{ activeAssignment?.program?.summary }}
+                <v-card-text class="active-program-card__body">
+                  <p v-if="activeProgramSummary" class="active-program-card__summary mb-0">
+                    {{ activeProgramSummary }}
                   </p>
 
-                  <v-list lines="two" density="comfortable" class="active-program-card__schedule">
-                    <v-list-subheader>Weekly schedule</v-list-subheader>
-                    <v-list-item
-                      v-for="day in activeAssignment?.program?.schedulePreview || []"
+                  <div class="active-program-card__schedule" aria-label="Weekly schedule">
+                    <article
+                      v-for="day in activeProgramSchedule"
                       :key="`active-${day.dayOfWeek}`"
-                      :subtitle="scheduleText(day)"
+                      class="active-program-day"
+                      :class="{ 'active-program-day--rest': day.isRestDay }"
                     >
-                      <template #prepend>
-                        <v-avatar
-                          :color="day.isRestDay ? 'surface-variant' : 'primary'"
-                          :variant="day.isRestDay ? 'tonal' : 'flat'"
-                          size="30"
+                      <h3 class="active-program-day__title">{{ day.dayLabel }}</h3>
+                      <p v-if="day.isRestDay" class="active-program-day__rest mb-0">Rest</p>
+                      <div v-else class="active-program-day__items">
+                        <div
+                          v-for="item in day.items"
+                          :key="`active-${day.dayOfWeek}-${item.slotNumber}`"
+                          class="active-program-exercise"
                         >
-                          {{ day.dayLabel.slice(0, 1) }}
-                        </v-avatar>
-                      </template>
-                      <v-list-item-title>{{ day.dayLabel }}</v-list-item-title>
-                    </v-list-item>
-                  </v-list>
+                          <div class="active-program-exercise__name">{{ item.exerciseName }}</div>
+                          <div class="active-program-exercise__work">{{ workSetLabel(item) }}</div>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
                 </v-card-text>
               </div>
             </v-expand-transition>
@@ -424,221 +465,181 @@ function toggleActiveProgramExpanded() {
           />
 
           <template v-else>
-            <v-card
+            <v-sheet
               rounded="xl"
-              elevation="1"
               border
-              class="today-card"
+              class="training-panel today-card"
             >
-              <v-card-item>
-                <template #prepend>
+              <header class="training-panel__header">
+                <div class="training-panel__identity">
                   <v-avatar
                     :color="todayProjection?.status === 'rest_day' ? 'surface-variant' : 'secondary'"
                     variant="tonal"
                     rounded="lg"
+                    class="training-panel__icon"
                   >
                     <v-icon :icon="todayProjection?.status === 'rest_day' ? mdiSleep : mdiCalendarClock" />
                   </v-avatar>
-                </template>
-                <div class="d-flex flex-column ga-1">
-                  <h3 class="text-h5 mb-0">Today</h3>
-                  <p class="text-body-2 text-medium-emphasis mb-0">
-                    {{ todayDate || "Current date unavailable" }}
-                  </p>
-                </div>
-              </v-card-item>
-              <v-divider />
-              <v-card-text class="d-flex flex-column ga-4">
-                <template v-if="todayProjection">
-                  <div class="d-flex flex-wrap ga-2 align-center">
-                    <v-chip :color="workoutStatusColor(todayProjection.status)" variant="tonal" label>
-                      {{ workoutStatusLabel(todayProjection.status) }}
-                    </v-chip>
-                    <v-chip v-if="todayProjection.programName" color="primary" variant="tonal" label>
-                      {{ todayProjection.programName }}
-                    </v-chip>
-                    <v-chip v-if="todayProjection.scheduledForDate" color="secondary" variant="tonal" label>
-                      {{ workoutDateLabel(todayProjection) }}
-                    </v-chip>
-                    <v-chip
-                      v-if="todayProjection.performedOnDate"
-                      color="info"
-                      variant="tonal"
-                      label
-                    >
-                      Performed {{ todayProjection.performedOnDate }}
-                    </v-chip>
+                  <div class="training-panel__title-block">
+                    <h3 class="training-panel__title">Today</h3>
+                    <p class="training-panel__date mb-0">
+                      {{ todayDate ? formatDateLabel(todayDate) : "Current date unavailable" }}
+                    </p>
                   </div>
+                </div>
+                <v-chip
+                  v-if="todayProjection"
+                  :color="workoutStatusColor(todayProjection.status)"
+                  variant="tonal"
+                  label
+                  class="training-panel__status"
+                >
+                  {{ workoutStatusLabel(todayProjection.status) }}
+                </v-chip>
+              </header>
 
-                  <p class="text-body-1 text-medium-emphasis mb-0">
-                    {{ workoutSummary(todayProjection) }}
-                  </p>
-
-                  <WorkoutExercisePreviewList
-                    v-if="Array.isArray(todayProjection.exercises) && todayProjection.exercises.length > 0"
-                    :exercises="todayProjection.exercises"
-                    :key-prefix="`today-${todayProjection.scheduledForDate}`"
-                    :stacked="smAndDown"
-                    class="today-card__exercise-list"
-                  />
-
-                  <div
-                    v-if="todayProjection.status === 'scheduled'"
-                    class="d-flex flex-wrap ga-3 align-center"
-                  >
+              <template v-if="todayProjection">
+                <section class="training-panel__summary">
+                  <div class="training-panel__copy">
+                    <div class="training-panel__headline">{{ workoutHeadline(todayProjection) }}</div>
+                    <p class="training-panel__support mb-0">
+                      {{ workoutSupportLine(todayProjection) }}
+                    </p>
+                  </div>
+                  <div class="training-panel__actions">
                     <v-btn
+                      v-if="todayProjection.status === 'scheduled'"
                       color="primary"
+                      aria-label="Start today's workout"
                       :prepend-icon="mdiPlayCircleOutline"
                       :loading="isStartActionLoading(todayProjection.scheduledForDate)"
                       @click="startWorkoutForDate(todayProjection.scheduledForDate)"
                     >
-                      Start today's workout
+                      Start
+                    </v-btn>
+                    <v-btn
+                      v-else-if="todayProjection.status === 'in_progress'"
+                      color="primary"
+                      variant="tonal"
+                      aria-label="Resume workout"
+                      :prepend-icon="mdiPlayCircleOutline"
+                      @click="openWorkoutDetail(todayProjection.scheduledForDate)"
+                    >
+                      Resume
                     </v-btn>
                   </div>
+                </section>
 
-                  <v-alert
-                    v-else-if="todayProjection.status === 'in_progress'"
-                    type="info"
-                    variant="tonal"
-                    border="start"
-                    text="The occurrence is open. Resume it to keep logging sets."
-                  >
-                    <template #append>
-                      <v-btn
-                        color="primary"
-                        variant="text"
-                        :prepend-icon="mdiPlayCircleOutline"
-                        @click="openWorkoutDetail(todayProjection.scheduledForDate)"
-                      >
-                        Resume workout
-                      </v-btn>
-                    </template>
-                  </v-alert>
-                </template>
+                <WorkoutExercisePreviewList
+                  v-if="Array.isArray(todayProjection.exercises) && todayProjection.exercises.length > 0"
+                  :exercises="todayProjection.exercises"
+                  :key-prefix="`today-${todayProjection.scheduledForDate}`"
+                  :stacked="smAndDown"
+                  class="training-panel__exercise-list"
+                />
+              </template>
 
-                <p v-else class="text-body-1 text-medium-emphasis mb-0">
-                  No daily projection is available yet.
-                </p>
-              </v-card-text>
-            </v-card>
+              <p v-else class="training-panel__empty mb-0">
+                No daily projection is available yet.
+              </p>
+            </v-sheet>
 
-            <v-card
+            <v-sheet
               v-if="overdueWorkouts.length > 0"
               rounded="xl"
-              elevation="1"
               border
-              class="overdue-card"
+              class="missed-panel overdue-card"
             >
-              <v-card-item>
-                <template #prepend>
-                  <v-avatar color="warning" variant="tonal" rounded="lg">
+              <header class="missed-panel__header">
+                <div class="training-panel__identity">
+                  <v-avatar color="warning" variant="tonal" rounded="lg" class="training-panel__icon">
                     <v-icon :icon="mdiTimerSand" />
                   </v-avatar>
-                </template>
-                <div class="d-flex flex-column ga-1">
-                  <h3 class="text-h5 mb-0">Missed workouts</h3>
-                  <p class="text-body-2 text-medium-emphasis mb-0">
-                    These scheduled workouts are still actionable until you complete them or explicitly mark them definitely missed.
-                  </p>
+                  <div class="training-panel__title-block">
+                    <h3 class="training-panel__title">Missed workouts</h3>
+                    <p class="training-panel__date mb-0">
+                      Older scheduled days that still need a decision.
+                    </p>
+                  </div>
                 </div>
-              </v-card-item>
-              <v-divider />
-              <v-card-text class="d-flex flex-column ga-4">
-                <div class="overdue-grid">
-                  <v-card
-                    v-for="workout in overdueWorkouts"
-                    :key="`overdue-${workout.scheduledForDate}`"
-                    rounded="xl"
-                    elevation="0"
-                    border
-                    class="overdue-workout-card"
-                  >
-                    <v-card-item>
-                      <template #prepend>
-                        <v-avatar :color="workoutStatusColor(workout.status)" variant="tonal" rounded="lg">
-                          <v-icon :icon="workout.status === 'in_progress' ? mdiPlayCircleOutline : mdiSkipForwardOutline" />
-                        </v-avatar>
-                      </template>
-                      <div class="d-flex flex-column ga-1">
-                        <h4 class="text-h6 mb-0">{{ workoutDateLabel(workout) }}</h4>
-                        <p class="text-body-2 text-medium-emphasis mb-0">
-                          {{ workoutSummary(workout) }}
-                        </p>
-                      </div>
-                    </v-card-item>
-                    <v-divider />
-                    <v-card-text class="d-flex flex-column ga-4">
-                      <div class="d-flex flex-wrap ga-2 align-center">
-                        <v-chip :color="workoutStatusColor(workout.status)" variant="tonal" size="small" label>
-                          {{ workoutStatusLabel(workout.status) }}
-                        </v-chip>
-                        <v-chip v-if="workout.programName" color="primary" variant="tonal" size="small" label>
-                          {{ workout.programName }}
-                        </v-chip>
-                        <v-chip
-                          v-if="workout.performedOnDate"
-                          color="info"
-                          variant="tonal"
-                          size="small"
-                          label
-                        >
-                          Performed {{ workout.performedOnDate }}
-                        </v-chip>
-                      </div>
+                <v-chip color="warning" variant="tonal" label class="training-panel__status">
+                  {{ overdueWorkouts.length }}
+                </v-chip>
+              </header>
 
-                      <WorkoutExercisePreviewList
-                        :exercises="workout.exercises"
-                        :key-prefix="`overdue-${workout.scheduledForDate}`"
-                        :stacked="smAndDown"
-                        class="today-card__exercise-list"
-                      />
-
-                      <div
-                        v-if="workout.status === 'overdue'"
-                        class="d-flex flex-wrap ga-3"
-                      >
+              <div class="missed-panel__list">
+                <article
+                  v-for="workout in overdueWorkouts"
+                  :key="`overdue-${workout.scheduledForDate}`"
+                  class="missed-workout-row overdue-workout-card"
+                  :data-scheduled-for-date="workout.scheduledForDate"
+                >
+                  <div class="missed-workout-row__topline">
+                    <div class="missed-workout-row__date">
+                      {{ workoutDateLine(workout) }}
+                    </div>
+                    <v-chip
+                      :color="workoutStatusColor(workout.status)"
+                      variant="tonal"
+                      size="small"
+                      label
+                      class="missed-workout-row__status"
+                    >
+                      {{ workoutStatusLabel(workout.status) }}
+                    </v-chip>
+                  </div>
+                  <div class="missed-workout-row__body">
+                    <div class="missed-workout-row__copy">
+                      <div class="missed-workout-row__headline">{{ workoutHeadline(workout) }}</div>
+                      <p class="missed-workout-row__support mb-0">
+                        {{ workoutSupportLine(workout) }}
+                      </p>
+                    </div>
+                    <div class="missed-workout-row__actions">
+                      <template v-if="workout.status === 'overdue'">
                         <v-btn
                           color="primary"
+                          variant="tonal"
+                          aria-label="Start overdue workout"
                           :prepend-icon="mdiPlayCircleOutline"
                           :loading="isStartActionLoading(workout.scheduledForDate)"
                           @click="startWorkoutForDate(workout.scheduledForDate)"
                         >
-                          Start overdue workout
+                          Start
                         </v-btn>
                         <v-btn
                           color="error"
-                          variant="tonal"
+                          variant="text"
+                          aria-label="Mark definitely missed"
                           :prepend-icon="mdiCheckCircleOutline"
                           :loading="isMarkMissedActionLoading(workout.scheduledForDate)"
                           @click="markWorkoutDefinitelyMissed(workout.scheduledForDate)"
                         >
-                          Mark definitely missed
+                          Mark missed
                         </v-btn>
-                      </div>
-
-                      <v-alert
+                      </template>
+                      <v-btn
                         v-else-if="workout.status === 'in_progress'"
-                        type="info"
-                        variant="tonal"
-                        border="start"
-                        text="This overdue workout is already open. Resume it to keep logging sets."
+                        color="primary"
+                        variant="text"
+                        aria-label="Resume workout"
+                        :prepend-icon="mdiPlayCircleOutline"
+                        @click="openWorkoutDetail(workout.scheduledForDate)"
                       >
-                        <template #append>
-                          <v-btn
-                            color="primary"
-                            variant="text"
-                            :prepend-icon="mdiPlayCircleOutline"
-                            @click="openWorkoutDetail(workout.scheduledForDate)"
-                          >
-                            Resume workout
-                          </v-btn>
-                        </template>
-                      </v-alert>
-                    </v-card-text>
-                  </v-card>
-                </div>
-              </v-card-text>
-            </v-card>
+                        Resume
+                      </v-btn>
+                    </div>
+                  </div>
+
+                  <WorkoutExercisePreviewList
+                    :exercises="workout.exercises"
+                    :key-prefix="`overdue-${workout.scheduledForDate}`"
+                    :stacked="smAndDown"
+                    class="missed-workout-row__exercises"
+                  />
+                </article>
+              </div>
+            </v-sheet>
           </template>
         </template>
       </template>
@@ -765,8 +766,7 @@ function toggleActiveProgramExpanded() {
   border-radius: 1.5rem;
 }
 
-.program-grid,
-.overdue-grid {
+.program-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -789,12 +789,111 @@ function toggleActiveProgramExpanded() {
   box-shadow: 0 18px 40px rgba(var(--v-theme-primary), 0.12);
 }
 
-.program-card__schedule,
-.active-program-card__schedule,
-.today-card__exercise-list {
+.program-card__schedule {
   background: rgba(var(--v-theme-surface-variant), 0.22);
   border-radius: 1rem;
   padding: 0.25rem 0.75rem 0.75rem;
+}
+
+.active-program-card {
+  background:
+    radial-gradient(circle at top left, rgba(var(--v-theme-primary), 0.12), transparent 32rem),
+    rgb(var(--v-theme-surface));
+  overflow: hidden;
+}
+
+.active-program-card__header {
+  align-items: center;
+}
+
+.active-program-card__icon {
+  box-shadow: 0 0.75rem 1.5rem rgba(var(--v-theme-primary), 0.22);
+}
+
+.active-program-card__title-block {
+  min-width: 0;
+}
+
+.active-program-card__title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 760;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.active-program-card__started {
+  color: rgba(var(--v-theme-on-surface), 0.68);
+  font-size: 0.94rem;
+  margin-top: 0.35rem;
+}
+
+.active-program-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.active-program-card__summary {
+  color: rgba(var(--v-theme-on-surface), 0.72);
+  font-size: 1rem;
+  line-height: 1.55;
+  max-width: 48rem;
+}
+
+.active-program-card__schedule {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.active-program-day {
+  background: rgba(var(--v-theme-surface-variant), 0.22);
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 8.5rem;
+  padding: 1rem;
+}
+
+.active-program-day--rest {
+  background: rgba(var(--v-theme-surface-variant), 0.1);
+}
+
+.active-program-day__title {
+  font-size: 0.95rem;
+  font-weight: 720;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.active-program-day__rest {
+  color: rgba(var(--v-theme-on-surface), 0.52);
+  font-size: 0.9rem;
+}
+
+.active-program-day__items {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.active-program-exercise {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.active-program-exercise__name {
+  font-size: 1.05rem;
+  font-weight: 680;
+  line-height: 1.2;
+}
+
+.active-program-exercise__work {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 0.9rem;
 }
 
 .start-program-card {
@@ -815,10 +914,185 @@ function toggleActiveProgramExpanded() {
     rgb(var(--v-theme-surface));
 }
 
-.overdue-workout-card {
-  background: rgba(var(--v-theme-surface-variant), 0.12);
+.training-panel,
+.missed-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.training-panel__header,
+.missed-panel__header {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.training-panel__identity {
+  align-items: center;
+  display: flex;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.training-panel__icon {
+  flex: 0 0 auto;
+}
+
+.training-panel__title-block {
+  min-width: 0;
+}
+
+.training-panel__title {
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 760;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.training-panel__date {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 0.95rem;
+  line-height: 1.35;
+  margin-top: 0.2rem;
+}
+
+.training-panel__status {
+  flex: 0 0 auto;
+}
+
+.training-panel__summary {
+  align-items: center;
+  background: rgba(var(--v-theme-surface), 0.66);
+  border: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+  border-radius: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.training-panel__copy,
+.missed-workout-row__copy {
+  min-width: 0;
+}
+
+.training-panel__headline,
+.missed-workout-row__headline {
+  color: rgba(var(--v-theme-on-surface), 0.92);
+  font-size: 1.08rem;
+  font-weight: 740;
+  line-height: 1.25;
+}
+
+.training-panel__support,
+.missed-workout-row__support,
+.training-panel__empty {
+  color: rgba(var(--v-theme-on-surface), 0.64);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  margin-top: 0.2rem;
+}
+
+.training-panel__actions,
+.missed-workout-row__actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.training-panel__actions :deep(.v-btn),
+.missed-workout-row__actions :deep(.v-btn) {
+  min-height: 44px;
+}
+
+.training-panel__exercise-list,
+.missed-workout-row__exercises {
+  background: rgba(var(--v-theme-surface-variant), 0.16);
+  border-radius: 1.2rem;
+  padding: 0.65rem;
+}
+
+.missed-panel__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.missed-workout-row {
+  background: rgba(var(--v-theme-surface), 0.68);
+  border: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+  border-radius: 1.25rem;
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.95rem;
+}
+
+.missed-workout-row__topline,
+.missed-workout-row__body {
+  align-items: start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.missed-workout-row__date {
+  color: rgba(var(--v-theme-on-surface), 0.88);
+  font-size: 1.02rem;
+  font-weight: 720;
+  line-height: 1.3;
+}
+
+.missed-workout-row__status {
+  flex: 0 0 auto;
 }
 
 @media (max-width: 640px) {
+  .active-program-card__header {
+    align-items: flex-start;
+  }
+
+  .active-program-card__header :deep(.v-card-item__append) {
+    padding-left: 0.5rem;
+  }
+
+  .active-program-card__header :deep(.v-btn) {
+    min-height: 48px;
+  }
+
+  .active-program-card__schedule {
+    grid-template-columns: 1fr;
+  }
+
+  .training-panel,
+  .missed-panel {
+    gap: 0.85rem;
+    padding: 0.85rem;
+  }
+
+  .training-panel__header,
+  .missed-panel__header {
+    align-items: flex-start;
+  }
+
+  .training-panel__summary,
+  .missed-workout-row__body {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .training-panel__actions,
+  .missed-workout-row__actions {
+    justify-content: flex-start;
+  }
+
+  .training-panel__actions :deep(.v-btn),
+  .missed-workout-row__actions :deep(.v-btn) {
+    min-height: 48px;
+  }
 }
 </style>

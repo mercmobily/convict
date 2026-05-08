@@ -3,13 +3,12 @@ export const surfaceAccessPolicies = {};
 surfaceAccessPolicies.public = {};
 
 
-surfaceAccessPolicies.console_owner = {
-  requireAuth: true,
-  requireFlagsAll: ["console_owner"]
+surfaceAccessPolicies.authenticated = {
+  requireAuth: true
 };
 
 
-surfaceAccessPolicies.workspace_member = {
+surfaceAccessPolicies.console_owner = {
   requireAuth: true,
-  requireWorkspaceMembership: true
+  requireFlagsAll: ["console_owner"]
 };

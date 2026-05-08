@@ -1,7 +1,6 @@
 import { createSchema } from "json-rest-schema";
 import { composeSchemaDefinitions } from "@jskit-ai/kernel/shared/validators";
 import { deepFreeze } from "@jskit-ai/kernel/shared/support/deepFreeze";
-import { workspaceSlugParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
 
 const scheduledForDateSchema = {
   type: "string",
@@ -31,12 +30,12 @@ const historyProjectionQueryRouteValidator = deepFreeze({
   mode: "patch"
 });
 
-const todayProjectionQueryInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator
-]);
+const todayProjectionQueryInputValidator = deepFreeze({
+  schema: createSchema({}),
+  mode: "patch"
+});
 
 const historyProjectionQueryInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   historyProjectionQueryRouteValidator
 ]);
 
@@ -65,27 +64,22 @@ const applyAdvancementBodyInputValidator = deepFreeze({
 });
 
 const startWorkoutCommandInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   startWorkoutBodyInputValidator
 ]);
 
 const markWorkoutDefinitelyMissedCommandInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   markWorkoutDefinitelyMissedBodyInputValidator
 ]);
 
 const workoutDetailQueryInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   scheduledForDateRouteParamsValidator
 ]);
 
 const submitWorkoutCommandInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   scheduledForDateRouteParamsValidator
 ]);
 
 const applyAdvancementCommandInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   applyAdvancementBodyInputValidator
 ]);
 

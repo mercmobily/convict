@@ -12,8 +12,6 @@ class ProgramAssignmentProvider {
     "runtime.actions",
     "json-rest-api.core",
     "auth.policy.fastify",
-    "workspaces.core",
-    "local.main",
     "crud.program_templates",
     "crud.program_template_schedule_entries",
     "crud.programs",
@@ -63,8 +61,7 @@ class ProgramAssignmentProvider {
   boot(app) {
     registerRoutes(app, {
       routeRelativePath: "program-assignment",
-      routeSurface: "app",
-      routeSurfaceRequiresWorkspace: true
+      routeSurface: "app"
     });
   }
 }

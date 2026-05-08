@@ -15,32 +15,4 @@ function resolveCurrentUserId(context = {}) {
   throw new AppError(401, "Authentication is required.");
 }
 
-function resolveCurrentWorkspaceId(context = {}) {
-  return normalizeRecordId(
-    context?.workspace?.id || context?.requestMeta?.resolvedWorkspaceContext?.workspace?.id,
-    { fallback: null }
-  );
-}
-
-function resolveCurrentWorkspace(context = {}) {
-  const workspace = context?.workspace || context?.requestMeta?.resolvedWorkspaceContext?.workspace || null;
-  if (!workspace || typeof workspace !== "object") {
-    return null;
-  }
-
-  const id = normalizeRecordId(workspace.id, { fallback: null });
-  if (!id) {
-    return null;
-  }
-
-  return {
-    ...workspace,
-    id
-  };
-}
-
-export {
-  resolveCurrentUserId,
-  resolveCurrentWorkspaceId,
-  resolveCurrentWorkspace
-};
+export { resolveCurrentUserId };

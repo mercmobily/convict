@@ -60,7 +60,6 @@ async function buildTodayState(
   {
     userId,
     todayDate,
-    workspace = null,
     context = null
   } = {}
 ) {
@@ -197,7 +196,6 @@ async function buildTodayState(
     date: todayDate,
     assignment: {
       ...assignment,
-      workspace,
       program: currentProgram
         ? {
             id: currentProgram.id,
@@ -273,14 +271,12 @@ async function buildWorkoutDetailState(
     userId,
     todayDate,
     scheduledForDate,
-    workspace = null,
     context = null
   } = {}
 ) {
   const state = await buildTodayState(todayRepository, {
     userId,
     todayDate,
-    workspace,
     context
   });
 

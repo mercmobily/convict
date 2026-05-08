@@ -1,7 +1,3 @@
-import AccountSettingsInvitesSection from "../components/AccountSettingsInvitesSection.vue";
-
-import AccountPendingInvitesCue from "../components/AccountPendingInvitesCue.vue";
-
 import AccountSettingsNotificationsSection from "/src/components/account/settings/AccountSettingsNotificationsSection.vue";
 
 import AccountSettingsPreferencesSection from "/src/components/account/settings/AccountSettingsPreferencesSection.vue";
@@ -53,8 +49,3 @@ registerMainClientComponent("local.main.account-settings.section.preferences", (
 
 registerMainClientComponent("local.main.account-settings.section.notifications", () => AccountSettingsNotificationsSection);
 
-
-registerMainClientComponent("local.main.account.pending-invites.cue", () => AccountPendingInvitesCue);
-
-
-registerMainClientComponent("local.main.account-settings.section.invites", () => AccountSettingsInvitesSection);

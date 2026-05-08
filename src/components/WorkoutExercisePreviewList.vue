@@ -20,7 +20,6 @@ const {
   exerciseCurrentStepNumber,
   exerciseDetailLine,
   formatWorkSetLabel,
-  measurementLabel,
   progressionTargetLabel
 } = useConvictWorkoutPresentation();
 
@@ -32,119 +31,112 @@ function exerciseKey(exercise = {}, index = 0) {
   ].join("-");
 }
 
-function exerciseMetaChips(exercise = {}) {
-  const chips = [
-    {
-      key: "work-sets",
-      color: "primary",
-      label: formatWorkSetLabel(exercise.plannedWorkSetsMin, exercise.plannedWorkSetsMax)
-    }
+function exerciseMetaLine(exercise = {}) {
+  const parts = [
+    formatWorkSetLabel(exercise.plannedWorkSetsMin, exercise.plannedWorkSetsMax)
   ];
+  const stepNumber = exerciseCurrentStepNumber(exercise);
+  const progressionTarget = progressionTargetLabel(exercise);
 
-  if (exerciseCurrentStepNumber(exercise)) {
-    chips.push({
-      key: "step",
-      color: "info",
-      label: `Step ${exerciseCurrentStepNumber(exercise)}`
-    });
+  if (stepNumber) {
+    parts.push(`Step ${stepNumber}`);
+  }
+  if (progressionTarget) {
+    parts.push(`Progression ${progressionTarget}`);
   }
 
-  if (progressionTargetLabel(exercise)) {
-    chips.push({
-      key: "progression",
-      color: "success",
-      label: `Progression ${progressionTargetLabel(exercise)}`
-    });
-  }
-
-  chips.push({
-    key: "measurement",
-    color: "secondary",
-    label: measurementLabel(exercise.measurementUnit)
-  });
-
-  return chips;
+  return parts.filter(Boolean).join(" / ");
 }
 </script>
 
 <template>
-  <v-list
+  <div
     v-if="Array.isArray(exercises) && exercises.length > 0"
-    lines="two"
-    density="comfortable"
+    class="exercise-preview-list"
+    :class="{ 'exercise-preview-list--stacked': stacked }"
+    role="list"
   >
-    <template v-if="stacked">
-      <v-list-item
-        v-for="(exercise, index) in exercises"
-        :key="exerciseKey(exercise, index)"
-        class="exercise-preview-list__item exercise-preview-list__item--stacked"
-      >
-        <v-list-item-title class="exercise-preview-list__title">
-          {{ exercise.exerciseName }}
-        </v-list-item-title>
-        <v-list-item-subtitle class="exercise-preview-list__subtitle">
-          {{ exerciseDetailLine(exercise) }}
-        </v-list-item-subtitle>
-        <div class="exercise-preview-list__chips exercise-preview-list__chips--stacked">
-          <v-chip
-            v-for="chip in exerciseMetaChips(exercise)"
-            :key="chip.key"
-            :color="chip.color"
-            variant="tonal"
-            size="small"
-            label
-          >
-            {{ chip.label }}
-          </v-chip>
-        </div>
-      </v-list-item>
-    </template>
-
-    <template v-else>
-      <v-list-item
-        v-for="(exercise, index) in exercises"
-        :key="exerciseKey(exercise, index)"
-        class="exercise-preview-list__item"
-      >
-        <v-list-item-title>{{ exercise.exerciseName }}</v-list-item-title>
-        <v-list-item-subtitle>{{ exerciseDetailLine(exercise) }}</v-list-item-subtitle>
-        <template #append>
-          <div class="exercise-preview-list__chips exercise-preview-list__chips--inline">
-            <v-chip
-              v-for="chip in exerciseMetaChips(exercise)"
-              :key="chip.key"
-              :color="chip.color"
-              variant="tonal"
-              size="small"
-              label
-            >
-              {{ chip.label }}
-            </v-chip>
-          </div>
-        </template>
-      </v-list-item>
-    </template>
-  </v-list>
+    <div
+      v-for="(exercise, index) in exercises"
+      :key="exerciseKey(exercise, index)"
+      class="exercise-preview-list__item"
+      role="listitem"
+    >
+      <div class="exercise-preview-list__main">
+        <div class="exercise-preview-list__title">{{ exercise.exerciseName }}</div>
+        <div class="exercise-preview-list__subtitle">{{ exerciseDetailLine(exercise) }}</div>
+      </div>
+      <div class="exercise-preview-list__meta">{{ exerciseMetaLine(exercise) }}</div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.exercise-preview-list__title,
+.exercise-preview-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.exercise-preview-list__item {
+  align-items: start;
+  border-bottom: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0.75rem 0.2rem;
+}
+
+.exercise-preview-list__item:last-child {
+  border-bottom: 0;
+}
+
+.exercise-preview-list__main {
+  min-width: 0;
+}
+
+.exercise-preview-list__title {
+  color: rgba(var(--v-theme-on-surface), 0.92);
+  font-size: 1rem;
+  font-weight: 720;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 .exercise-preview-list__subtitle {
-  white-space: normal;
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin-top: 0.15rem;
+  overflow-wrap: anywhere;
 }
 
-.exercise-preview-list__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.exercise-preview-list__meta {
+  color: rgba(var(--v-theme-primary), 0.92);
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.35;
+  max-width: 18rem;
+  text-align: right;
 }
 
-.exercise-preview-list__chips--inline {
-  justify-content: flex-end;
+.exercise-preview-list--stacked .exercise-preview-list__item {
+  grid-template-columns: 1fr;
 }
 
-.exercise-preview-list__chips--stacked {
-  justify-content: flex-start;
-  margin-top: 10px;
+.exercise-preview-list--stacked .exercise-preview-list__meta {
+  max-width: none;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .exercise-preview-list__item {
+    grid-template-columns: 1fr;
+    padding: 0.85rem;
+  }
+
+  .exercise-preview-list__meta {
+    max-width: none;
+    text-align: left;
+  }
 }
 </style>

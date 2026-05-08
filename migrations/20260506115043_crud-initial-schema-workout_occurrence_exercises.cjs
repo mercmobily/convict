@@ -10,7 +10,6 @@ exports.up = async function up(knex) {
     table.bigIncrements("id").unsigned().primary();
     table.bigInteger("workout_occurrence_id").unsigned().notNullable();
     table.bigInteger("user_id").unsigned().notNullable();
-    table.bigInteger("workspace_id").unsigned().nullable();
     table.smallint("slot_number").unsigned().notNullable();
     table.bigInteger("exercise_id").unsigned().notNullable();
     table.string("exercise_name_snapshot", 160).notNullable();
@@ -33,7 +32,6 @@ exports.up = async function up(knex) {
     table.index(["canonical_step_id"], "idx_workout_occurrence_exercises_canonical_step_id");
     table.index(["exercise_id"], "idx_workout_occurrence_exercises_exercise_id");
     table.index(["user_id"], "idx_workout_occurrence_exercises_user_id");
-    table.index(["workspace_id"], "idx_workout_occurrence_exercises_workspace_id");
     table.unique(["workout_occurrence_id","exercise_id"], "uq_workout_occurrence_exercises_occurrence_exercise");
     table.unique(["workout_occurrence_id","slot_number"], "uq_workout_occurrence_exercises_occurrence_slot");
     table.foreign(["canonical_step_id"], "fk_workout_occurrence_exercises_canonical_step_id").references(["id"]).inTable("exercise_steps").onUpdate("RESTRICT").onDelete("RESTRICT");
@@ -41,7 +39,6 @@ exports.up = async function up(knex) {
     table.foreign(["workout_occurrence_id"], "fk_workout_occurrence_exercises_occurrence_id").references(["id"]).inTable("workout_occurrences").onUpdate("RESTRICT").onDelete("CASCADE");
     table.foreign(["personal_step_variation_id"], "fk_workout_occurrence_exercises_personal_step_variation_id").references(["id"]).inTable("personal_step_variations").onUpdate("RESTRICT").onDelete("SET NULL");
     table.foreign(["user_id"], "fk_workout_occurrence_exercises_user_id").references(["id"]).inTable("users").onUpdate("RESTRICT").onDelete("CASCADE");
-    table.foreign(["workspace_id"], "fk_workout_occurrence_exercises_workspace_id").references(["id"]).inTable("workspaces").onUpdate("RESTRICT").onDelete("SET NULL");
   });
 
 };

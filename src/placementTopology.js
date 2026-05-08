@@ -91,6 +91,43 @@ addPlacementTopology({
 });
 
 addPlacementTopology({
+  id: "shell.global-actions",
+  description: "Global surface actions that should stay outside primary navigation.",
+  surfaces: ["*"],
+  variants: {
+    compact: {
+      outlet: "shell-layout:top-right",
+      renderers: menuLinkRenderers
+    },
+    medium: {
+      outlet: "shell-layout:top-right",
+      renderers: menuLinkRenderers
+    },
+    expanded: {
+      outlet: "shell-layout:top-right",
+      renderers: menuLinkRenderers
+    }
+  }
+});
+
+addPlacementTopology({
+  id: "page.supporting-content",
+  description: "Supporting page content that opens as a bottom sheet on compact layouts and a side panel on wider layouts.",
+  surfaces: ["*"],
+  variants: {
+    compact: {
+      outlet: "shell-layout:supporting-bottom-sheet"
+    },
+    medium: {
+      outlet: "shell-layout:supporting-side-panel"
+    },
+    expanded: {
+      outlet: "shell-layout:supporting-side-panel"
+    }
+  }
+});
+
+addPlacementTopology({
   id: "page.section-nav",
   owner: "home-settings",
   description: "Navigation between child pages in the home settings section.",
@@ -171,68 +208,6 @@ addPlacementTopology({
     },
     expanded: {
       outlet: "account-settings:sections"
-    }
-  }
-});
-
-addPlacementTopology({
-  id: "page.section-nav",
-  owner: "console-settings",
-  description: "Navigation between console settings child pages.",
-  surfaces: ["console"],
-  variants: {
-    compact: {
-      outlet: "console-settings:primary-menu",
-      renderers: menuLinkRenderers
-    },
-    medium: {
-      outlet: "console-settings:primary-menu",
-      renderers: menuLinkRenderers
-    },
-    expanded: {
-      outlet: "console-settings:primary-menu",
-      renderers: menuLinkRenderers
-    }
-  }
-});
-
-addPlacementTopology({
-  id: "page.section-nav",
-  owner: "admin-settings",
-  description: "Navigation between workspace admin settings child pages.",
-  surfaces: ["admin"],
-  variants: {
-    compact: {
-      outlet: "admin-settings:primary-menu",
-      renderers: menuLinkRenderers
-    },
-    medium: {
-      outlet: "admin-settings:primary-menu",
-      renderers: menuLinkRenderers
-    },
-    expanded: {
-      outlet: "admin-settings:primary-menu",
-      renderers: menuLinkRenderers
-    }
-  }
-});
-
-addPlacementTopology({
-  id: "admin.tools-menu",
-  description: "Admin surface tools menu actions.",
-  surfaces: ["admin"],
-  variants: {
-    compact: {
-      outlet: "admin-cog:primary-menu",
-      renderers: menuLinkRenderers
-    },
-    medium: {
-      outlet: "admin-cog:primary-menu",
-      renderers: menuLinkRenderers
-    },
-    expanded: {
-      outlet: "admin-cog:primary-menu",
-      renderers: menuLinkRenderers
     }
   }
 });

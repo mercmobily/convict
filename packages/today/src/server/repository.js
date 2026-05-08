@@ -407,7 +407,6 @@ function createRepository({
     async createOccurrence(
       {
         userId,
-        workspaceId = null,
         userProgramAssignmentId,
         userProgramAssignmentRevisionId,
         scheduledForDate,
@@ -426,7 +425,6 @@ function createRepository({
 
       const document = await workoutOccurrencesRepository.createDocument(
         {
-          workspaceId,
           userProgramAssignmentId,
           userProgramAssignmentRevisionId,
           scheduledForDate,
@@ -484,7 +482,6 @@ function createRepository({
     async createExerciseProgress(
       {
         userId,
-        workspaceId = null,
         exerciseId,
         currentStepId,
         readyToAdvanceStepId = null,
@@ -502,7 +499,6 @@ function createRepository({
 
       const document = await userExerciseProgressRepository.createDocument(
         {
-          workspaceId,
           exerciseId,
           currentStepId,
           readyToAdvanceStepId,

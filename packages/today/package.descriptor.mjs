@@ -7,7 +7,6 @@ export default Object.freeze({
   dependsOn: [
     "@jskit-ai/kernel",
     "@jskit-ai/json-rest-api-core",
-    "@jskit-ai/workspaces-core",
     "@local/programs",
     "@local/program-schedule-entries",
     "@local/exercises",

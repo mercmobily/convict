@@ -69,11 +69,9 @@ async function deleteUserTrainingRows(connection, userId) {
   );
 }
 
-async function ensureUserWorkspaceInTransaction(connection, { email, workspaceSlug, workspaceName }) {
-  const username = workspaceSlug;
-  const displayName = workspaceName;
+async function ensureUserInTransaction(connection, { email, username, displayName }) {
   const authProvider = "supabase";
-  const authProviderUserSid = `playwright-${workspaceSlug}`;
+  const authProviderUserSid = `playwright-${username}`;
 
   const [userRows] = await connection.query(
     "SELECT id FROM users WHERE email = ? LIMIT 1",
@@ -101,70 +99,22 @@ async function ensureUserWorkspaceInTransaction(connection, { email, workspaceSl
     );
   }
 
-  const [workspaceRows] = await connection.query(
-    "SELECT id FROM workspaces WHERE slug = ? LIMIT 1",
-    [workspaceSlug]
-  );
-  let workspaceId = workspaceRows?.[0]?.id || null;
-
-  if (!workspaceId) {
-    const [insertWorkspaceResult] = await connection.query(
-      [
-        "INSERT INTO workspaces (slug, name, owner_user_id, is_personal, avatar_url)",
-        "VALUES (?, ?, ?, ?, ?)"
-      ].join(" "),
-      [workspaceSlug, workspaceName, userId, 1, ""]
-    );
-    workspaceId = insertWorkspaceResult.insertId;
-  } else {
-    await connection.query(
-      [
-        "UPDATE workspaces",
-        "SET name = ?, owner_user_id = ?, is_personal = ?, avatar_url = ?, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP",
-        "WHERE id = ?"
-      ].join(" "),
-      [workspaceName, userId, 1, "", workspaceId]
-    );
-  }
-
-  await connection.query(
-    [
-      "INSERT INTO workspace_memberships (workspace_id, user_id, role_sid, status)",
-      "VALUES (?, ?, ?, ?)",
-      "ON DUPLICATE KEY UPDATE",
-      "role_sid = VALUES(role_sid),",
-      "status = VALUES(status),",
-      "updated_at = CURRENT_TIMESTAMP"
-    ].join(" "),
-    [workspaceId, userId, "owner", "active"]
-  );
-
-  await connection.query(
-    [
-      "INSERT INTO workspace_settings (workspace_id)",
-      "VALUES (?)",
-      "ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP"
-    ].join(" "),
-    [workspaceId]
-  );
-
   return {
-    userId,
-    workspaceId
+    userId
   };
 }
 
-async function withUserWorkspaceFixture({ email, workspaceSlug, workspaceName }, callback = async () => ({})) {
+async function withUserFixture({ email, username, displayName }, callback = async () => ({})) {
   const connection = await createDbConnection();
 
   try {
     await connection.beginTransaction();
 
     try {
-      const baseState = await ensureUserWorkspaceInTransaction(connection, {
+      const baseState = await ensureUserInTransaction(connection, {
         email,
-        workspaceSlug,
-        workspaceName
+        username,
+        displayName
       });
 
       await deleteUserTrainingRows(connection, baseState.userId);
@@ -178,7 +128,6 @@ async function withUserWorkspaceFixture({ email, workspaceSlug, workspaceName },
 
       return {
         userId: String(baseState.userId),
-        workspaceId: String(baseState.workspaceId),
         ...(result || {})
       };
     } catch (error) {
@@ -192,7 +141,7 @@ async function withUserWorkspaceFixture({ email, workspaceSlug, workspaceName },
 
 async function seedProgramCopyAssignment(
   connection,
-  { userId, workspaceId, programSlug, startOn }
+  { userId, programSlug, startOn }
 ) {
   const [templateRows] = await connection.query(
     "SELECT id, name, description FROM program_templates WHERE slug = ? LIMIT 1",
@@ -225,10 +174,10 @@ async function seedProgramCopyAssignment(
 
   const [assignmentInsertResult] = await connection.query(
     [
-      "INSERT INTO user_program_assignments (user_id, workspace_id, starts_on, status)",
-      "VALUES (?, ?, ?, ?)"
+      "INSERT INTO user_program_assignments (user_id, starts_on, status)",
+      "VALUES (?, ?, ?)"
     ].join(" "),
-    [userId, workspaceId, startOn, "active"]
+    [userId, startOn, "active"]
   );
   const assignmentId = assignmentInsertResult.insertId;
 
@@ -344,5 +293,5 @@ export {
   formatLocalDateOnly,
   normalizeDbDateOnly,
   seedProgramCopyAssignment,
-  withUserWorkspaceFixture
+  withUserFixture
 };

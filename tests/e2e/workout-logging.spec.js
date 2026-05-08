@@ -6,12 +6,12 @@ import {
   findMostRecentPastDateForDayOfWeek,
   formatLocalDateOnly,
   seedProgramCopyAssignment,
-  withUserWorkspaceFixture
+  withUserFixture
 } from "./support/convictTestSupport.js";
 
 const DEV_USER_EMAIL = "slice3-playwright@convict.local";
-const WORKSPACE_SLUG = "slice3-playwright";
-const WORKSPACE_NAME = "Slice 3 Playwright";
+const USERNAME = "slice3-playwright";
+const DISPLAY_NAME = "Slice 3 Playwright";
 const WEDNESDAY_DAY_OF_WEEK = 3;
 
 function buildWorkoutLoggingFixturePlan() {
@@ -26,19 +26,18 @@ function buildWorkoutLoggingFixturePlan() {
 
 async function ensureWorkoutLoggingFixture({
   email,
-  workspaceSlug,
-  workspaceName,
+  username,
+  displayName,
   startOn
 }) {
-  return withUserWorkspaceFixture(
+  return withUserFixture(
     {
       email,
-      workspaceSlug,
-      workspaceName
+      username,
+      displayName
     },
-    async ({ connection, userId, workspaceId }) => seedProgramCopyAssignment(connection, {
+    async ({ connection, userId }) => seedProgramCopyAssignment(connection, {
       userId,
-      workspaceId,
       programSlug: "supermax",
       startOn
     })
@@ -89,8 +88,8 @@ test("user can log reps and seconds on an in-progress workout and see them after
   const fixturePlan = buildWorkoutLoggingFixturePlan();
   const fixtureState = await ensureWorkoutLoggingFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -98,16 +97,14 @@ test("user can log reps and seconds on an in-progress workout and see them after
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+  await page.goto("/app");
 
-  const targetWorkoutCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.targetWorkoutDate
-  }).first();
+  const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
   await expect(targetWorkoutCard).toBeVisible();
 
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/w/${WORKSPACE_SLUG}/workouts/${fixturePlan.targetWorkoutDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
   await expect(page.getByRole("heading", { name: /workout$/i })).toBeVisible();
 
   const handstandCard = page.locator(".exercise-card").filter({
@@ -137,7 +134,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
   }
 
   let delayedRefreshRequest = false;
-  await page.route(`**/api/w/${WORKSPACE_SLUG}/today/workouts/${fixturePlan.targetWorkoutDate}`, async (route, request) => {
+  await page.route(`**/api/today/workouts/${fixturePlan.targetWorkoutDate}`, async (route, request) => {
     if (request.method() !== "GET" || delayedRefreshRequest) {
       await route.continue();
       return;
@@ -237,8 +234,8 @@ test("deleting the middle saved set renumbers the visible list without gaps", as
   const fixturePlan = buildWorkoutLoggingFixturePlan();
   await ensureWorkoutLoggingFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -246,11 +243,9 @@ test("deleting the middle saved set renumbers the visible list without gaps", as
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+  await page.goto("/app");
 
-  const targetWorkoutCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.targetWorkoutDate
-  }).first();
+  const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
   const handstandCard = page.locator(".exercise-card").filter({

@@ -74,12 +74,12 @@ const formRuntime = useCrudAddEdit({
   addEditOptions: {
     model: formState,
     apiUrlTemplate: isCreateMode.value ? "/workout-set-logs" : "/workout-set-logs/:recordId",
-    queryKeyFactory: (surfaceId = "", workspaceSlug = "") => [
+    queryKeyFactory: (surfaceId = "", routeScope = "") => [
       "convict",
       "workout-set-logs",
       isCreateMode.value ? "create" : "edit",
       String(surfaceId || ""),
-      String(workspaceSlug || ""),
+      String(routeScope || ""),
       String(props.exercise?.occurrenceExerciseId || ""),
       normalizedRecordId.value || "create"
     ],

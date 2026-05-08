@@ -5,12 +5,12 @@ import {
   findMostRecentPastDateForDayOfWeek,
   formatLocalDateOnly,
   seedProgramCopyAssignment,
-  withUserWorkspaceFixture
+  withUserFixture
 } from "./support/convictTestSupport.js";
 
 const DEV_USER_EMAIL = "progress-playwright@convict.local";
-const WORKSPACE_SLUG = "progress-playwright";
-const WORKSPACE_NAME = "Progress Playwright";
+const USERNAME = "progress-playwright";
+const DISPLAY_NAME = "Progress Playwright";
 const MONDAY_DAY_OF_WEEK = 1;
 const PROGRAM_SLUG = "new-blood";
 
@@ -26,19 +26,18 @@ function buildProgressFixturePlan() {
 
 async function ensureProgressFixture({
   email,
-  workspaceSlug,
-  workspaceName,
+  username,
+  displayName,
   startOn
 }) {
-  return withUserWorkspaceFixture(
+  return withUserFixture(
     {
       email,
-      workspaceSlug,
-      workspaceName
+      username,
+      displayName
     },
-    async ({ connection, userId, workspaceId }) => seedProgramCopyAssignment(connection, {
+    async ({ connection, userId }) => seedProgramCopyAssignment(connection, {
       userId,
-      workspaceId,
       programSlug: PROGRAM_SLUG,
       startOn
     })
@@ -87,8 +86,8 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
   const fixturePlan = buildProgressFixturePlan();
   const fixtureState = await ensureProgressFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -96,11 +95,9 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+  await page.goto("/app");
 
-  const targetWorkoutCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.targetWorkoutDate
-  }).first();
+  const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
   await expect(targetWorkoutCard).toBeVisible();
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
@@ -131,7 +128,7 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
   await page.getByRole("button", { name: "Finish workout" }).click();
   await expect(page.getByText("This workout is completed.")).toBeVisible();
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/progress`);
+  await page.goto("/app/progress");
 
   await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
   await expect(page.getByTestId("progress-summary-ready")).toContainText("1");
@@ -140,7 +137,7 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
   const progressSquatsCard = page.getByTestId("progress-exercise-squats");
 
   await expect(progressPushupsCard.getByText("Step 1: Wall Push-ups")).toBeVisible();
-  await expect(progressPushupsCard.getByText("Next step: Step 2 - Incline Push-ups")).toBeVisible();
+  await expect(progressPushupsCard.getByText("Step 2: Incline Push-ups")).toBeVisible();
   await expect(progressPushupsCard.getByRole("button", { name: "Advance now" })).toBeVisible();
   await expect(progressSquatsCard.getByText("Not started")).toBeVisible();
 
@@ -154,7 +151,7 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
 
   await expect(progressPushupsCard.getByText("Step 2: Incline Push-ups")).toBeVisible();
   await expect(progressPushupsCard.getByRole("button", { name: "Advance now" })).toHaveCount(0);
-  await expect(page.getByTestId("progress-summary-ready")).toContainText("0");
+  await expect(page.getByTestId("progress-summary-ready")).toHaveCount(0);
 
   const progressRowAfterAdvance = await fetchPushupProgress(fixtureState.userId);
   expect(progressRowAfterAdvance).toEqual({

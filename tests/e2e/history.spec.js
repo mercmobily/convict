@@ -5,12 +5,12 @@ import {
   devLoginAs,
   formatLocalDateOnly,
   seedProgramCopyAssignment,
-  withUserWorkspaceFixture
+  withUserFixture
 } from "./support/convictTestSupport.js";
 
 const DEV_USER_EMAIL = "history-playwright@convict.local";
-const WORKSPACE_SLUG = "history-playwright";
-const WORKSPACE_NAME = "History Playwright";
+const USERNAME = "history-playwright";
+const DISPLAY_NAME = "History Playwright";
 const SUPERMAX_SCHEDULE = Object.freeze({
   1: ["Pull-ups", "Squats"],
   2: ["Push-ups", "Leg Raises"],
@@ -46,19 +46,18 @@ function buildHistoryFixturePlan() {
 
 async function ensureHistoryFixture({
   email,
-  workspaceSlug,
-  workspaceName,
+  username,
+  displayName,
   startOn
 }) {
-  return withUserWorkspaceFixture(
+  return withUserFixture(
     {
       email,
-      workspaceSlug,
-      workspaceName
+      username,
+      displayName
     },
-    async ({ connection, userId, workspaceId }) => seedProgramCopyAssignment(connection, {
+    async ({ connection, userId }) => seedProgramCopyAssignment(connection, {
       userId,
-      workspaceId,
       programSlug: "supermax",
       startOn
     })
@@ -84,8 +83,8 @@ test("history page shows month projection and links into workout detail", async 
   const fixturePlan = buildHistoryFixturePlan();
   await ensureHistoryFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -93,7 +92,7 @@ test("history page shows month projection and links into workout detail", async 
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/history`);
+  await page.goto("/app/history");
 
   await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
   await expect(page.getByText(monthTitleFor(fixturePlan.todayDate))).toBeVisible();
@@ -110,9 +109,9 @@ test("history page shows month projection and links into workout detail", async 
   }
 
   await page.getByRole("link", { name: "Open workout detail" }).click();
-  await expect(page).toHaveURL(new RegExp(`/w/${WORKSPACE_SLUG}/workouts/${fixturePlan.targetHistoryDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetHistoryDate}$`));
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/history`);
+  await page.goto("/app/history");
 
   const nextMonthKey = shiftMonth(fixturePlan.todayDate, 1);
   await page.getByRole("button", { name: "Next" }).click();

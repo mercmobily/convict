@@ -9,7 +9,6 @@ exports.up = async function up(knex) {
   await knex.schema.createTable(TABLE_NAME, (table) => {
     table.bigIncrements("id").unsigned().primary();
     table.bigInteger("user_id").unsigned().notNullable();
-    table.bigInteger("workspace_id").unsigned().nullable();
     table.bigInteger("exercise_id").unsigned().notNullable();
     table.bigInteger("current_step_id").unsigned().notNullable();
     table.bigInteger("ready_to_advance_step_id").unsigned().nullable();
@@ -23,7 +22,6 @@ exports.up = async function up(knex) {
     table.index(["active_variation_id"], "fk_user_exercise_progress_active_variation_id");
     table.index(["exercise_id"], "fk_user_exercise_progress_exercise_id");
     table.index(["last_completed_occurrence_id"], "fk_user_exercise_progress_last_completed_occurrence_id");
-    table.index(["workspace_id"], "fk_user_exercise_progress_workspace_id");
     table.index(["current_step_id"], "idx_user_exercise_progress_current_step_id");
     table.index(["ready_to_advance_step_id"], "idx_user_exercise_progress_ready_step_id");
     table.unique(["user_id","exercise_id"], "uq_user_exercise_progress_user_exercise");
@@ -33,7 +31,6 @@ exports.up = async function up(knex) {
     table.foreign(["last_completed_occurrence_id"], "fk_user_exercise_progress_last_completed_occurrence_id").references(["id"]).inTable("workout_occurrences").onUpdate("RESTRICT").onDelete("RESTRICT");
     table.foreign(["ready_to_advance_step_id"], "fk_user_exercise_progress_ready_to_advance_step_id").references(["id"]).inTable("exercise_steps").onUpdate("RESTRICT").onDelete("RESTRICT");
     table.foreign(["user_id"], "fk_user_exercise_progress_user_id").references(["id"]).inTable("users").onUpdate("RESTRICT").onDelete("CASCADE");
-    table.foreign(["workspace_id"], "fk_user_exercise_progress_workspace_id").references(["id"]).inTable("workspaces").onUpdate("RESTRICT").onDelete("SET NULL");
   });
 
 };

@@ -1,7 +1,5 @@
 import { resolveScopedApiBasePath, normalizeSurfaceId } from "@jskit-ai/kernel/shared/surface";
-import { ROUTE_VISIBILITY_WORKSPACE_USER } from "@jskit-ai/kernel/shared/support/visibility";
-import { workspaceSlugParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
-import { buildWorkspaceInputFromRouteParams } from "@jskit-ai/workspaces-core/server/support/workspaceRouteInput";
+import { ROUTE_VISIBILITY_USER } from "@jskit-ai/kernel/shared/support/visibility";
 import {
   READ_TODAY_PROJECTION,
   READ_HISTORY_PROJECTION,
@@ -23,8 +21,7 @@ function registerRoutes(
   app,
   {
     routeSurface = "",
-    routeRelativePath = "",
-    routeSurfaceRequiresWorkspace = false
+    routeRelativePath = ""
   } = {}
 ) {
   if (!app || typeof app.make !== "function") {
@@ -34,7 +31,7 @@ function registerRoutes(
   const router = app.make("jskit.http.router");
   const normalizedRouteSurface = normalizeSurfaceId(routeSurface);
   const routeBase = resolveScopedApiBasePath({
-    routeBase: routeSurfaceRequiresWorkspace === true ? "/w/:workspaceSlug" : "/",
+    routeBase: "/",
     relativePath: routeRelativePath,
     strictParams: false
   });
@@ -45,19 +42,16 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Read today and overdue workout projection for the current user."
-      },
-      params: workspaceSlugParamsValidator
+      }
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: READ_TODAY_PROJECTION,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params)
-        }
+        input: {}
       });
 
       reply.code(200).send(response);
@@ -70,21 +64,17 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Read a month history projection for the current user's active program assignment."
       },
-      params: workspaceSlugParamsValidator,
       query: historyProjectionQueryRouteValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: READ_HISTORY_PROJECTION,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.query || {})
-        }
+        input: request.input.query || {}
       });
 
       reply.code(200).send(response);
@@ -97,7 +87,7 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Read the workout detail projection and saved set logs for a scheduled date."
@@ -107,10 +97,7 @@ function registerRoutes(
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: READ_WORKOUT_DETAIL,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.params || {})
-        }
+        input: request.input.params || {}
       });
 
       reply.code(200).send(response);
@@ -123,21 +110,17 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Create or resume an in-progress workout occurrence for today or an overdue date."
       },
-      params: workspaceSlugParamsValidator,
       body: startWorkoutBodyInputValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: START_WORKOUT_OCCURRENCE,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.body || {})
-        }
+        input: request.input.body || {}
       });
 
       reply.code(200).send(response);
@@ -150,7 +133,7 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Finish an in-progress workout occurrence and evaluate earned advancement."
@@ -160,10 +143,7 @@ function registerRoutes(
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: SUBMIT_WORKOUT_OCCURRENCE,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.params || {})
-        }
+        input: request.input.params || {}
       });
 
       reply.code(200).send(response);
@@ -176,21 +156,17 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Apply an earned exercise advancement without changing workout history."
       },
-      params: workspaceSlugParamsValidator,
       body: applyAdvancementBodyInputValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: APPLY_EXERCISE_ADVANCEMENT,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.body || {})
-        }
+        input: request.input.body || {}
       });
 
       reply.code(200).send(response);
@@ -203,21 +179,17 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
-      visibility: ROUTE_VISIBILITY_WORKSPACE_USER,
+      visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
         summary: "Mark an overdue workout as definitely missed."
       },
-      params: workspaceSlugParamsValidator,
       body: markWorkoutDefinitelyMissedBodyInputValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: MARK_WORKOUT_DEFINITELY_MISSED,
-        input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
-          ...(request.input.body || {})
-        }
+        input: request.input.body || {}
       });
 
       reply.code(200).send(response);

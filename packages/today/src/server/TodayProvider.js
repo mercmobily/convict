@@ -12,8 +12,6 @@ class TodayProvider {
     "runtime.actions",
     "json-rest-api.core",
     "auth.policy.fastify",
-    "workspaces.core",
-    "local.main",
     "crud.programs",
     "crud.program_schedule_entries",
     "crud.exercises",
@@ -66,8 +64,7 @@ class TodayProvider {
   boot(app) {
     registerRoutes(app, {
       routeRelativePath: "today",
-      routeSurface: "app",
-      routeSurfaceRequiresWorkspace: true
+      routeSurface: "app"
     });
   }
 }

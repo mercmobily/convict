@@ -117,7 +117,6 @@ async function buildHistoryState(
     userId,
     todayDate,
     historyMonth,
-    workspace = null,
     context = null
   } = {}
 ) {
@@ -221,10 +220,7 @@ async function buildHistoryState(
       gridStart,
       gridEnd
     },
-    assignment: {
-      ...assignmentSummary,
-      workspace
-    },
+    assignment: assignmentSummary,
     summary: summarizeHistoryDays(days.filter((day) => day.isCurrentMonth)),
     days,
     rules: {

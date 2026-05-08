@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
-import { devLoginAs, withUserWorkspaceFixture } from "./support/convictTestSupport.js";
+import { devLoginAs, withUserFixture } from "./support/convictTestSupport.js";
 
 const DEV_USER_EMAIL = "surface-routes-playwright@convict.local";
-const WORKSPACE_SLUG = "surface-routes-playwright";
-const WORKSPACE_NAME = "Surface Routes Playwright";
+const USERNAME = "surface-routes-playwright";
+const DISPLAY_NAME = "Surface Routes Playwright";
 
 async function ensureSurfaceRoutesFixture() {
-  return withUserWorkspaceFixture(
+  return withUserFixture(
     {
       email: DEV_USER_EMAIL,
-      workspaceSlug: WORKSPACE_SLUG,
-      workspaceName: WORKSPACE_NAME
+      username: USERNAME,
+      displayName: DISPLAY_NAME
     },
     async ({ connection, userId }) => {
       await connection.query(
@@ -23,7 +23,7 @@ async function ensureSurfaceRoutesFixture() {
   );
 }
 
-test("console settings lands on its real child and console can route back home", async ({ page }) => {
+test("console settings lands on the app settings page and console can route back home", async ({ page }) => {
   await ensureSurfaceRoutesFixture();
 
   await devLoginAs(page, {
@@ -31,22 +31,13 @@ test("console settings lands on its real child and console can route back home",
   });
 
   await page.goto("/console/settings");
-  await expect(page).toHaveURL(/\/console\/settings\/admin-assistant\/?$/);
-  await expect(page.getByText("Console settings")).toBeVisible();
+  await expect(page).toHaveURL(/\/console\/settings\/?$/);
+  await expect(page.getByText("Console settings", { exact: true })).toBeVisible();
+  await expect(page.getByText("No app-level console settings are enabled")).toBeVisible();
 
   await page.goto("/console");
   await expect(page.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/home");
-});
 
-test("workspace settings route shows a real landing page instead of a blank shell", async ({ page }) => {
-  await ensureSurfaceRoutesFixture();
-
-  await devLoginAs(page, {
-    email: DEV_USER_EMAIL
-  });
-
-  await page.goto(`/w/${WORKSPACE_SLUG}/admin/workspace/settings`);
-  await expect(page.getByText("Workspace settings")).toBeVisible();
-  await expect(page.getByText("Current workspace", { exact: true })).toBeVisible();
-  await expect(page.getByText("Settings in this section apply to the current cell only.")).toBeVisible();
+  await page.goto("/home");
+  await expect(page).toHaveURL(/\/app\/?$/);
 });

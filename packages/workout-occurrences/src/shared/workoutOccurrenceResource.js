@@ -39,13 +39,6 @@ const resource = defineCrudResource({
       patch: { required: false }
     }
   },
-  workspaceId: {
-    type: "id",
-    nullable: true,
-    search: true,
-    hidden: true,
-    operations: {}
-  },
   scheduledForDate: {
     type: "date",
     required: true,

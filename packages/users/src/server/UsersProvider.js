@@ -15,7 +15,7 @@ import { resource } from "../shared/userResource.js";
 
 const CRUD_MODULE_CONFIG = Object.freeze({
   namespace: "users",
-  surface: "admin",
+  surface: "home",
   ownershipFilter: "public",
   relativePath: "/users"
 });
@@ -82,7 +82,6 @@ class UsersProvider {
     registerRoutes(app, {
       routeOwnershipFilter: crudPolicy.ownershipFilter,
       routeSurface: crudPolicy.surfaceId,
-      routeSurfaceRequiresWorkspace: crudPolicy.surfaceDefinition.requiresWorkspace === true,
       routeRelativePath: crudPolicy.relativePath
     });
   }

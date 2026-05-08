@@ -1,8 +1,9 @@
-import { composeSchemaDefinitions } from "@jskit-ai/kernel/shared/validators";
-import { workspaceSlugParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
+import { createSchema } from "json-rest-schema";
+import { deepFreeze } from "@jskit-ai/kernel/shared/support/deepFreeze";
 
-const progressStateQueryInputValidator = composeSchemaDefinitions([
-  workspaceSlugParamsValidator
-]);
+const progressStateQueryInputValidator = deepFreeze({
+  schema: createSchema({}),
+  mode: "patch"
+});
 
 export { progressStateQueryInputValidator };

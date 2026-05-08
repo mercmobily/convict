@@ -10,8 +10,6 @@ import {
   composeSchemaDefinitions,
   recordIdParamsValidator
 } from "@jskit-ai/kernel/shared/validators";
-import { routeParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
-import { buildWorkspaceInputFromRouteParams } from "@jskit-ai/workspaces-core/server/support/workspaceRouteInput";
 import { resource } from "../shared/userResource.js";
 
 const listCursorPaginationQueryValidator = createCrudCursorPaginationQueryValidator({
@@ -33,24 +31,19 @@ const viewRouteContract = createJsonApiResourceRouteContract({
   output: resource.operations.view.output,
   outputKind: "record"
 });
-const viewRouteParamsValidator = composeSchemaDefinitions([
-  routeParamsValidator,
-  recordIdParamsValidator
-]);
 
 function registerRoutes(
   app,
   {
     routeOwnershipFilter = "public",
     routeSurface = "",
-    routeSurfaceRequiresWorkspace = false,
     routeRelativePath = ""
   } = {}
 ) {
   const router = app.make("jskit.http.router");
   const normalizedRouteSurface = normalizeSurfaceId(routeSurface);
   const routeBase = resolveScopedApiBasePath({
-    routeBase: routeSurfaceRequiresWorkspace === true ? "/w/:workspaceSlug" : "/",
+    routeBase: "/",
     relativePath: routeRelativePath,
     strictParams: false
   });
@@ -66,14 +59,12 @@ function registerRoutes(
         tags: ["crud"],
         summary: "List users."
       },
-      ...listRouteContract,
-      params: routeParamsValidator
+      ...listRouteContract
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: "crud.users.list",
         input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           ...(request.input.query || {})
         }
       });
@@ -93,13 +84,12 @@ function registerRoutes(
         summary: "View a user."
       },
       ...viewRouteContract,
-      params: viewRouteParamsValidator
+      params: recordIdParamsValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: "crud.users.view",
         input: {
-          ...buildWorkspaceInputFromRouteParams(request.input.params),
           recordId: request.input.params.recordId
         }
       });

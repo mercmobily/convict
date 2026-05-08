@@ -9,18 +9,13 @@ import {
   createCrudParentFilterQueryValidator
 } from "@jskit-ai/crud-core/server/listQueryValidators";
 import { resource } from "../shared/programScheduleEntryResource.js";
-import { workspaceSlugParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
 
 const listCursorPaginationQueryValidator = createCrudCursorPaginationQueryValidator({
   orderBy: resource.defaultSort
 });
 const listParentFilterQueryValidator = createCrudParentFilterQueryValidator(resource);
-const actionPermissions = Object.freeze({
-  list: "crud.program_schedule_entries.list",
-  view: "crud.program_schedule_entries.view",
-  create: "crud.program_schedule_entries.create",
-  update: "crud.program_schedule_entries.update",
-  delete: "crud.program_schedule_entries.delete"
+const authenticatedPermission = Object.freeze({
+  require: "authenticated"
 });
 
 function createActions({ surface } = {}) {
@@ -31,9 +26,8 @@ function createActions({ surface } = {}) {
       kind: "query",
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
-      permission: { require: "all", permissions: [actionPermissions.list] },
+      permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   listCursorPaginationQueryValidator,
   listSearchQueryValidator,
   listParentFilterQueryValidator,
@@ -46,7 +40,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const { workspaceSlug, ...query } = input || {};
+        const query = input || {};
         return deps.programScheduleEntriesService.queryDocuments(query, {
           context
         });
@@ -58,9 +52,8 @@ function createActions({ surface } = {}) {
       kind: "query",
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
-      permission: { require: "all", permissions: [actionPermissions.view] },
+      permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   recordIdParamsValidator,
   lookupIncludeQueryValidator,
 ]),
@@ -83,9 +76,8 @@ function createActions({ surface } = {}) {
       kind: "command",
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
-      permission: { require: "all", permissions: [actionPermissions.create] },
+      permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   resource.operations.create.body,
 ], {
   mode: "create"
@@ -97,7 +89,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const { workspaceSlug, ...payload } = input || {};
+        const payload = input || {};
         return deps.programScheduleEntriesService.createDocument(payload, {
           context
         });
@@ -109,9 +101,8 @@ function createActions({ surface } = {}) {
       kind: "command",
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
-      permission: { require: "all", permissions: [actionPermissions.update] },
+      permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   recordIdParamsValidator,
   resource.operations.patch.body,
 ]),
@@ -122,7 +113,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const { workspaceSlug, recordId, ...patch } = input || {};
+        const { recordId, ...patch } = input || {};
         return deps.programScheduleEntriesService.patchDocumentById(recordId, patch, {
           context
         });
@@ -134,9 +125,8 @@ function createActions({ surface } = {}) {
       kind: "command",
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
-      permission: { require: "all", permissions: [actionPermissions.delete] },
+      permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-  workspaceSlugParamsValidator,
   recordIdParamsValidator,
 ]),
       output: null,

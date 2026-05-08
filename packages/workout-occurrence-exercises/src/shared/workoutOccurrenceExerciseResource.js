@@ -25,13 +25,6 @@ const resource = defineCrudResource({
     hidden: true,
     operations: {}
   },
-  workspaceId: {
-    type: "id",
-    nullable: true,
-    search: true,
-    hidden: true,
-    operations: {}
-  },
   slotNumber: {
     type: "integer",
     min: 0,

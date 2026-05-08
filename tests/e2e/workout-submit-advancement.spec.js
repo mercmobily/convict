@@ -5,12 +5,12 @@ import {
   findMostRecentPastDateForDayOfWeek,
   formatLocalDateOnly,
   seedProgramCopyAssignment,
-  withUserWorkspaceFixture
+  withUserFixture
 } from "./support/convictTestSupport.js";
 
 const DEV_USER_EMAIL = "slice4-playwright@convict.local";
-const WORKSPACE_SLUG = "slice4-playwright";
-const WORKSPACE_NAME = "Slice 4 Playwright";
+const USERNAME = "slice4-playwright";
+const DISPLAY_NAME = "Slice 4 Playwright";
 const MONDAY_DAY_OF_WEEK = 1;
 const PROGRAM_SLUG = "new-blood";
 
@@ -26,19 +26,18 @@ function buildWorkoutSubmitFixturePlan() {
 
 async function ensureWorkoutSubmitFixture({
   email,
-  workspaceSlug,
-  workspaceName,
+  username,
+  displayName,
   startOn
 }) {
-  return withUserWorkspaceFixture(
+  return withUserFixture(
     {
       email,
-      workspaceSlug,
-      workspaceName
+      username,
+      displayName
     },
-    async ({ connection, userId, workspaceId }) => seedProgramCopyAssignment(connection, {
+    async ({ connection, userId }) => seedProgramCopyAssignment(connection, {
       userId,
-      workspaceId,
       programSlug: PROGRAM_SLUG,
       startOn
     })
@@ -114,8 +113,8 @@ test("user can finish a workout and manually apply earned advancement", async ({
   const fixturePlan = buildWorkoutSubmitFixturePlan();
   const fixtureState = await ensureWorkoutSubmitFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -123,15 +122,13 @@ test("user can finish a workout and manually apply earned advancement", async ({
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+  await page.goto("/app");
 
-  const targetWorkoutCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.targetWorkoutDate
-  }).first();
+  const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
   await expect(targetWorkoutCard).toBeVisible();
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/w/${WORKSPACE_SLUG}/workouts/${fixturePlan.targetWorkoutDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
 
   const pushupsCard = page.locator(".exercise-card").filter({
     hasText: "Push-ups"
@@ -216,8 +213,8 @@ test("user can finish a workout below the programmed minimum volume", async ({ p
   const fixturePlan = buildWorkoutSubmitFixturePlan();
   const fixtureState = await ensureWorkoutSubmitFixture({
     email: DEV_USER_EMAIL,
-    workspaceSlug: WORKSPACE_SLUG,
-    workspaceName: WORKSPACE_NAME,
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
     startOn: fixturePlan.startOn
   });
 
@@ -225,11 +222,9 @@ test("user can finish a workout below the programmed minimum volume", async ({ p
     email: DEV_USER_EMAIL
   });
 
-  await page.goto(`/w/${WORKSPACE_SLUG}/`);
+  await page.goto("/app");
 
-  const targetWorkoutCard = page.locator(".overdue-workout-card").filter({
-    hasText: fixturePlan.targetWorkoutDate
-  }).first();
+  const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
   await expect(targetWorkoutCard).toBeVisible();
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 

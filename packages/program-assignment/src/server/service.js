@@ -1,7 +1,7 @@
 import { ConflictError, NotFoundError, AppError } from "@jskit-ai/kernel/server/runtime/errors";
 import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
 import { dayLabelForIsoDayOfWeek, formatWorkSetLabel, resolveScheduleExerciseName } from "@local/main/shared";
-import { resolveCurrentUserId, resolveCurrentWorkspace, resolveCurrentWorkspaceId } from "@local/main/shared/requestContext";
+import { resolveCurrentUserId } from "@local/main/shared/requestContext";
 
 const TEMPLATE_METADATA = Object.freeze({
   "new-blood": Object.freeze({
@@ -127,7 +127,7 @@ function buildTemplateScheduleIndex(rows = []) {
   return index;
 }
 
-async function buildSelectionState(programAssignmentRepository, userId, { workspace = null, context = null } = {}) {
+async function buildSelectionState(programAssignmentRepository, userId, { context = null } = {}) {
   const repositoryOptions = context ? { context } : {};
   const [programTemplates, activeAssignment] = await Promise.all([
     programAssignmentRepository.listProgramTemplates(repositoryOptions),
@@ -162,7 +162,6 @@ async function buildSelectionState(programAssignmentRepository, userId, { worksp
       hydratedActiveAssignment = {
         ...activeAssignment,
         revision: activeRevision,
-        workspace,
         program: activeProgram
           ? enrichAssignedProgram(activeProgram, activeProgramScheduleEntries, sourceTemplate)
           : null
@@ -201,17 +200,13 @@ function createService({ programAssignmentRepository } = {}) {
       void input;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const workspace = resolveCurrentWorkspace(context);
       return buildSelectionState(programAssignmentRepository, userId, {
-        workspace,
         context
       });
     },
     async startProgram(input = {}, options = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const workspaceId = resolveCurrentWorkspaceId(context);
-      const workspace = resolveCurrentWorkspace(context);
       const programTemplateId = input?.programTemplateId || null;
       const startsOn = normalizeStartsOn(input?.startsOn);
 
@@ -249,7 +244,6 @@ function createService({ programAssignmentRepository } = {}) {
 
         const assignmentId = await programAssignmentRepository.createAssignment(
           {
-            workspaceId,
             startsOn,
             status: "active"
           },
@@ -259,7 +253,6 @@ function createService({ programAssignmentRepository } = {}) {
         await programAssignmentRepository.createAssignmentRevision(
           {
             userProgramAssignmentId: assignmentId,
-            workspaceId,
             programId,
             effectiveFromDate: startsOn,
             changeReason: "initial",
@@ -270,7 +263,6 @@ function createService({ programAssignmentRepository } = {}) {
       });
 
       return buildSelectionState(programAssignmentRepository, userId, {
-        workspace,
         context
       });
     }

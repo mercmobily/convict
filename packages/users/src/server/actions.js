@@ -6,7 +6,6 @@ import {
   createCrudCursorPaginationQueryValidator,
   listSearchQueryValidator
 } from "@jskit-ai/crud-core/server/listQueryValidators";
-import { workspaceSlugParamsValidator } from "@jskit-ai/workspaces-core/server/validators/routeParamsValidator";
 import { resource } from "../shared/userResource.js";
 
 const listCursorPaginationQueryValidator = createCrudCursorPaginationQueryValidator({
@@ -26,7 +25,6 @@ function createActions({ surface } = {}) {
       surfaces: [surface],
       permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-        workspaceSlugParamsValidator,
         listCursorPaginationQueryValidator,
         listSearchQueryValidator
       ]),
@@ -37,8 +35,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const { workspaceSlug, ...query } = input || {};
-        return deps.usersService.queryDocuments(query, {
+        return deps.usersService.queryDocuments(input || {}, {
           context,
           visibilityContext: context?.visibilityContext
         });
@@ -52,7 +49,6 @@ function createActions({ surface } = {}) {
       surfaces: [surface],
       permission: authenticatedPermission,
       input: composeSchemaDefinitions([
-        workspaceSlugParamsValidator,
         recordIdParamsValidator
       ]),
       output: null,

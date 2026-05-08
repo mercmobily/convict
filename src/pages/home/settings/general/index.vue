@@ -15,10 +15,12 @@ const drawerDefaultOpenModel = computed({
 </script>
 
 <template>
-  <section class="d-flex flex-column ga-4">
+  <section class="generated-ui-screen generated-ui-screen--settings settings-general-screen d-flex flex-column ga-4">
     <div>
-      <h2 class="text-h6 mb-2">General</h2>
-      <p class="text-body-2 text-medium-emphasis mb-0">These preferences are stored in this browser for this device.</p>
+      <h2 class="text-h6 mb-2">Navigation</h2>
+      <p class="text-body-2 text-medium-emphasis mb-0">
+        Choose the default behavior for wider screens. Phone layouts keep primary navigation in the bottom bar.
+      </p>
     </div>
 
     <v-switch
@@ -26,11 +28,13 @@ const drawerDefaultOpenModel = computed({
       color="primary"
       inset
       hide-details="auto"
-      label="Open navigation drawer by default"
+      label="Open drawer by default on wider screens"
     />
-
-    <p class="text-body-2 text-medium-emphasis mb-0">
-      This controls the default shell behavior for the public surface without changing account or workspace data.
-    </p>
   </section>
 </template>
+
+<style scoped>
+.settings-general-screen :deep(.v-switch) {
+  min-height: 48px;
+}
+</style>

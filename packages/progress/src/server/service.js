@@ -3,7 +3,7 @@ import {
   localTodayDateString,
   sortCanonicalExercises
 } from "@local/main/shared";
-import { resolveCurrentUserId, resolveCurrentWorkspace } from "@local/main/shared/requestContext";
+import { resolveCurrentUserId } from "@local/main/shared/requestContext";
 
 function progressStatus(progressRow = null) {
   if (progressRow?.readyToAdvanceStepId) {
@@ -39,7 +39,6 @@ function createService({ progressRepository } = {}) {
       void input;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const workspace = resolveCurrentWorkspace(context);
 
       const [exerciseRows, progressRows] = await Promise.all([
         progressRepository.listExercises({ context }),
@@ -105,13 +104,6 @@ function createService({ progressRepository } = {}) {
 
       return {
         date: localTodayDateString(),
-        workspace: workspace
-          ? {
-              id: workspace.id,
-              slug: String(workspace.slug || "").trim(),
-              name: String(workspace.name || "").trim()
-            }
-          : null,
         summary: buildSummary(exerciseProgress),
         progress: exerciseProgress
       };

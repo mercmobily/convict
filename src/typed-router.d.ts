@@ -37,6 +37,44 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/app': RouteRecordInfo<
+      '/app',
+      '/app',
+      Record<never, never>,
+      Record<never, never>,
+      | '/app/'
+      | '/app/history/'
+      | '/app/progress/'
+      | '/app/workouts/[scheduledForDate]'
+    >,
+    '/app/': RouteRecordInfo<
+      '/app/',
+      '/app',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/app/history/': RouteRecordInfo<
+      '/app/history/',
+      '/app/history',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/app/progress/': RouteRecordInfo<
+      '/app/progress/',
+      '/app/progress',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/app/workouts/[scheduledForDate]': RouteRecordInfo<
+      '/app/workouts/[scheduledForDate]',
+      '/app/workouts/:scheduledForDate',
+      { scheduledForDate: ParamValue<true> },
+      { scheduledForDate: ParamValue<false> },
+      | never
+    >,
     '/auth/login': RouteRecordInfo<
       '/auth/login',
       '/auth/login',
@@ -59,7 +97,6 @@ declare module 'vue-router/auto-routes' {
       | '/console/'
       | '/console/settings'
       | '/console/settings/'
-      | '/console/settings/admin-assistant/'
     >,
     '/console/': RouteRecordInfo<
       '/console/',
@@ -74,18 +111,10 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       Record<never, never>,
       | '/console/settings/'
-      | '/console/settings/admin-assistant/'
     >,
     '/console/settings/': RouteRecordInfo<
       '/console/settings/',
       '/console/settings',
-      Record<never, never>,
-      Record<never, never>,
-      | never
-    >,
-    '/console/settings/admin-assistant/': RouteRecordInfo<
-      '/console/settings/admin-assistant/',
-      '/console/settings/admin-assistant',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -129,96 +158,6 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    '/w/[workspaceSlug]': RouteRecordInfo<
-      '/w/[workspaceSlug]',
-      '/w/:workspaceSlug',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | '/w/[workspaceSlug]/'
-      | '/w/[workspaceSlug]/admin'
-      | '/w/[workspaceSlug]/admin/'
-      | '/w/[workspaceSlug]/admin/assistant/'
-      | '/w/[workspaceSlug]/admin/members/'
-      | '/w/[workspaceSlug]/admin/workspace/settings'
-      | '/w/[workspaceSlug]/admin/workspace/settings/'
-      | '/w/[workspaceSlug]/history/'
-      | '/w/[workspaceSlug]/progress/'
-      | '/w/[workspaceSlug]/workouts/[scheduledForDate]'
-    >,
-    '/w/[workspaceSlug]/': RouteRecordInfo<
-      '/w/[workspaceSlug]/',
-      '/w/:workspaceSlug',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/admin': RouteRecordInfo<
-      '/w/[workspaceSlug]/admin',
-      '/w/:workspaceSlug/admin',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | '/w/[workspaceSlug]/admin/'
-      | '/w/[workspaceSlug]/admin/assistant/'
-      | '/w/[workspaceSlug]/admin/members/'
-      | '/w/[workspaceSlug]/admin/workspace/settings'
-      | '/w/[workspaceSlug]/admin/workspace/settings/'
-    >,
-    '/w/[workspaceSlug]/admin/': RouteRecordInfo<
-      '/w/[workspaceSlug]/admin/',
-      '/w/:workspaceSlug/admin',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/admin/assistant/': RouteRecordInfo<
-      '/w/[workspaceSlug]/admin/assistant/',
-      '/w/:workspaceSlug/admin/assistant',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/admin/members/': RouteRecordInfo<
-      '/w/[workspaceSlug]/admin/members/',
-      '/w/:workspaceSlug/admin/members',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/admin/workspace/settings': RouteRecordInfo<
-      '/w/[workspaceSlug]/admin/workspace/settings',
-      '/w/:workspaceSlug/admin/workspace/settings',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | '/w/[workspaceSlug]/admin/workspace/settings/'
-    >,
-    '/w/[workspaceSlug]/admin/workspace/settings/': RouteRecordInfo<
-      '/w/[workspaceSlug]/admin/workspace/settings/',
-      '/w/:workspaceSlug/admin/workspace/settings',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/history/': RouteRecordInfo<
-      '/w/[workspaceSlug]/history/',
-      '/w/:workspaceSlug/history',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/progress/': RouteRecordInfo<
-      '/w/[workspaceSlug]/progress/',
-      '/w/:workspaceSlug/progress',
-      { workspaceSlug: ParamValue<true> },
-      { workspaceSlug: ParamValue<false> },
-      | never
-    >,
-    '/w/[workspaceSlug]/workouts/[scheduledForDate]': RouteRecordInfo<
-      '/w/[workspaceSlug]/workouts/[scheduledForDate]',
-      '/w/:workspaceSlug/workouts/:scheduledForDate',
-      { workspaceSlug: ParamValue<true>, scheduledForDate: ParamValue<true> },
-      { workspaceSlug: ParamValue<false>, scheduledForDate: ParamValue<false> },
-      | never
-    >,
   }
 
   /**
@@ -235,6 +174,40 @@ declare module 'vue-router/auto-routes' {
     'src/pages/account/index.vue': {
       routes:
         | '/account/'
+      views:
+        | never
+    }
+    'src/pages/app.vue': {
+      routes:
+        | '/app'
+        | '/app/'
+        | '/app/history/'
+        | '/app/progress/'
+        | '/app/workouts/[scheduledForDate]'
+      views:
+        | 'default'
+    }
+    'src/pages/app/index.vue': {
+      routes:
+        | '/app/'
+      views:
+        | never
+    }
+    'src/pages/app/history/index.vue': {
+      routes:
+        | '/app/history/'
+      views:
+        | never
+    }
+    'src/pages/app/progress/index.vue': {
+      routes:
+        | '/app/progress/'
+      views:
+        | never
+    }
+    'src/pages/app/workouts/[scheduledForDate].vue': {
+      routes:
+        | '/app/workouts/[scheduledForDate]'
       views:
         | never
     }
@@ -256,7 +229,6 @@ declare module 'vue-router/auto-routes' {
         | '/console/'
         | '/console/settings'
         | '/console/settings/'
-        | '/console/settings/admin-assistant/'
       views:
         | 'default'
     }
@@ -270,19 +242,12 @@ declare module 'vue-router/auto-routes' {
       routes:
         | '/console/settings'
         | '/console/settings/'
-        | '/console/settings/admin-assistant/'
       views:
         | 'default'
     }
     'src/pages/console/settings/index.vue': {
       routes:
         | '/console/settings/'
-      views:
-        | never
-    }
-    'src/pages/console/settings/admin-assistant/index.vue': {
-      routes:
-        | '/console/settings/admin-assistant/'
       views:
         | never
     }
@@ -319,88 +284,6 @@ declare module 'vue-router/auto-routes' {
     'src/pages/home/settings/general/index.vue': {
       routes:
         | '/home/settings/general/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug].vue': {
-      routes:
-        | '/w/[workspaceSlug]'
-        | '/w/[workspaceSlug]/'
-        | '/w/[workspaceSlug]/admin'
-        | '/w/[workspaceSlug]/admin/'
-        | '/w/[workspaceSlug]/admin/assistant/'
-        | '/w/[workspaceSlug]/admin/members/'
-        | '/w/[workspaceSlug]/admin/workspace/settings'
-        | '/w/[workspaceSlug]/admin/workspace/settings/'
-        | '/w/[workspaceSlug]/history/'
-        | '/w/[workspaceSlug]/progress/'
-        | '/w/[workspaceSlug]/workouts/[scheduledForDate]'
-      views:
-        | 'default'
-    }
-    'src/pages/w/[workspaceSlug]/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/admin.vue': {
-      routes:
-        | '/w/[workspaceSlug]/admin'
-        | '/w/[workspaceSlug]/admin/'
-        | '/w/[workspaceSlug]/admin/assistant/'
-        | '/w/[workspaceSlug]/admin/members/'
-        | '/w/[workspaceSlug]/admin/workspace/settings'
-        | '/w/[workspaceSlug]/admin/workspace/settings/'
-      views:
-        | 'default'
-    }
-    'src/pages/w/[workspaceSlug]/admin/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/admin/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/admin/assistant/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/admin/assistant/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/admin/members/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/admin/members/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/admin/workspace/settings.vue': {
-      routes:
-        | '/w/[workspaceSlug]/admin/workspace/settings'
-        | '/w/[workspaceSlug]/admin/workspace/settings/'
-      views:
-        | 'default'
-    }
-    'src/pages/w/[workspaceSlug]/admin/workspace/settings/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/admin/workspace/settings/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/history/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/history/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/progress/index.vue': {
-      routes:
-        | '/w/[workspaceSlug]/progress/'
-      views:
-        | never
-    }
-    'src/pages/w/[workspaceSlug]/workouts/[scheduledForDate].vue': {
-      routes:
-        | '/w/[workspaceSlug]/workouts/[scheduledForDate]'
       views:
         | never
     }

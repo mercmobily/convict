@@ -73,7 +73,7 @@ addPlacement({
   order: 200,
   props: {
     label: "Sign in",
-    to: "/auth/login"
+    to: "/auth/login?returnTo=%2Fapp"
   },
   when: ({ auth }) => auth?.authenticated !== true
 });
@@ -211,18 +211,7 @@ addPlacement({
 
 
 addPlacement({
-  id: "workspaces.profile.menu.surface-switch",
-  target: "auth.profile-menu",
-  kind: "component",
-  surfaces: ["*"],
-  order: 100,
-  componentToken: "workspaces.web.profile.menu.surface-switch-item",
-  when: ({ auth }) => auth?.authenticated === true
-});
-
-
-addPlacement({
-  id: "workspaces.workspace.menu.app",
+  id: "convict.app.menu.home",
   target: "shell.primary-nav",
   kind: "link",
   surfaces: ["app"],
@@ -236,125 +225,6 @@ addPlacement({
   },
   when: ({ auth }) => auth?.authenticated === true
 });
-
-addPlacement({
-  id: "workspaces.workspace.menu.admin",
-  target: "shell.primary-nav",
-  kind: "link",
-  surfaces: ["admin"],
-  order: 60,
-  props: {
-    label: "Home",
-    surface: "admin",
-    scopedSuffix: "/",
-    unscopedSuffix: "/",
-    exact: true
-  },
-  when: ({ auth }) => auth?.authenticated === true
-});
-
-addPlacement({
-  id: "workspaces.workspace.selector",
-  target: "shell.identity",
-  kind: "component",
-  surfaces: ["*"],
-  order: 200,
-  componentToken: "workspaces.web.workspace.selector",
-  props: {
-    allowOnNonWorkspaceSurface: true,
-    targetSurfaceId: "app"
-  },
-  when: ({ auth }) => auth?.authenticated === true
-});
-
-addPlacement({
-  id: "workspaces.account.invites.cue",
-  target: "shell.status",
-  kind: "component",
-  surfaces: ["*"],
-  order: 850,
-  componentToken: "local.main.account.pending-invites.cue",
-  when: ({ auth }) => auth?.authenticated === true
-});
-
-addPlacement({
-  id: "workspaces.workspace.tools.widget",
-  target: "shell.status",
-  kind: "component",
-  surfaces: ["admin"],
-  order: 900,
-  componentToken: "workspaces.web.workspace.tools.widget"
-});
-
-addPlacement({
-  id: "workspaces.workspace.menu.workspace-settings",
-  target: "admin.tools-menu",
-  kind: "component",
-  surfaces: ["admin"],
-  order: 100,
-  componentToken: "workspaces.web.workspace-settings.menu-item"
-});
-
-addPlacement({
-  id: "workspaces.workspace.menu.members",
-  target: "admin.tools-menu",
-  kind: "component",
-  surfaces: ["admin"],
-  order: 200,
-  componentToken: "workspaces.web.workspace-members.menu-item"
-});
-
-
-addPlacement({
-  id: "workspaces.account.settings.invites",
-  target: "settings.sections",
-  owner: "account-settings",
-  kind: "component",
-  surfaces: ["account"],
-  order: 400,
-  componentToken: "local.main.account-settings.section.invites",
-  props: {
-    title: "Invites",
-    value: "invites",
-    usesSharedRuntime: false
-  },
-  when: ({ auth, workspaceInvitesEnabled }) => auth?.authenticated === true && workspaceInvitesEnabled === true
-});
-// jskit:assistant.page.link:admin:/assistant
-{
-  addPlacement({
-    id: "ui-generator.page.admin.assistant.link",
-    target: "shell.primary-nav",
-    kind: "link",
-    surfaces: ["admin"],
-    order: 155,
-    props: {
-      label: "Assistant",
-      surface: "admin",
-      scopedSuffix: "/assistant",
-      unscopedSuffix: "/assistant",
-    },
-    when: ({ auth }) => auth?.authenticated === true
-  });
-}
-// jskit:assistant.settings-page.link:console:/settings/admin-assistant:admin
-{
-  addPlacement({
-    id: "ui-generator.page.console.settings.admin-assistant.link",
-    target: "page.section-nav",
-    owner: "console-settings",
-    kind: "link",
-    surfaces: ["console"],
-    order: 155,
-    props: {
-      label: "Admin Assistant",
-      surface: "console",
-      scopedSuffix: "/settings/admin-assistant",
-      unscopedSuffix: "/settings/admin-assistant",
-    },
-    when: ({ auth }) => auth?.authenticated === true
-  });
-}
 // jskit:ui-generator.page.link:app:/progress
 {
   addPlacement({

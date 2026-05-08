@@ -11,7 +11,6 @@ exports.up = async function up(knex) {
     table.bigInteger("user_id").unsigned().notNullable();
     table.bigInteger("user_program_assignment_id").unsigned().notNullable();
     table.bigInteger("user_program_assignment_revision_id").unsigned().notNullable();
-    table.bigInteger("workspace_id").unsigned().nullable();
     table.date("scheduled_for_date").notNullable();
     table.date("performed_on_date").nullable();
     table.string("status", 32).notNullable().defaultTo("in_progress");
@@ -21,7 +20,6 @@ exports.up = async function up(knex) {
     table.text("notes").nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.raw("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"));
-    table.index(["workspace_id"], "fk_workout_occurrences_workspace_id");
     table.index(["user_program_assignment_revision_id","scheduled_for_date"], "idx_workout_occurrences_revision_scheduled_date");
     table.index(["user_id"], "idx_workout_occurrences_user_id");
     table.index(["user_id","performed_on_date"], "idx_workout_occurrences_user_performed_date");
@@ -30,7 +28,6 @@ exports.up = async function up(knex) {
     table.foreign(["user_program_assignment_id"], "fk_workout_occurrences_assignment_id").references(["id"]).inTable("user_program_assignments").onUpdate("RESTRICT").onDelete("RESTRICT");
     table.foreign(["user_program_assignment_revision_id"], "fk_workout_occurrences_assignment_revision_id").references(["id"]).inTable("user_program_assignment_revisions").onUpdate("RESTRICT").onDelete("RESTRICT");
     table.foreign(["user_id"], "fk_workout_occurrences_user_id").references(["id"]).inTable("users").onUpdate("RESTRICT").onDelete("CASCADE");
-    table.foreign(["workspace_id"], "fk_workout_occurrences_workspace_id").references(["id"]).inTable("workspaces").onUpdate("RESTRICT").onDelete("SET NULL");
   });
 
 };
