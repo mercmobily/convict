@@ -13,10 +13,10 @@ export default function getPlacements() {
 
 addPlacement({
   id: "shell-web.home.menu.home",
-  target: "shell-layout:primary-menu",
+  target: "shell.primary-nav",
+  kind: "link",
   surfaces: ["home"],
   order: 50,
-  componentToken: "local.main.ui.surface-aware-menu-link-item",
   props: {
     label: "Home",
     surface: "home",
@@ -28,10 +28,10 @@ addPlacement({
 
 addPlacement({
   id: "shell-web.home.menu.settings",
-  target: "shell-layout:primary-menu",
+  target: "shell.primary-nav",
+  kind: "link",
   surfaces: ["home"],
   order: 100,
-  componentToken: "local.main.ui.surface-aware-menu-link-item",
   props: {
     label: "Settings",
     surface: "home",
@@ -42,10 +42,11 @@ addPlacement({
 
 addPlacement({
   id: "shell-web.home.settings.general",
-  target: "home-settings:primary-menu",
+  target: "page.section-nav",
+  owner: "home-settings",
+  kind: "link",
   surfaces: ["home"],
   order: 100,
-  componentToken: "local.main.ui.surface-aware-menu-link-item",
   props: {
     label: "General",
     surface: "home",
@@ -57,7 +58,8 @@ addPlacement({
 
 addPlacement({
   id: "auth.profile.widget",
-  target: "shell-layout:top-right",
+  target: "shell.status",
+  kind: "component",
   surfaces: ["*"],
   order: 1000,
   componentToken: "auth.web.profile.widget"
@@ -65,10 +67,10 @@ addPlacement({
 
 addPlacement({
   id: "auth.profile.menu.sign-in",
-  target: "auth-profile-menu:primary-menu",
+  target: "auth.profile-menu",
+  kind: "link",
   surfaces: ["*"],
   order: 200,
-  componentToken: "auth.web.profile.menu.link-item",
   props: {
     label: "Sign in",
     to: "/auth/login"
@@ -78,10 +80,10 @@ addPlacement({
 
 addPlacement({
   id: "auth.profile.menu.sign-out",
-  target: "auth-profile-menu:primary-menu",
+  target: "auth.profile-menu",
+  kind: "link",
   surfaces: ["*"],
   order: 1000,
-  componentToken: "auth.web.profile.menu.link-item",
   props: {
     label: "Sign out",
     to: "/auth/signout"
@@ -92,10 +94,10 @@ addPlacement({
 
 addPlacement({
   id: "users.profile.menu.settings",
-  target: "auth-profile-menu:primary-menu",
+  target: "auth.profile-menu",
+  kind: "link",
   surfaces: ["*"],
   order: 500,
-  componentToken: "auth.web.profile.menu.link-item",
   props: {
     label: "Settings",
     to: "/account"
@@ -106,7 +108,8 @@ addPlacement({
 
 addPlacement({
   id: "users.home.tools.widget",
-  target: "shell-layout:top-right",
+  target: "shell.status",
+  kind: "component",
   surfaces: ["home"],
   order: 900,
   componentToken: "users.web.home.tools.widget",
@@ -115,10 +118,10 @@ addPlacement({
 
 addPlacement({
   id: "users.home.menu.settings",
-  target: "home-cog:primary-menu",
+  target: "home.tools-menu",
+  kind: "link",
   surfaces: ["home"],
   order: 100,
-  componentToken: "local.main.ui.surface-aware-menu-link-item",
   props: {
     label: "Settings",
     surface: "home",
@@ -131,7 +134,9 @@ addPlacement({
 
 addPlacement({
   id: "users.account.settings.profile",
-  target: "account-settings:sections",
+  target: "settings.sections",
+  owner: "account-settings",
+  kind: "component",
   surfaces: ["account"],
   order: 100,
   componentToken: "local.main.account-settings.section.profile",
@@ -144,7 +149,9 @@ addPlacement({
 
 addPlacement({
   id: "users.account.settings.preferences",
-  target: "account-settings:sections",
+  target: "settings.sections",
+  owner: "account-settings",
+  kind: "component",
   surfaces: ["account"],
   order: 200,
   componentToken: "local.main.account-settings.section.preferences",
@@ -157,7 +164,9 @@ addPlacement({
 
 addPlacement({
   id: "users.account.settings.notifications",
-  target: "account-settings:sections",
+  target: "settings.sections",
+  owner: "account-settings",
+  kind: "component",
   surfaces: ["account"],
   order: 300,
   componentToken: "local.main.account-settings.section.notifications",
@@ -171,10 +180,10 @@ addPlacement({
 
 addPlacement({
   id: "console.web.profile.menu.console",
-  target: "auth-profile-menu:primary-menu",
+  target: "auth.profile-menu",
+  kind: "link",
   surfaces: ["*"],
   order: 600,
-  componentToken: "auth.web.profile.menu.link-item",
   props: {
     label: "Go to console",
     to: "/console",
@@ -188,10 +197,10 @@ addPlacement({
 
 addPlacement({
   id: "console.web.menu.settings",
-  target: "shell-layout:primary-menu",
+  target: "shell.primary-nav",
+  kind: "link",
   surfaces: ["console"],
   order: 100,
-  componentToken: "local.main.ui.menu-link-item",
   props: {
     label: "Settings",
     to: "/console/settings",
@@ -203,7 +212,8 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.profile.menu.surface-switch",
-  target: "auth-profile-menu:primary-menu",
+  target: "auth.profile-menu",
+  kind: "component",
   surfaces: ["*"],
   order: 100,
   componentToken: "workspaces.web.profile.menu.surface-switch-item",
@@ -213,10 +223,10 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.workspace.menu.app",
-  target: "shell-layout:primary-menu",
+  target: "shell.primary-nav",
+  kind: "link",
   surfaces: ["app"],
   order: 50,
-  componentToken: "local.main.ui.surface-aware-menu-link-item",
   props: {
     label: "Home",
     surface: "app",
@@ -229,10 +239,10 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.workspace.menu.admin",
-  target: "shell-layout:primary-menu",
+  target: "shell.primary-nav",
+  kind: "link",
   surfaces: ["admin"],
   order: 60,
-  componentToken: "local.main.ui.surface-aware-menu-link-item",
   props: {
     label: "Home",
     surface: "admin",
@@ -245,7 +255,8 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.workspace.selector",
-  target: "shell-layout:top-left",
+  target: "shell.identity",
+  kind: "component",
   surfaces: ["*"],
   order: 200,
   componentToken: "workspaces.web.workspace.selector",
@@ -258,7 +269,8 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.account.invites.cue",
-  target: "shell-layout:top-right",
+  target: "shell.status",
+  kind: "component",
   surfaces: ["*"],
   order: 850,
   componentToken: "local.main.account.pending-invites.cue",
@@ -267,7 +279,8 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.workspace.tools.widget",
-  target: "shell-layout:top-right",
+  target: "shell.status",
+  kind: "component",
   surfaces: ["admin"],
   order: 900,
   componentToken: "workspaces.web.workspace.tools.widget"
@@ -275,7 +288,8 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.workspace.menu.workspace-settings",
-  target: "admin-cog:primary-menu",
+  target: "admin.tools-menu",
+  kind: "component",
   surfaces: ["admin"],
   order: 100,
   componentToken: "workspaces.web.workspace-settings.menu-item"
@@ -283,7 +297,8 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.workspace.menu.members",
-  target: "admin-cog:primary-menu",
+  target: "admin.tools-menu",
+  kind: "component",
   surfaces: ["admin"],
   order: 200,
   componentToken: "workspaces.web.workspace-members.menu-item"
@@ -292,7 +307,9 @@ addPlacement({
 
 addPlacement({
   id: "workspaces.account.settings.invites",
-  target: "account-settings:sections",
+  target: "settings.sections",
+  owner: "account-settings",
+  kind: "component",
   surfaces: ["account"],
   order: 400,
   componentToken: "local.main.account-settings.section.invites",
@@ -307,10 +324,10 @@ addPlacement({
 {
   addPlacement({
     id: "ui-generator.page.admin.assistant.link",
-    target: "shell-layout:primary-menu",
+    target: "shell.primary-nav",
+    kind: "link",
     surfaces: ["admin"],
     order: 155,
-    componentToken: "local.main.ui.surface-aware-menu-link-item",
     props: {
       label: "Assistant",
       surface: "admin",
@@ -324,10 +341,11 @@ addPlacement({
 {
   addPlacement({
     id: "ui-generator.page.console.settings.admin-assistant.link",
-    target: "console-settings:primary-menu",
+    target: "page.section-nav",
+    owner: "console-settings",
+    kind: "link",
     surfaces: ["console"],
     order: 155,
-    componentToken: "local.main.ui.surface-aware-menu-link-item",
     props: {
       label: "Admin Assistant",
       surface: "console",
@@ -341,10 +359,10 @@ addPlacement({
 {
   addPlacement({
     id: "ui-generator.page.app.progress.link",
-    target: "shell-layout:primary-menu",
+    target: "shell.primary-nav",
+    kind: "link",
     surfaces: ["app"],
     order: 155,
-    componentToken: "local.main.ui.surface-aware-menu-link-item",
     props: {
       label: "Progress",
       icon: "mdi-view-list-outline",
@@ -359,10 +377,10 @@ addPlacement({
 {
   addPlacement({
     id: "ui-generator.page.app.history.link",
-    target: "shell-layout:primary-menu",
+    target: "shell.primary-nav",
+    kind: "link",
     surfaces: ["app"],
     order: 155,
-    componentToken: "local.main.ui.surface-aware-menu-link-item",
     props: {
       label: "History",
       icon: "mdi-calendar-month-outline",
@@ -377,7 +395,8 @@ addPlacement({
 
 addPlacement({
   id: "realtime.connection.indicator",
-  target: "shell-layout:top-right",
+  target: "shell.status",
+  kind: "component",
   surfaces: ["*"],
   order: 950,
   componentToken: "realtime.web.connection.indicator"

@@ -29,7 +29,7 @@
     },
     "@jskit-ai/shell-web": {
       "packageId": "@jskit-ai/shell-web",
-      "version": "0.1.64",
+      "version": "0.1.65",
       "source": {
         "type": "catalog",
         "descriptorPath": "../jskit-catalog/catalog/packages.json#@jskit-ai/shell-web"
@@ -114,6 +114,16 @@
             "id": "shell-web-placement-registry"
           },
           {
+            "path": "src/placementTopology.js",
+            "hash": "30f0998baf55be384267735bd629126ed7fc2ded628188c961c1ba97e208f037",
+            "hadPrevious": false,
+            "previousContentBase64": "",
+            "preserveOnRemove": false,
+            "reason": "Install app-owned semantic placement topology used by shell-web placement runtime.",
+            "category": "shell-web",
+            "id": "shell-web-placement-topology"
+          },
+          {
             "path": "src/pages/home.vue",
             "hash": "52e99863be5b81fa9e5813bb10e912b4439446ebdcc5c543e46f223558b355cc",
             "hadPrevious": true,
@@ -167,8 +177,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-07T14:33:29.325Z",
-      "migrationSyncVersion": "0.1.64"
+      "installedAt": "2026-05-08T08:19:34.637Z",
+      "migrationSyncVersion": "0.1.65"
     },
     "@jskit-ai/auth-core": {
       "packageId": "@jskit-ai/auth-core",
@@ -1972,7 +1982,7 @@
     },
     "@jskit-ai/mobile-capacitor": {
       "packageId": "@jskit-ai/mobile-capacitor",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "source": {
         "type": "npm-installed-package",
         "packagePath": "node_modules/@jskit-ai/mobile-capacitor",
@@ -2011,8 +2021,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-08T02:16:15.684Z",
-      "migrationSyncVersion": "0.1.2"
+      "installedAt": "2026-05-08T08:31:58.904Z",
+      "migrationSyncVersion": "0.1.3"
     }
   }
 }
