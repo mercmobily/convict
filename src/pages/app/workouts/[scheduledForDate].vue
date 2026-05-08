@@ -20,6 +20,7 @@ import { useRoute, useRouter } from "vue-router";
 import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vue";
 import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
+import { parseDateOnly } from "@local/main/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
@@ -90,6 +91,8 @@ const assignment = computed(() => detailState.value.assignment || null);
 const loadError = computed(() => String(workoutDetailResource.loadError.value || "").trim());
 const isInitialLoading = computed(() => Boolean(workoutDetailResource.isInitialLoading.value));
 const isRefreshing = computed(() => Boolean(workoutDetailResource.isRefetching.value));
+const workoutDateLabel = computed(() => formatDateLabel(workout.value?.scheduledForDate));
+const workoutProgramName = computed(() => String(assignment.value?.program?.name || workout.value?.programName || "").trim());
 
 watch(
   workout,
@@ -127,27 +130,41 @@ const pageTitle = computed(() => {
 
 const pageSubtitle = computed(() => {
   if (!workout.value) {
-    return "Load the projected workout, then open it when you are ready to train.";
+    return "Open the scheduled day and save sets as you train.";
   }
 
   if (workout.value.status === "in_progress") {
-    return "Each exercise card persists its own set logs. Finish the workout once you are done training.";
+    return "Save sets per exercise. Finish when the day is done.";
   }
 
   if (workout.value.status === "completed") {
-    return "This workout is closed. Any earned step advancement stays advisory until you apply it yourself.";
+    return "Review saved sets and apply any earned advancement manually.";
   }
 
   if (workout.value.status === "overdue") {
-    return "This workout is overdue. Open it to begin logging sets.";
+    return "Open this overdue day to log it now.";
   }
 
   if (workout.value.status === "scheduled") {
-    return "This is today's scheduled workout. Open it to begin logging sets.";
+    return "Open today’s workout when you start training.";
   }
 
-  return "Review the projected workout and saved set logs.";
+  return "Review the projected workout and saved sets.";
 });
+
+function formatDateLabel(dateString = "", { includeYear = true } = {}) {
+  const date = parseDateOnly(dateString);
+  if (!date) {
+    return String(dateString || "").trim();
+  }
+
+  return date.toLocaleDateString("en-AU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    ...(includeYear ? { year: "numeric" } : {})
+  });
+}
 
 function exerciseCardKey(exercise = {}) {
   const occurrenceExerciseId = String(exercise.occurrenceExerciseId || "").trim();
@@ -306,99 +323,91 @@ async function goBackToToday() {
         :text="startWorkoutCommand.message"
       />
 
-      <v-card
+      <v-sheet
         v-if="workout"
         rounded="xl"
-        elevation="1"
         border
         class="workout-detail-card"
       >
-        <v-card-item>
-          <template #prepend>
+        <header class="workout-detail-card__header">
+          <div class="workout-detail-card__identity">
             <v-avatar :color="workoutStatusColor(workout.status)" variant="tonal" rounded="lg">
               <v-icon :icon="mdiCalendarClock" />
             </v-avatar>
-          </template>
-          <div class="d-flex flex-column ga-1">
-            <h3 class="text-h5 mb-0">{{ workout.dayLabel }} • {{ workout.scheduledForDate }}</h3>
-            <p class="text-body-2 text-medium-emphasis mb-0">
-              {{ assignment?.program?.name || workout.programName }}
-            </p>
+            <div class="workout-detail-card__title-block">
+              <h3 class="workout-detail-card__title">{{ workoutDateLabel || pageTitle }}</h3>
+              <p v-if="workoutProgramName" class="workout-detail-card__meta mb-0">
+                {{ workoutProgramName }}
+              </p>
+            </div>
           </div>
-        </v-card-item>
-        <v-divider />
-        <v-card-text class="d-flex flex-column ga-4">
-          <div class="d-flex flex-wrap ga-2 align-center">
+          <div class="workout-detail-card__status">
             <v-chip :color="workoutStatusColor(workout.status)" variant="tonal" label>
               {{ workoutStatusLabel(workout.status) }}
             </v-chip>
-            <v-chip v-if="workout.performedOnDate" color="info" variant="tonal" label>
-              Performed {{ workout.performedOnDate }}
-            </v-chip>
+            <span v-if="workout.status === 'completed' && workout.performedOnDate">
+              Completed {{ formatDateLabel(workout.performedOnDate) }}
+            </span>
           </div>
+        </header>
 
-          <v-alert
-            v-if="workout.canStart"
-            type="info"
-            variant="tonal"
-            border="start"
-          >
-            <div class="workout-detail-callout">
-              <p class="text-body-2 mb-0">
-                Open this workout occurrence first. Once it is open, the set log fields below become editable.
+        <section class="workout-detail-card__action-panel">
+          <template v-if="workout.canStart">
+            <div>
+              <div class="workout-detail-card__action-title">Ready to open</div>
+              <p class="workout-detail-card__action-copy mb-0">
+                Open this workout to start saving sets.
               </p>
-              <v-btn
-                color="primary"
-                :prepend-icon="mdiPlayCircleOutline"
-                :loading="startWorkoutCommand.isRunning"
-                class="workout-detail-callout__action"
-                @click="openWorkout"
-              >
-                Open workout
-              </v-btn>
             </div>
-          </v-alert>
+            <v-btn
+              color="primary"
+              :prepend-icon="mdiPlayCircleOutline"
+              :loading="startWorkoutCommand.isRunning"
+              class="workout-detail-card__action-button"
+              @click="openWorkout"
+            >
+              Open workout
+            </v-btn>
+          </template>
 
-          <v-alert
-            v-else-if="workout.status === 'in_progress'"
-            type="info"
-            variant="tonal"
-            border="start"
-          >
-            <div class="workout-detail-callout">
-              <p class="text-body-2 mb-0">
+          <template v-else-if="workout.status === 'in_progress'">
+            <div>
+              <div class="workout-detail-card__action-title">Logging sets</div>
+              <p class="workout-detail-card__action-copy mb-0">
                 {{ finishWorkoutHint }}
               </p>
-              <v-btn
-                color="success"
-                :prepend-icon="mdiCheckCircleOutline"
-                :loading="submitWorkoutCommand.isRunning"
-                :disabled="!canFinishWorkout"
-                class="workout-detail-callout__action"
-                @click="finishWorkout"
-              >
-                Finish workout
-              </v-btn>
             </div>
-          </v-alert>
+            <v-btn
+              color="success"
+              :prepend-icon="mdiCheckCircleOutline"
+              :loading="submitWorkoutCommand.isRunning"
+              :disabled="!canFinishWorkout"
+              class="workout-detail-card__action-button"
+              @click="finishWorkout"
+            >
+              Finish workout
+            </v-btn>
+          </template>
 
-          <v-alert
-            v-else-if="workout.status === 'completed'"
-            type="success"
-            variant="tonal"
-            border="start"
-            text="This workout is completed. Any earned advancement stays manual, so you can keep repeating the current step until you decide to move on."
-          />
+          <template v-else-if="workout.status === 'completed'">
+            <div>
+              <div class="workout-detail-card__action-title">This workout is completed.</div>
+              <p class="workout-detail-card__action-copy mb-0">
+                Earned advancement stays manual; repeat the current step until you choose to move on.
+              </p>
+            </div>
+          </template>
 
-          <v-alert
-            v-else-if="workout.status === 'definitely_missed'"
-            type="warning"
-            variant="tonal"
-            border="start"
-            text="This workout was marked definitely missed and is no longer loggable."
-          />
-        </v-card-text>
-      </v-card>
+          <template v-else-if="workout.status === 'definitely_missed'">
+            <div>
+              <div class="workout-detail-card__action-title">Marked missed</div>
+              <p class="workout-detail-card__action-copy mb-0">
+                This workout is no longer loggable.
+              </p>
+            </div>
+          </template>
+        </section>
+      </v-sheet>
 
       <v-alert
         v-else
@@ -428,30 +437,6 @@ async function goBackToToday() {
 </template>
 
 <style scoped>
-.workout-detail-callout {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  justify-content: space-between;
-}
-
-.workout-detail-callout__action {
-  flex: 0 0 auto;
-}
-
-@media (max-width: 640px) {
-  .workout-detail-callout {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .workout-detail-callout__action {
-    width: 100%;
-  }
-}
-</style>
-
-<style scoped>
 .workout-detail-page__title {
   letter-spacing: -0.03em;
 }
@@ -477,11 +462,117 @@ async function goBackToToday() {
   background:
     linear-gradient(180deg, rgba(var(--v-theme-primary), 0.06), transparent),
     rgb(var(--v-theme-surface));
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.workout-detail-card__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.workout-detail-card__identity {
+  align-items: center;
+  display: flex;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.workout-detail-card__title-block {
+  min-width: 0;
+}
+
+.workout-detail-card__title {
+  color: rgba(var(--v-theme-on-surface), 0.94);
+  font-size: clamp(1.25rem, 3vw, 1.85rem);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.workout-detail-card__meta,
+.workout-detail-card__status,
+.workout-detail-card__action-copy {
+  color: rgba(var(--v-theme-on-surface), 0.64);
+}
+
+.workout-detail-card__meta {
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+}
+
+.workout-detail-card__status {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.workout-detail-card__action-panel {
+  align-items: center;
+  background: rgba(var(--v-theme-surface), 0.66);
+  border: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+  border-radius: 1.2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.workout-detail-card__action-title {
+  color: rgba(var(--v-theme-on-surface), 0.92);
+  font-size: 1rem;
+  font-weight: 740;
+  line-height: 1.25;
+}
+
+.workout-detail-card__action-copy {
+  font-size: 0.94rem;
+  line-height: 1.45;
+  margin-top: 0.2rem;
+}
+
+.workout-detail-card__action-button {
+  flex: 0 0 auto;
 }
 
 .exercise-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .workout-detail-card {
+    gap: 0.85rem;
+    padding: 0.85rem;
+  }
+
+  .workout-detail-card__header,
+  .workout-detail-card__action-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workout-detail-card__status {
+    justify-content: flex-start;
+  }
+
+  .workout-detail-card__action-button {
+    min-height: 48px;
+    width: 100%;
+  }
+
+  .exercise-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

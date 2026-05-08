@@ -8,10 +8,10 @@ import { RouterView } from "vue-router";
     <header>
       <p class="text-overline text-medium-emphasis mb-1">Console</p>
       <h1 class="settings-shell__title">Console settings</h1>
-      <p class="text-body-2 text-medium-emphasis mb-0">Global configuration and reference data for the whole app.</p>
+      <p class="text-body-2 text-medium-emphasis mb-0">Operator-only configuration for the whole app.</p>
     </header>
 
-    <v-sheet rounded="lg" border class="settings-shell__panel">
+    <v-sheet rounded="xl" border class="settings-shell__panel">
       <nav class="settings-shell__nav" aria-label="Console settings sections">
         <v-list nav density="comfortable" class="settings-shell__nav-list">
           <ShellOutlet target="console-settings:primary-menu" />

@@ -120,8 +120,8 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await expect(bridgesCard.getByText("Step 1: Short Bridges")).toBeVisible();
   await expect(bridgesCard.getByText("Progression 3 x 50 reps")).toBeVisible();
   await expect(bridgesCard.getByText(/lift the hips into a short bridge/i)).toBeVisible();
-  await expect(handstandCard.locator(".v-chip").filter({ hasText: "seconds" }).first()).toBeVisible();
-  await expect(bridgesCard.locator(".v-chip").filter({ hasText: "reps" }).first()).toBeVisible();
+  await expect(handstandCard.getByText("seconds").first()).toBeVisible();
+  await expect(bridgesCard.getByText("reps").first()).toBeVisible();
   await expect(handstandCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(handstandCard.getByText("Add set 1")).toBeVisible();

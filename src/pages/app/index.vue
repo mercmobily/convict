@@ -24,7 +24,6 @@ import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
 
 const {
-  formatWorkSetLabel,
   workoutStatusColor,
   workoutStatusLabel
 } = useConvictWorkoutPresentation();
@@ -77,6 +76,12 @@ const selectedProgramTemplate = computed(() => {
   const currentId = String(selectedProgramTemplateId.value || "").trim();
   return programTemplates.value.find((programTemplate) => String(programTemplate.id) === currentId) || null;
 });
+const selectedProgramTemplateSummary = computed(() => cleanProgramSummary(selectedProgramTemplate.value));
+const selectedProgramTemplateSchedule = computed(() => (
+  Array.isArray(selectedProgramTemplate.value?.schedulePreview)
+    ? selectedProgramTemplate.value.schedulePreview
+    : []
+));
 const startProgramDisabled = computed(() => {
   return (
     !canStartProgram.value ||
@@ -160,15 +165,6 @@ function selectProgramTemplate(programTemplateId) {
 
 function isSelectedProgramTemplate(programTemplateId) {
   return String(selectedProgramTemplateId.value || "").trim() === String(programTemplateId || "").trim();
-}
-
-function scheduleText(day = {}) {
-  if (day?.isRestDay === true) {
-    return "Rest";
-  }
-  return Array.isArray(day?.items)
-    ? day.items.map((item) => `${item.exerciseName} (${formatWorkSetLabel(item.workSetsMin, item.workSetsMax)})`).join(" • ")
-    : "";
 }
 
 function cleanProgramSummary(program = {}) {
@@ -645,117 +641,112 @@ function toggleActiveProgramExpanded() {
       </template>
 
       <template v-else>
-        <v-card rounded="xl" elevation="1" border class="start-program-card">
-          <v-card-item>
-            <template #prepend>
+        <section class="start-program-layout">
+          <v-sheet rounded="xl" border class="start-program-card">
+            <header class="start-program-card__header">
               <v-avatar color="secondary" variant="tonal" rounded="lg">
                 <v-icon :icon="mdiCalendarStart" />
               </v-avatar>
-            </template>
-            <div class="d-flex flex-column ga-1">
-              <h3 class="text-h5 mb-0">Start your first program</h3>
-              <p class="text-body-2 text-medium-emphasis mb-0">
-                Pick one official template and the date you want it to begin.
-              </p>
-            </div>
-          </v-card-item>
-          <v-divider />
-          <v-card-text class="d-flex flex-column ga-4">
-            <div class="d-flex flex-column ga-2">
-              <label class="text-body-2 text-medium-emphasis" for="starts-on-input">Start date</label>
-              <v-text-field
-                id="starts-on-input"
-                v-model="selectionModel.startsOn"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-                hide-details="auto"
-              />
-            </div>
+              <div>
+                <h3 class="start-program-card__title">Start your first program</h3>
+                <p class="start-program-card__copy mb-0">
+                  Pick a template and choose the first training day.
+                </p>
+              </div>
+            </header>
 
-            <v-alert
-              v-if="selectedProgramTemplate"
-              type="info"
-              variant="tonal"
-              border="start"
-              :title="selectedProgramTemplate.name"
-              :text="selectedProgramTemplate.summary"
-            />
+            <div class="start-program-card__controls">
+              <div class="start-program-card__date">
+                <label class="text-body-2 text-medium-emphasis" for="starts-on-input">Start date</label>
+                <v-text-field
+                  id="starts-on-input"
+                  v-model="selectionModel.startsOn"
+                  type="date"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </div>
 
-            <v-btn
-              color="primary"
-              size="large"
-              :prepend-icon="mdiFlagCheckered"
-              :disabled="startProgramDisabled"
-              :loading="startProgramCommand.isRunning"
-              @click="startSelectedProgram"
-            >
-              Start Program
-            </v-btn>
-          </v-card-text>
-        </v-card>
-
-        <div class="program-grid">
-          <v-card
-            v-for="programTemplate in programTemplates"
-            :key="programTemplate.id"
-            rounded="xl"
-            elevation="1"
-            border
-            class="program-card"
-            :class="{ 'program-card--selected': isSelectedProgramTemplate(programTemplate.id) }"
-            @click="selectProgramTemplate(programTemplate.id)"
-          >
-            <v-card-item>
-              <template #prepend>
-                <v-avatar
-                  :color="isSelectedProgramTemplate(programTemplate.id) ? 'primary' : 'surface-variant'"
-                  :variant="isSelectedProgramTemplate(programTemplate.id) ? 'flat' : 'tonal'"
-                  rounded="lg"
-                >
-                  <v-icon :icon="isSelectedProgramTemplate(programTemplate.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
-                </v-avatar>
-              </template>
-              <v-card-title class="text-h6">{{ programTemplate.name }}</v-card-title>
-              <v-card-subtitle>{{ programTemplate.difficultyLabel || "Program" }}</v-card-subtitle>
-            </v-card-item>
-            <v-card-text class="d-flex flex-column ga-4">
-              <p class="text-body-2 text-medium-emphasis mb-0">{{ programTemplate.summary }}</p>
-
-              <v-list lines="two" density="compact" class="program-card__schedule">
-                <v-list-item
-                  v-for="day in programTemplate.schedulePreview"
-                  :key="`${programTemplate.id}-${day.dayOfWeek}`"
-                  :subtitle="scheduleText(day)"
-                  class="px-0"
-                >
-                  <template #prepend>
-                    <v-chip
-                      :color="day.isRestDay ? 'default' : 'primary'"
-                      :variant="day.isRestDay ? 'tonal' : 'flat'"
-                      label
-                      size="small"
-                      class="mr-3"
-                    >
-                      {{ day.dayLabel.slice(0, 3) }}
-                    </v-chip>
-                  </template>
-                  <v-list-item-title>{{ day.dayLabel }}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-            <v-card-actions class="px-4 pb-4">
               <v-btn
-                :color="isSelectedProgramTemplate(programTemplate.id) ? 'primary' : 'default'"
-                :variant="isSelectedProgramTemplate(programTemplate.id) ? 'flat' : 'outlined'"
-                block
-                @click.stop="selectProgramTemplate(programTemplate.id)"
+                color="primary"
+                size="large"
+                :prepend-icon="mdiFlagCheckered"
+                :disabled="startProgramDisabled"
+                :loading="startProgramCommand.isRunning"
+                class="start-program-card__button"
+                @click="startSelectedProgram"
               >
-                {{ isSelectedProgramTemplate(programTemplate.id) ? "Selected" : "Choose" }}
+                Start Program
               </v-btn>
-            </v-card-actions>
-          </v-card>
-        </div>
+            </div>
+          </v-sheet>
+
+          <div class="program-selection-layout">
+            <div class="program-picker" aria-label="Program templates">
+              <button
+                v-for="programTemplate in programTemplates"
+                :key="programTemplate.id"
+                type="button"
+                class="program-option"
+                :class="{ 'program-option--selected': isSelectedProgramTemplate(programTemplate.id) }"
+                @click="selectProgramTemplate(programTemplate.id)"
+              >
+                <span class="program-option__icon" aria-hidden="true">
+                  <v-icon :icon="isSelectedProgramTemplate(programTemplate.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
+                </span>
+                <span class="program-option__body">
+                  <span class="program-option__name">{{ programTemplate.name }}</span>
+                  <span class="program-option__meta">{{ programTemplate.difficultyLabel || "Program" }}</span>
+                </span>
+              </button>
+            </div>
+
+            <v-sheet rounded="xl" border class="program-detail-panel">
+              <template v-if="selectedProgramTemplate">
+                <header class="program-detail-panel__header">
+                  <div>
+                    <p class="program-detail-panel__eyebrow mb-0">Selected program</p>
+                    <h3 class="program-detail-panel__title">{{ selectedProgramTemplate.name }}</h3>
+                  </div>
+                  <v-chip color="primary" variant="tonal" label>
+                    {{ selectedProgramTemplate.difficultyLabel || "Program" }}
+                  </v-chip>
+                </header>
+
+                <p v-if="selectedProgramTemplateSummary" class="program-detail-panel__summary mb-0">
+                  {{ selectedProgramTemplateSummary }}
+                </p>
+
+                <div class="program-detail-panel__schedule">
+                  <article
+                    v-for="day in selectedProgramTemplateSchedule"
+                    :key="`template-${selectedProgramTemplate.id}-${day.dayOfWeek}`"
+                    class="program-detail-day"
+                    :class="{ 'program-detail-day--rest': day.isRestDay }"
+                  >
+                    <div class="program-detail-day__title">{{ day.dayLabel }}</div>
+                    <p v-if="day.isRestDay" class="program-detail-day__rest mb-0">Rest</p>
+                    <div v-else class="program-detail-day__items">
+                      <div
+                        v-for="item in day.items"
+                        :key="`template-${selectedProgramTemplate.id}-${day.dayOfWeek}-${item.slotNumber}`"
+                        class="program-detail-day__item"
+                      >
+                        <span>{{ item.exerciseName }}</span>
+                        <span>{{ workSetLabel(item) }}</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </template>
+
+              <div v-else class="program-detail-panel__empty">
+                Choose a program to see its weekly rhythm.
+              </div>
+            </v-sheet>
+          </div>
+        </section>
       </template>
     </template>
   </section>
@@ -764,35 +755,6 @@ function toggleActiveProgramExpanded() {
 <style scoped>
 .program-home-page__skeleton {
   border-radius: 1.5rem;
-}
-
-.program-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.program-card {
-  cursor: pointer;
-  transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
-}
-
-.program-card:hover {
-  transform: translateY(-2px);
-}
-
-.program-card--selected {
-  border-color: rgb(var(--v-theme-primary));
-  box-shadow: 0 18px 40px rgba(var(--v-theme-primary), 0.12);
-}
-
-.program-card__schedule {
-  background: rgba(var(--v-theme-surface-variant), 0.22);
-  border-radius: 1rem;
-  padding: 0.25rem 0.75rem 0.75rem;
 }
 
 .active-program-card {
@@ -900,6 +862,208 @@ function toggleActiveProgramExpanded() {
   background:
     linear-gradient(180deg, rgba(var(--v-theme-secondary), 0.08), transparent),
     rgb(var(--v-theme-surface));
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.start-program-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.start-program-card__header {
+  align-items: center;
+  display: flex;
+  gap: 0.9rem;
+}
+
+.start-program-card__title {
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.start-program-card__copy,
+.program-detail-panel__summary,
+.program-detail-day__rest {
+  color: rgba(var(--v-theme-on-surface), 0.64);
+}
+
+.start-program-card__controls {
+  align-items: end;
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: minmax(12rem, 18rem) auto;
+}
+
+.start-program-card__date {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.start-program-card__button {
+  min-height: 48px;
+}
+
+.program-selection-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr);
+}
+
+.program-picker {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.program-option {
+  appearance: none;
+  align-items: center;
+  background: rgba(var(--v-theme-surface), 0.68);
+  border: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+  border-radius: 1rem;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  gap: 0.75rem;
+  min-height: 64px;
+  padding: 0.75rem;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.program-option:hover {
+  border-color: rgba(var(--v-theme-primary), 0.35);
+  transform: translateY(-1px);
+}
+
+.program-option--selected {
+  border-color: rgb(var(--v-theme-primary));
+  box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.14);
+}
+
+.program-option__icon {
+  align-items: center;
+  background: rgba(var(--v-theme-primary), 0.1);
+  border-radius: 0.75rem;
+  color: rgb(var(--v-theme-primary));
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 2.5rem;
+  justify-content: center;
+  width: 2.5rem;
+}
+
+.program-option__body {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.program-option__name {
+  font-size: 1rem;
+  font-weight: 740;
+  line-height: 1.2;
+}
+
+.program-option__meta,
+.program-detail-panel__eyebrow,
+.program-detail-day__item span:last-child {
+  color: rgba(var(--v-theme-on-surface), 0.58);
+}
+
+.program-option__meta {
+  font-size: 0.86rem;
+}
+
+.program-detail-panel {
+  background:
+    radial-gradient(circle at top right, rgba(var(--v-theme-primary), 0.08), transparent 20rem),
+    rgb(var(--v-theme-surface));
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.program-detail-panel__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.program-detail-panel__eyebrow {
+  font-size: 0.76rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.program-detail-panel__title {
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  margin: 0.15rem 0 0;
+}
+
+.program-detail-panel__summary {
+  line-height: 1.5;
+  max-width: 54rem;
+}
+
+.program-detail-panel__schedule {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.program-detail-day {
+  background: rgba(var(--v-theme-surface-variant), 0.16);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem;
+}
+
+.program-detail-day--rest {
+  background: rgba(var(--v-theme-surface-variant), 0.08);
+}
+
+.program-detail-day__title {
+  font-weight: 740;
+  line-height: 1.2;
+}
+
+.program-detail-day__items {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.program-detail-day__item {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.program-detail-day__item span:first-child {
+  font-weight: 680;
+  line-height: 1.25;
+}
+
+.program-detail-day__item span:last-child {
+  font-size: 0.88rem;
+}
+
+.program-detail-panel__empty {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  padding: 1rem;
+  text-align: center;
 }
 
 .today-card {
@@ -1065,6 +1229,31 @@ function toggleActiveProgramExpanded() {
   }
 
   .active-program-card__schedule {
+    grid-template-columns: 1fr;
+  }
+
+  .start-program-card,
+  .program-detail-panel {
+    padding: 0.85rem;
+  }
+
+  .start-program-card__header,
+  .start-program-card__controls,
+  .program-detail-panel__header {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .start-program-card__header,
+  .program-detail-panel__header {
+    flex-direction: column;
+  }
+
+  .program-selection-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .program-detail-panel__schedule {
     grid-template-columns: 1fr;
   }
 

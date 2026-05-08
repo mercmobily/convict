@@ -95,7 +95,7 @@ test("history page shows month projection and links into workout detail", async 
   await page.goto("/app/history");
 
   await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
-  await expect(page.getByText(monthTitleFor(fixturePlan.todayDate))).toBeVisible();
+  await expect(page.getByText(monthTitleFor(fixturePlan.todayDate), { exact: true })).toBeVisible();
   await expect(page.getByTestId(`history-day-${fixturePlan.targetHistoryDate}`)).toBeVisible();
 
   const targetDayButton = page.getByTestId(`history-day-${fixturePlan.targetHistoryDate}`);
@@ -103,7 +103,7 @@ test("history page shows month projection and links into workout detail", async 
   await targetDayButton.click();
 
   await expect(page).toHaveURL(new RegExp(`day=${fixturePlan.targetHistoryDate}`));
-  await expect(page.getByText(fixturePlan.targetHistoryDate, { exact: false }).last()).toBeVisible();
+  await expect(page.locator(`.history-day-detail-card[data-scheduled-for-date="${fixturePlan.targetHistoryDate}"]`)).toBeVisible();
   for (const exerciseName of fixturePlan.targetHistoryExercises) {
     await expect(page.getByText(exerciseName).last()).toBeVisible();
   }
@@ -116,5 +116,5 @@ test("history page shows month projection and links into workout detail", async 
   const nextMonthKey = shiftMonth(fixturePlan.todayDate, 1);
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page).toHaveURL(new RegExp(`month=${nextMonthKey}`));
-  await expect(page.getByText(monthTitleFor(`${nextMonthKey}-01`))).toBeVisible();
+  await expect(page.getByText(monthTitleFor(`${nextMonthKey}-01`), { exact: true })).toBeVisible();
 });

@@ -7,11 +7,11 @@ import { RouterView } from "vue-router";
   <section class="generated-ui-screen generated-ui-screen--settings settings-shell d-flex flex-column ga-4">
     <header>
       <p class="text-overline text-medium-emphasis mb-1">Settings</p>
-      <h1 class="settings-shell__title">Home settings</h1>
-      <p class="text-body-2 text-medium-emphasis mb-0">Configure shell behavior for this surface.</p>
+      <h1 class="settings-shell__title">Shell settings</h1>
+      <p class="text-body-2 text-medium-emphasis mb-0">Navigation behavior for this generated support surface.</p>
     </header>
 
-    <v-sheet rounded="lg" border class="settings-shell__panel">
+    <v-sheet rounded="xl" border class="settings-shell__panel">
       <div class="settings-shell__body">
         <nav class="settings-shell__nav" aria-label="Home settings sections">
           <v-list nav density="comfortable" rounded="lg" border>

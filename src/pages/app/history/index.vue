@@ -384,10 +384,7 @@ async function selectDay(day = {}) {
           </div>
         </div>
 
-        <div
-          v-if="smAndDown"
-          class="history-page__summary-chip-row"
-        >
+        <div class="history-page__summary-chip-row">
           <v-chip
             v-for="summaryCard in summaryCards"
             :key="summaryCard.key"
@@ -398,33 +395,6 @@ async function selectDay(day = {}) {
           >
             {{ summaryCard.mobileLabel }} {{ summaryCard.value }}
           </v-chip>
-        </div>
-
-        <div
-          v-else
-          class="history-page__summary-grid"
-        >
-          <v-card
-            v-for="summaryCard in summaryCards"
-            :key="summaryCard.key"
-            class="history-summary-card"
-            rounded="xl"
-            variant="tonal"
-          >
-            <v-card-text class="history-summary-card__body">
-              <div>
-                <div class="text-overline text-medium-emphasis">{{ summaryCard.label }}</div>
-                <div class="text-h5 font-weight-bold">{{ summaryCard.value }}</div>
-              </div>
-              <v-avatar
-                :color="summaryCard.color"
-                size="42"
-                variant="flat"
-              >
-                <v-icon :icon="summaryCard.icon" />
-              </v-avatar>
-            </v-card-text>
-          </v-card>
         </div>
 
         <div class="history-page__content-grid">
@@ -529,20 +499,6 @@ async function selectDay(day = {}) {
 
 .history-page__summary-chip-row::-webkit-scrollbar {
   display: none;
-}
-
-.history-page__summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 16px;
-}
-
-.history-summary-card__body {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 88px;
 }
 
 .history-page__content-grid {

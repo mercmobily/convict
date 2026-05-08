@@ -146,19 +146,19 @@ function cancel() {
 </script>
 
 <template>
-  <v-card
-    variant="tonal"
-    color="primary"
+  <v-sheet
+    rounded="lg"
+    border
     :class="[
       'set-log-editor',
       { 'set-log-editor--inline': !isCreateMode }
     ]"
   >
-    <v-card-text
+    <div
       :class="[
         'd-flex',
         'flex-column',
-        'ga-4',
+        'ga-3',
         'set-log-editor__content',
         { 'set-log-editor__content--inline': !isCreateMode }
       ]"
@@ -168,7 +168,7 @@ function cancel() {
           {{ `Add set ${displaySetNumber}` }}
         </div>
         <div class="text-body-2 text-medium-emphasis">
-          Save this set to persist it immediately.
+          Saves immediately.
         </div>
       </div>
 
@@ -216,18 +216,23 @@ function cancel() {
           </div>
         </div>
       </v-form>
-    </v-card-text>
-  </v-card>
+    </div>
+  </v-sheet>
 </template>
 
 <style scoped>
 .set-log-editor {
   border-radius: 1rem;
+  background: rgba(var(--v-theme-primary), 0.08);
+  color: inherit;
 }
 
 .set-log-editor--inline {
   background: rgba(var(--v-theme-surface), 0.72);
-  color: inherit;
+}
+
+.set-log-editor__content {
+  padding: 0.85rem;
 }
 
 .set-log-editor__content--inline {
