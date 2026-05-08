@@ -110,23 +110,24 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
 
   await pushupsCard.locator('input[type="number"]').first().fill("50");
   await pushupsCard.getByRole("button", { name: "Save set" }).click();
-  await expect(pushupsCard.getByText("Add set 2")).toBeVisible();
+  await expect(locateSavedSetRow(pushupsCard, 1, "50 reps")).toBeVisible();
   await pushupsCard.locator('input[type="number"]').first().fill("50");
   await pushupsCard.getByRole("button", { name: "Save set" }).click();
-  await expect(pushupsCard.getByText("Add set 3")).toBeVisible();
+  await expect(locateSavedSetRow(pushupsCard, 2, "50 reps")).toBeVisible();
   await pushupsCard.locator('input[type="number"]').first().fill("50");
   await pushupsCard.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(pushupsCard, 3, "50 reps")).toBeVisible();
 
   await legRaisesCard.locator('input[type="number"]').first().fill("10");
   await legRaisesCard.getByRole("button", { name: "Save set" }).click();
-  await expect(legRaisesCard.getByText("Add set 2")).toBeVisible();
+  await expect(locateSavedSetRow(legRaisesCard, 1, "10 reps")).toBeVisible();
   await legRaisesCard.locator('input[type="number"]').first().fill("10");
   await legRaisesCard.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(legRaisesCard, 2, "10 reps")).toBeVisible();
 
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await expect(page.getByText("This workout is completed.")).toBeVisible();
+  await expect(page.locator(".workout-detail-card__status").getByText("Completed", { exact: true })).toBeVisible();
+  await expect(page.getByText("This workout is completed.")).toHaveCount(0);
 
   await page.goto("/app/progress");
 

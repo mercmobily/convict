@@ -114,7 +114,7 @@ test("history page shows month projection and links into workout detail", async 
   await page.goto("/app/history");
 
   const nextMonthKey = shiftMonth(fixturePlan.todayDate, 1);
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next calendar month" }).click();
   await expect(page).toHaveURL(new RegExp(`month=${nextMonthKey}`));
   await expect(page.getByText(monthTitleFor(`${nextMonthKey}-01`), { exact: true })).toBeVisible();
 });

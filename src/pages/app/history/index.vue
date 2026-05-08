@@ -50,6 +50,7 @@ const historyApiPath = computed(() => paths.api("/today/history"));
 const historyResource = useEndpointResource({
   queryKey: computed(() => ["today-history", historyApiPath.value, requestedMonth.value || "server-default"]),
   path: historyApiPath,
+  refreshOnPull: true,
   readQuery: computed(() => (
     requestedMonth.value
       ? {
@@ -366,20 +367,24 @@ async function selectDay(day = {}) {
             </div>
           </div>
 
-          <div class="d-flex align-center ga-2">
+          <div class="history-month-nav" aria-label="Calendar month navigation">
             <v-btn
+              icon
+              color="primary"
               variant="text"
-              :prepend-icon="mdiChevronLeft"
+              aria-label="Previous calendar month"
               @click="moveMonth(-1)"
             >
-              Previous
+              <v-icon :icon="mdiChevronLeft" />
             </v-btn>
             <v-btn
+              icon
+              color="primary"
               variant="text"
-              :append-icon="mdiChevronRight"
+              aria-label="Next calendar month"
               @click="moveMonth(1)"
             >
-              Next
+              <v-icon :icon="mdiChevronRight" />
             </v-btn>
           </div>
         </div>
@@ -499,6 +504,21 @@ async function selectDay(day = {}) {
 
 .history-page__summary-chip-row::-webkit-scrollbar {
   display: none;
+}
+
+.history-month-nav {
+  align-items: center;
+  background: rgba(var(--v-theme-surface-variant), 0.28);
+  border: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.history-month-nav :deep(.v-btn) {
+  min-height: 48px;
+  min-width: 48px;
 }
 
 .history-page__content-grid {

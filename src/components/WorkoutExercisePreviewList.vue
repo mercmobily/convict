@@ -63,8 +63,8 @@ function exerciseMetaLine(exercise = {}) {
       role="listitem"
     >
       <div class="exercise-preview-list__main">
-        <div class="exercise-preview-list__title">{{ exercise.exerciseName }}</div>
-        <div class="exercise-preview-list__subtitle">{{ exerciseDetailLine(exercise) }}</div>
+        <div class="exercise-preview-list__eyebrow">{{ exercise.exerciseName }}</div>
+        <div class="exercise-preview-list__title">{{ exerciseDetailLine(exercise) || exercise.exerciseName }}</div>
       </div>
       <div class="exercise-preview-list__meta">{{ exerciseMetaLine(exercise) }}</div>
     </div>
@@ -94,19 +94,23 @@ function exerciseMetaLine(exercise = {}) {
   min-width: 0;
 }
 
-.exercise-preview-list__title {
-  color: rgba(var(--v-theme-on-surface), 0.92);
-  font-size: 1rem;
-  font-weight: 720;
-  line-height: 1.25;
+.exercise-preview-list__eyebrow {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 0.78rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
   overflow-wrap: anywhere;
+  text-transform: uppercase;
 }
 
-.exercise-preview-list__subtitle {
-  color: rgba(var(--v-theme-on-surface), 0.62);
-  font-size: 0.9rem;
-  line-height: 1.35;
-  margin-top: 0.15rem;
+.exercise-preview-list__title {
+  color: rgba(var(--v-theme-on-surface), 0.94);
+  font-size: 1.08rem;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  margin-top: 0.2rem;
   overflow-wrap: anywhere;
 }
 

@@ -132,7 +132,7 @@ const resource = defineCrudResource({
   },
   searchSchema: {
     id: { type: "id", actualField: "id" },
-    exerciseIds: { type: "array", actualField: "exerciseId", filterOperator: "in" },
+    exerciseIds: { type: "array", actualField: "exercise_id", filterOperator: "in" },
   },
   defaultSort: ["-createdAt"],
   autofilter: "user",

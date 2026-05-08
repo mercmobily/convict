@@ -20,7 +20,7 @@ import { useRoute, useRouter } from "vue-router";
 import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vue";
 import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
-import { parseDateOnly } from "@local/main/shared";
+import { normalizeDateOnly, parseDateOnly } from "@local/main/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
@@ -44,6 +44,7 @@ const workoutDetailResource = useEndpointResource({
   queryKey: computed(() => ["today-workout-detail", detailApiPath.value]),
   path: detailApiPath,
   fallbackLoadError: "Unable to load this workout.",
+  refreshOnPull: true,
   enabled: computed(() => Boolean(scheduledForDate.value))
 });
 
@@ -93,6 +94,19 @@ const isInitialLoading = computed(() => Boolean(workoutDetailResource.isInitialL
 const isRefreshing = computed(() => Boolean(workoutDetailResource.isRefetching.value));
 const workoutDateLabel = computed(() => formatDateLabel(workout.value?.scheduledForDate));
 const workoutProgramName = computed(() => String(assignment.value?.program?.name || workout.value?.programName || "").trim());
+const completedPerformedDateLabel = computed(() => {
+  if (workout.value?.status !== "completed" || !workout.value?.performedOnDate) {
+    return "";
+  }
+
+  const performedDate = normalizeDateOnly(workout.value.performedOnDate);
+  const scheduledDate = normalizeDateOnly(workout.value.scheduledForDate || scheduledForDate.value);
+  if (!performedDate || performedDate === scheduledDate) {
+    return "";
+  }
+
+  return formatDateLabel(performedDate);
+});
 
 watch(
   workout,
@@ -117,40 +131,6 @@ watch(
     immediate: true
   }
 );
-
-const pageTitle = computed(() => {
-  if (!workout.value) {
-    return "Workout detail";
-  }
-
-  return workout.value.dayLabel
-    ? `${workout.value.dayLabel} workout`
-    : "Workout detail";
-});
-
-const pageSubtitle = computed(() => {
-  if (!workout.value) {
-    return "Open the scheduled day and save sets as you train.";
-  }
-
-  if (workout.value.status === "in_progress") {
-    return "Save sets per exercise. Finish when the day is done.";
-  }
-
-  if (workout.value.status === "completed") {
-    return "Review saved sets and apply any earned advancement manually.";
-  }
-
-  if (workout.value.status === "overdue") {
-    return "Open this overdue day to log it now.";
-  }
-
-  if (workout.value.status === "scheduled") {
-    return "Open today’s workout when you start training.";
-  }
-
-  return "Review the projected workout and saved sets.";
-});
 
 function formatDateLabel(dateString = "", { includeYear = true } = {}) {
   const date = parseDateOnly(dateString);
@@ -191,42 +171,12 @@ const savedWorkoutSetCount = computed(() => {
   }, 0);
 });
 
-const incompleteExerciseCount = computed(() => {
-  const exercises = Array.isArray(workout.value?.exercises) ? workout.value.exercises : [];
-  return exercises.filter((exercise) => {
-    const savedSetCount = Array.isArray(exercise.setLogs) ? exercise.setLogs.length : 0;
-    return savedSetCount < Number(exercise.plannedWorkSetsMin || 0);
-  }).length;
-});
-
 const canFinishWorkout = computed(() => {
   if (workout.value?.status !== "in_progress" || hasUnsavedWorkoutDrafts.value || isWorkoutSyncing.value) {
     return false;
   }
 
   return savedWorkoutSetCount.value > 0;
-});
-
-const finishWorkoutHint = computed(() => {
-  if (isWorkoutSyncing.value) {
-    return "Wait for the latest saved set changes to finish syncing before you finish this workout.";
-  }
-
-  if (hasUnsavedWorkoutDrafts.value) {
-    return "Wait for every changed exercise card to finish saving before you finish this workout.";
-  }
-
-  if (workout.value?.status === "in_progress" && savedWorkoutSetCount.value < 1) {
-    return "Save at least one set before finishing this workout.";
-  }
-
-  if (workout.value?.status === "in_progress" && incompleteExerciseCount.value > 0) {
-    return incompleteExerciseCount.value === 1
-      ? "You can finish now, but 1 exercise is below the programmed minimum."
-      : `You can finish now, but ${incompleteExerciseCount.value} exercises are below the programmed minimum.`;
-  }
-
-  return "Finish the workout when you are done. The app will still track whether you met the programmed minimum volume.";
 });
 
 async function openWorkout() {
@@ -273,16 +223,7 @@ async function goBackToToday() {
       Refreshing
     </v-chip>
 
-    <div class="d-flex justify-space-between align-start flex-wrap ga-3">
-      <div class="d-flex flex-column ga-1">
-        <div class="d-flex flex-column ga-1">
-          <h2 class="text-h4 workout-detail-page__title mb-0">{{ pageTitle }}</h2>
-          <p class="text-body-1 text-medium-emphasis mb-0 workout-detail-page__subtitle">
-            {{ pageSubtitle }}
-          </p>
-        </div>
-      </div>
-
+    <div class="workout-detail-page__top-actions">
       <v-btn
         variant="text"
         color="primary"
@@ -335,7 +276,7 @@ async function goBackToToday() {
               <v-icon :icon="mdiCalendarClock" />
             </v-avatar>
             <div class="workout-detail-card__title-block">
-              <h3 class="workout-detail-card__title">{{ workoutDateLabel || pageTitle }}</h3>
+              <h3 class="workout-detail-card__title">{{ workoutDateLabel || "Workout detail" }}</h3>
               <p v-if="workoutProgramName" class="workout-detail-card__meta mb-0">
                 {{ workoutProgramName }}
               </p>
@@ -345,13 +286,13 @@ async function goBackToToday() {
             <v-chip :color="workoutStatusColor(workout.status)" variant="tonal" label>
               {{ workoutStatusLabel(workout.status) }}
             </v-chip>
-            <span v-if="workout.status === 'completed' && workout.performedOnDate">
-              Completed {{ formatDateLabel(workout.performedOnDate) }}
+            <span v-if="completedPerformedDateLabel">
+              Completed {{ completedPerformedDateLabel }}
             </span>
           </div>
         </header>
 
-        <section class="workout-detail-card__action-panel">
+        <section v-if="workout.canStart || workout.status === 'definitely_missed'" class="workout-detail-card__action-panel">
           <template v-if="workout.canStart">
             <div>
               <div class="workout-detail-card__action-title">Ready to open</div>
@@ -368,34 +309,6 @@ async function goBackToToday() {
             >
               Open workout
             </v-btn>
-          </template>
-
-          <template v-else-if="workout.status === 'in_progress'">
-            <div>
-              <div class="workout-detail-card__action-title">Logging sets</div>
-              <p class="workout-detail-card__action-copy mb-0">
-                {{ finishWorkoutHint }}
-              </p>
-            </div>
-            <v-btn
-              color="success"
-              :prepend-icon="mdiCheckCircleOutline"
-              :loading="submitWorkoutCommand.isRunning"
-              :disabled="!canFinishWorkout"
-              class="workout-detail-card__action-button"
-              @click="finishWorkout"
-            >
-              Finish workout
-            </v-btn>
-          </template>
-
-          <template v-else-if="workout.status === 'completed'">
-            <div>
-              <div class="workout-detail-card__action-title">This workout is completed.</div>
-              <p class="workout-detail-card__action-copy mb-0">
-                Earned advancement stays manual; repeat the current step until you choose to move on.
-              </p>
-            </div>
           </template>
 
           <template v-else-if="workout.status === 'definitely_missed'">
@@ -432,15 +345,26 @@ async function goBackToToday() {
           @advance-requested="handleExerciseAdvanceRequested(exercise)"
         />
       </div>
+
+      <div v-if="workout?.status === 'in_progress'" class="workout-detail-page__finish-action">
+        <v-btn
+          color="success"
+          size="large"
+          rounded="pill"
+          :prepend-icon="mdiCheckCircleOutline"
+          :loading="submitWorkoutCommand.isRunning"
+          :disabled="!canFinishWorkout"
+          class="workout-detail-page__finish-button"
+          @click="finishWorkout"
+        >
+          Finish workout
+        </v-btn>
+      </div>
     </template>
   </section>
 </template>
 
 <style scoped>
-.workout-detail-page__title {
-  letter-spacing: -0.03em;
-}
-
 .workout-detail-page__refresh-chip {
   position: fixed;
   top: calc(var(--v-layout-top, 0px) + 1rem);
@@ -449,8 +373,9 @@ async function goBackToToday() {
   pointer-events: none;
 }
 
-.workout-detail-page__subtitle {
-  max-width: 48rem;
+.workout-detail-page__top-actions {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .workout-detail-page__skeleton,
@@ -550,6 +475,18 @@ async function goBackToToday() {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
+.workout-detail-page__finish-action {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 5.5rem;
+}
+
+.workout-detail-page__finish-button {
+  box-shadow: 0 0.75rem 1.5rem rgba(var(--v-theme-success), 0.18);
+  min-height: 56px;
+  padding-inline: 1.5rem;
+}
+
 @media (max-width: 640px) {
   .workout-detail-card {
     gap: 0.85rem;
@@ -573,6 +510,14 @@ async function goBackToToday() {
 
   .exercise-grid {
     grid-template-columns: 1fr;
+  }
+
+  .workout-detail-page__finish-action {
+    justify-content: stretch;
+  }
+
+  .workout-detail-page__finish-button {
+    width: 100%;
   }
 }
 </style>

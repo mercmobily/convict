@@ -18,7 +18,7 @@ import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 import WorkoutExercisePreviewList from "@/components/WorkoutExercisePreviewList.vue";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
-import { localTodayDateString, parseDateOnly } from "@local/main/shared";
+import { localTodayDateString, normalizeDateOnly, parseDateOnly } from "@local/main/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
@@ -44,6 +44,7 @@ const selectionApiPath = computed(() => paths.api("/program-assignment"));
 const selectionResource = useEndpointResource({
   queryKey: computed(() => ["program-assignment", selectionApiPath.value]),
   path: selectionApiPath,
+  refreshOnPull: true,
   fallbackLoadError: "Unable to load program choices."
 });
 
@@ -98,6 +99,7 @@ const todayResource = useEndpointResource({
   queryKey: computed(() => ["today", todayApiPath.value, activeAssignment.value?.id || "none"]),
   path: todayApiPath,
   enabled: computed(() => hasActiveAssignment.value),
+  refreshOnPull: true,
   fallbackLoadError: "Unable to load today's training."
 });
 
@@ -239,8 +241,11 @@ function workoutHeadline(workout = {}) {
   if (status === "overdue") {
     return "Overdue";
   }
+  if (status === "scheduled") {
+    return "";
+  }
 
-  return "Ready to train";
+  return "Training day";
 }
 
 function workoutSupportLine(workout = {}) {
@@ -260,9 +265,11 @@ function workoutSupportLine(workout = {}) {
     return "Keep logging sets.";
   }
   if (status === "completed") {
-    return workout.performedOnDate
-      ? `Finished ${formatDateLabel(workout.performedOnDate)}.`
-      : "Finished.";
+    const performedDate = normalizeDateOnly(workout.performedOnDate);
+    const scheduledDate = normalizeDateOnly(workout.scheduledForDate);
+    return performedDate && performedDate !== scheduledDate
+      ? `Finished ${formatDateLabel(performedDate)}.`
+      : "";
   }
   if (status === "definitely_missed") {
     return "Marked missed.";
@@ -270,8 +277,11 @@ function workoutSupportLine(workout = {}) {
   if (status === "overdue") {
     return "Still available to complete.";
   }
+  if (status === "scheduled") {
+    return "";
+  }
 
-  return "Start when ready.";
+  return "";
 }
 
 function workoutDetailPagePath(scheduledForDate) {
@@ -495,37 +505,6 @@ function toggleActiveProgramExpanded() {
               </header>
 
               <template v-if="todayProjection">
-                <section class="training-panel__summary">
-                  <div class="training-panel__copy">
-                    <div class="training-panel__headline">{{ workoutHeadline(todayProjection) }}</div>
-                    <p class="training-panel__support mb-0">
-                      {{ workoutSupportLine(todayProjection) }}
-                    </p>
-                  </div>
-                  <div class="training-panel__actions">
-                    <v-btn
-                      v-if="todayProjection.status === 'scheduled'"
-                      color="primary"
-                      aria-label="Start today's workout"
-                      :prepend-icon="mdiPlayCircleOutline"
-                      :loading="isStartActionLoading(todayProjection.scheduledForDate)"
-                      @click="startWorkoutForDate(todayProjection.scheduledForDate)"
-                    >
-                      Start
-                    </v-btn>
-                    <v-btn
-                      v-else-if="todayProjection.status === 'in_progress'"
-                      color="primary"
-                      variant="tonal"
-                      aria-label="Resume workout"
-                      :prepend-icon="mdiPlayCircleOutline"
-                      @click="openWorkoutDetail(todayProjection.scheduledForDate)"
-                    >
-                      Resume
-                    </v-btn>
-                  </div>
-                </section>
-
                 <WorkoutExercisePreviewList
                   v-if="Array.isArray(todayProjection.exercises) && todayProjection.exercises.length > 0"
                   :exercises="todayProjection.exercises"
@@ -533,6 +512,49 @@ function toggleActiveProgramExpanded() {
                   :stacked="smAndDown"
                   class="training-panel__exercise-list"
                 />
+
+                <section
+                  class="training-panel__summary"
+                  :class="{
+                    'training-panel__summary--actionable': todayProjection.status === 'scheduled',
+                    'training-panel__summary--button-only': ['scheduled', 'in_progress'].includes(todayProjection.status)
+                  }"
+                >
+                  <div v-if="!['scheduled', 'in_progress'].includes(todayProjection.status)" class="training-panel__copy">
+                    <div class="training-panel__headline">{{ workoutHeadline(todayProjection) }}</div>
+                    <p v-if="workoutSupportLine(todayProjection)" class="training-panel__support mb-0">
+                      {{ workoutSupportLine(todayProjection) }}
+                    </p>
+                  </div>
+                  <div class="training-panel__actions">
+                    <v-btn
+                      v-if="todayProjection.status === 'scheduled'"
+                      color="primary"
+                      variant="flat"
+                      size="large"
+                      rounded="pill"
+                      aria-label="Start today's workout"
+                      :prepend-icon="mdiPlayCircleOutline"
+                      class="training-panel__primary-action"
+                      :loading="isStartActionLoading(todayProjection.scheduledForDate)"
+                      @click="startWorkoutForDate(todayProjection.scheduledForDate)"
+                    >
+                      Start workout
+                    </v-btn>
+                    <v-btn
+                      v-else-if="todayProjection.status === 'in_progress'"
+                      color="primary"
+                      variant="flat"
+                      rounded="pill"
+                      aria-label="Resume workout"
+                      :prepend-icon="mdiPlayCircleOutline"
+                      class="training-panel__primary-action"
+                      @click="openWorkoutDetail(todayProjection.scheduledForDate)"
+                    >
+                      Resume
+                    </v-btn>
+                  </div>
+                </section>
               </template>
 
               <p v-else class="training-panel__empty mb-0">
@@ -585,45 +607,11 @@ function toggleActiveProgramExpanded() {
                     </v-chip>
                   </div>
                   <div class="missed-workout-row__body">
-                    <div class="missed-workout-row__copy">
+                    <div v-if="workout.status !== 'in_progress'" class="missed-workout-row__copy">
                       <div class="missed-workout-row__headline">{{ workoutHeadline(workout) }}</div>
-                      <p class="missed-workout-row__support mb-0">
+                      <p v-if="workoutSupportLine(workout)" class="missed-workout-row__support mb-0">
                         {{ workoutSupportLine(workout) }}
                       </p>
-                    </div>
-                    <div class="missed-workout-row__actions">
-                      <template v-if="workout.status === 'overdue'">
-                        <v-btn
-                          color="primary"
-                          variant="tonal"
-                          aria-label="Start overdue workout"
-                          :prepend-icon="mdiPlayCircleOutline"
-                          :loading="isStartActionLoading(workout.scheduledForDate)"
-                          @click="startWorkoutForDate(workout.scheduledForDate)"
-                        >
-                          Start
-                        </v-btn>
-                        <v-btn
-                          color="error"
-                          variant="text"
-                          aria-label="Mark definitely missed"
-                          :prepend-icon="mdiCheckCircleOutline"
-                          :loading="isMarkMissedActionLoading(workout.scheduledForDate)"
-                          @click="markWorkoutDefinitelyMissed(workout.scheduledForDate)"
-                        >
-                          Mark missed
-                        </v-btn>
-                      </template>
-                      <v-btn
-                        v-else-if="workout.status === 'in_progress'"
-                        color="primary"
-                        variant="text"
-                        aria-label="Resume workout"
-                        :prepend-icon="mdiPlayCircleOutline"
-                        @click="openWorkoutDetail(workout.scheduledForDate)"
-                      >
-                        Resume
-                      </v-btn>
                     </div>
                   </div>
 
@@ -633,6 +621,43 @@ function toggleActiveProgramExpanded() {
                     :stacked="smAndDown"
                     class="missed-workout-row__exercises"
                   />
+
+                  <div class="missed-workout-row__actions">
+                    <template v-if="workout.status === 'overdue'">
+                      <v-btn
+                        color="primary"
+                        variant="tonal"
+                        aria-label="Start overdue workout"
+                        :prepend-icon="mdiPlayCircleOutline"
+                        :loading="isStartActionLoading(workout.scheduledForDate)"
+                        @click="startWorkoutForDate(workout.scheduledForDate)"
+                      >
+                        Start
+                      </v-btn>
+                      <v-btn
+                        color="error"
+                        variant="text"
+                        aria-label="Mark definitely missed"
+                        :prepend-icon="mdiCheckCircleOutline"
+                        :loading="isMarkMissedActionLoading(workout.scheduledForDate)"
+                        @click="markWorkoutDefinitelyMissed(workout.scheduledForDate)"
+                      >
+                        Mark missed
+                      </v-btn>
+                    </template>
+                    <v-btn
+                      v-else-if="workout.status === 'in_progress'"
+                      color="primary"
+                      variant="flat"
+                      rounded="pill"
+                      aria-label="Resume workout"
+                      :prepend-icon="mdiPlayCircleOutline"
+                      class="training-panel__primary-action missed-workout-row__primary-action"
+                      @click="openWorkoutDetail(workout.scheduledForDate)"
+                    >
+                      Resume
+                    </v-btn>
+                  </div>
                 </article>
               </div>
             </v-sheet>
@@ -1131,11 +1156,28 @@ function toggleActiveProgramExpanded() {
   align-items: center;
   background: rgba(var(--v-theme-surface), 0.66);
   border: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.training-panel__summary--actionable {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(var(--v-theme-primary), 0.18), transparent 18rem),
+    linear-gradient(135deg, rgba(var(--v-theme-secondary), 0.12), rgba(var(--v-theme-surface-variant), 0.22)),
+    rgb(var(--v-theme-surface));
+  border-color: rgba(var(--v-theme-primary), 0.2);
+  box-shadow: 0 1rem 2.5rem rgba(var(--v-theme-primary), 0.12);
+}
+
+.training-panel__summary--button-only {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  justify-content: flex-end;
+  padding: 0;
 }
 
 .training-panel__copy,
@@ -1143,7 +1185,14 @@ function toggleActiveProgramExpanded() {
   min-width: 0;
 }
 
-.training-panel__headline,
+.training-panel__headline {
+  color: rgba(var(--v-theme-on-surface), 0.92);
+  font-size: clamp(1.22rem, 3vw, 1.65rem);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
 .missed-workout-row__headline {
   color: rgba(var(--v-theme-on-surface), 0.92);
   font-size: 1.08rem;
@@ -1173,6 +1222,12 @@ function toggleActiveProgramExpanded() {
 .training-panel__actions :deep(.v-btn),
 .missed-workout-row__actions :deep(.v-btn) {
   min-height: 44px;
+}
+
+.training-panel__primary-action {
+  box-shadow: 0 0.75rem 1.5rem rgba(var(--v-theme-primary), 0.24);
+  min-height: 56px !important;
+  padding-inline: 1.4rem;
 }
 
 .training-panel__exercise-list,
@@ -1213,6 +1268,10 @@ function toggleActiveProgramExpanded() {
 
 .missed-workout-row__status {
   flex: 0 0 auto;
+}
+
+.missed-workout-row__primary-action {
+  padding-inline: 1.4rem;
 }
 
 @media (max-width: 640px) {
@@ -1282,6 +1341,11 @@ function toggleActiveProgramExpanded() {
   .training-panel__actions :deep(.v-btn),
   .missed-workout-row__actions :deep(.v-btn) {
     min-height: 48px;
+  }
+
+  .training-panel__actions :deep(.v-btn),
+  .missed-workout-row__primary-action {
+    width: 100%;
   }
 }
 </style>

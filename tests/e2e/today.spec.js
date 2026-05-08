@@ -191,7 +191,8 @@ test("active assignment shows today's projection and resolves overdue workouts",
 
   await page.getByRole("button", { name: "Back to today" }).click();
   await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
-  await expect(primaryOverdueCard.getByText("Open workout")).toBeVisible();
+  await expect(primaryOverdueCard.getByRole("button", { name: "Resume workout" })).toBeVisible();
+  await expect(primaryOverdueCard.getByText("Open workout")).toHaveCount(0);
 
   await secondaryOverdueCard.getByRole("button", { name: "Mark definitely missed" }).click();
 

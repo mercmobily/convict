@@ -105,7 +105,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
   await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
-  await expect(page.getByRole("heading", { name: /workout$/i })).toBeVisible();
+  await expect(page.locator(".workout-detail-card")).toBeVisible();
 
   const handstandCard = page.locator(".exercise-card").filter({
     hasText: "Handstand Push-ups"
@@ -124,13 +124,13 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await expect(bridgesCard.getByText("reps").first()).toBeVisible();
   await expect(handstandCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
-  await expect(handstandCard.getByText("Add set 1")).toBeVisible();
-  await expect(bridgesCard.getByText("Add set 1")).toBeVisible();
+  await expect(handstandCard.getByLabel("Seconds in new set")).toBeVisible();
+  await expect(bridgesCard.getByLabel("Reps in new set")).toBeVisible();
 
-  const pageTitle = page.getByRole("heading", { name: /workout$/i });
-  const titleBoxBeforeRefresh = await pageTitle.boundingBox();
-  if (!titleBoxBeforeRefresh) {
-    throw new Error("Unable to measure the workout page title before refresh.");
+  const workoutCard = page.locator(".workout-detail-card");
+  const cardBoxBeforeRefresh = await workoutCard.boundingBox();
+  if (!cardBoxBeforeRefresh) {
+    throw new Error("Unable to measure the workout card before refresh.");
   }
 
   let delayedRefreshRequest = false;
@@ -150,16 +150,16 @@ test("user can log reps and seconds on an in-progress workout and see them after
   const refreshChip = page.locator(".workout-detail-page__refresh-chip");
   await expect(refreshChip).toBeVisible();
   await expect(refreshChip).toHaveCSS("position", "fixed");
-  const titleBoxDuringRefresh = await pageTitle.boundingBox();
-  if (!titleBoxDuringRefresh) {
-    throw new Error("Unable to measure the workout page title during refresh.");
+  const cardBoxDuringRefresh = await workoutCard.boundingBox();
+  if (!cardBoxDuringRefresh) {
+    throw new Error("Unable to measure the workout card during refresh.");
   }
-  expect(Math.abs(titleBoxDuringRefresh.y - titleBoxBeforeRefresh.y)).toBeLessThan(1);
-  await expect(handstandCard.getByText("Add set 2")).toBeVisible();
+  expect(Math.abs(cardBoxDuringRefresh.y - cardBoxBeforeRefresh.y)).toBeLessThan(1);
+  await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toBeVisible();
   await handstandCard.locator('input[type="number"]').first().fill("45");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(handstandCard, 2, "45 seconds")).toBeVisible();
-  await expect(handstandCard.getByText("Add set 3")).toBeVisible();
+  await expect(handstandCard.getByLabel("Seconds in new set")).toBeVisible();
   await expect(handstandCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
@@ -179,7 +179,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
   if (!editInputBox || !editCancelButtonBox || !editSaveButtonBox) {
     throw new Error("Unable to measure the edit set editor layout.");
   }
-  expect(editInputBox.width).toBeLessThan(220);
+  expect(editInputBox.width).toBeGreaterThan(170);
   expect(editCancelButtonBox.x).toBeGreaterThan(editInputBox.x + editInputBox.width - 1);
   expect(editSaveButtonBox.x).toBeGreaterThan(editCancelButtonBox.x);
   expect(Math.abs(editCancelButtonBox.y - editInputBox.y)).toBeLessThan(28);
@@ -191,7 +191,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await bridgesCard.locator('input[type="number"]').first().fill("20");
   await bridgesCard.getByRole("button", { name: "Save set" }).click();
   await expect(locateSavedSetRow(bridgesCard, 1, "20 reps")).toBeVisible();
-  await expect(bridgesCard.getByText("Add set 2")).toBeVisible();
+  await expect(bridgesCard.getByLabel("Reps in new set")).toBeVisible();
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
@@ -225,9 +225,9 @@ test("user can log reps and seconds on an in-progress workout and see them after
 
   await expect(locateSavedSetRow(reloadedHandstandCard, 1, "36 seconds")).toBeVisible();
   await expect(locateSavedSetRow(reloadedHandstandCard, 2, "45 seconds")).toBeVisible();
-  await expect(reloadedHandstandCard.getByText("Add set 3")).toBeVisible();
+  await expect(reloadedHandstandCard.getByLabel("Seconds in new set")).toBeVisible();
   await expect(locateSavedSetRow(reloadedBridgesCard, 1, "20 reps")).toBeVisible();
-  await expect(reloadedBridgesCard.getByText("Add set 2")).toBeVisible();
+  await expect(reloadedBridgesCard.getByLabel("Reps in new set")).toBeVisible();
 });
 
 test("deleting the middle saved set renumbers the visible list without gaps", async ({ page }) => {
@@ -254,10 +254,10 @@ test("deleting the middle saved set renumbers the visible list without gaps", as
 
   await handstandCard.locator('input[type="number"]').first().fill("35");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
-  await expect(handstandCard.getByText("Add set 2")).toBeVisible();
+  await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toBeVisible();
   await handstandCard.locator('input[type="number"]').first().fill("45");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
-  await expect(handstandCard.getByText("Add set 3")).toBeVisible();
+  await expect(locateSavedSetRow(handstandCard, 2, "45 seconds")).toBeVisible();
   await handstandCard.locator('input[type="number"]').first().fill("55");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
 
@@ -270,11 +270,11 @@ test("deleting the middle saved set renumbers the visible list without gaps", as
   await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toBeVisible();
   await expect(locateSavedSetRow(handstandCard, 2, "55 seconds")).toBeVisible();
   await expect(locateSavedSetRow(handstandCard, 3, "55 seconds")).toHaveCount(0);
-  await expect(handstandCard.getByText("Add set 3")).toBeVisible();
+  await expect(handstandCard.getByLabel("Seconds in new set")).toBeVisible();
 
   await handstandCard.locator('input[type="number"]').first().fill("65");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
 
   await expect(locateSavedSetRow(handstandCard, 3, "65 seconds")).toBeVisible();
-  await expect(handstandCard.getByText("Add set 4")).toBeVisible();
+  await expect(handstandCard.getByLabel("Seconds in new set")).toBeVisible();
 });

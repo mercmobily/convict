@@ -94,7 +94,7 @@ const resource = defineCrudResource({
   },
   searchSchema: {
     id: { type: "id", actualField: "id" },
-    programTemplateIds: { type: "array", actualField: "programTemplateId", filterOperator: "in" },
+    programTemplateIds: { type: "array", actualField: "program_template_id", filterOperator: "in" },
   },
   defaultSort: ["-createdAt"],
   autofilter: "public",

@@ -17,10 +17,6 @@ const props = defineProps({
     type: [String, Number],
     default: ""
   },
-  displaySetNumber: {
-    type: Number,
-    default: 1
-  },
   initialPerformedValue: {
     type: [String, Number],
     default: ""
@@ -119,6 +115,9 @@ const addEdit = formRuntime.addEdit;
 const measurementUnitLabel = computed(() => (
   measurementLabel(props.exercise?.measurementUnit) === "seconds" ? "Seconds" : "Reps"
 ));
+const fieldLabel = computed(() => (
+  isCreateMode.value ? `${measurementUnitLabel.value} in new set` : measurementUnitLabel.value
+));
 const hasEnteredValue = computed(() => String(formState.performedValue ?? "").trim() !== "");
 const formIsDirty = computed(() => String(formState.performedValue ?? "").trim() !== normalizedInitialPerformedValue.value);
 
@@ -149,29 +148,11 @@ function cancel() {
   <v-sheet
     rounded="lg"
     border
-    :class="[
-      'set-log-editor',
-      { 'set-log-editor--inline': !isCreateMode }
-    ]"
+    class="set-log-editor set-log-editor--inline"
   >
     <div
-      :class="[
-        'd-flex',
-        'flex-column',
-        'ga-3',
-        'set-log-editor__content',
-        { 'set-log-editor__content--inline': !isCreateMode }
-      ]"
+      class="d-flex flex-column ga-3 set-log-editor__content set-log-editor__content--inline"
     >
-      <div v-if="isCreateMode">
-        <div class="text-body-2 font-weight-medium">
-          {{ `Add set ${displaySetNumber}` }}
-        </div>
-        <div class="text-body-2 text-medium-emphasis">
-          Saves immediately.
-        </div>
-      </div>
-
       <v-alert
         v-if="addEdit.message && addEdit.messageType === 'error'"
         type="error"
@@ -184,7 +165,7 @@ function cancel() {
         <div class="set-log-editor__form-row">
           <v-text-field
             v-model="formState.performedValue"
-            :label="measurementUnitLabel"
+            :label="fieldLabel"
             type="number"
             min="0"
             step="1"
@@ -243,12 +224,12 @@ function cancel() {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .set-log-editor__field {
-  flex: 0 1 8.5rem;
-  min-width: 7rem;
+  flex: 1 1 14rem;
+  min-width: 10.75rem;
 }
 
 .set-log-editor__field :deep(.v-input__control) {
@@ -259,21 +240,9 @@ function cancel() {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   margin-left: auto;
   padding-top: 0.125rem;
-}
-
-@media (max-width: 420px) {
-  .set-log-editor__field {
-    flex-basis: 100%;
-    min-width: 100%;
-  }
-
-  .set-log-editor__actions {
-    width: 100%;
-    margin-left: 0;
-  }
 }
 </style>

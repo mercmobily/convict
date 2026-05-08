@@ -228,7 +228,7 @@ const resource = defineCrudResource({
   },
   searchSchema: {
     id: { type: "id", actualField: "id" },
-    workoutOccurrenceIds: { type: "array", actualField: "workoutOccurrenceId", filterOperator: "in" },
+    workoutOccurrenceIds: { type: "array", actualField: "workout_occurrence_id", filterOperator: "in" },
     q: { type: "string", oneOf: ["exerciseNameSnapshot","canonicalStepNameSnapshot","variationNameSnapshot","measurementUnitSnapshot","status","notes"], filterOperator: "like", splitBy: " ", matchAll: true },
   },
   defaultSort: ["-createdAt"],

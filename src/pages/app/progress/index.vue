@@ -27,6 +27,7 @@ const progressApiPath = computed(() => paths.api("/progress"));
 const progressResource = useEndpointResource({
   queryKey: computed(() => ["progress", progressApiPath.value]),
   path: progressApiPath,
+  refreshOnPull: true,
   fallbackLoadError: "Unable to load progress."
 });
 

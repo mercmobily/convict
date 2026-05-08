@@ -63,7 +63,6 @@ const savedSetLogs = computed(() => {
   return items.slice();
 });
 
-const nextDisplaySetNumber = computed(() => savedSetLogs.value.length + 1);
 const currentStepTitle = computed(() => exerciseDetailLine(props.exercise) || "No step data available.");
 const exerciseMetaParts = computed(() => ([
   formatWorkSetLabel(props.exercise.plannedWorkSetsMin, props.exercise.plannedWorkSetsMax),
@@ -95,10 +94,9 @@ function hasAdvancedPastWorkoutSnapshot() {
   return Boolean(props.exercise?.hasProgressStepChanged);
 }
 
-function openEditEditor(setLog = {}, displaySetNumber = 1) {
+function openEditEditor(setLog = {}) {
   editState.value = {
     recordId: String(setLog.id || "").trim(),
-    displaySetNumber: Number(displaySetNumber || 1),
     initialPerformedValue: String(setLog.performedValue ?? "")
   };
 }
@@ -234,7 +232,6 @@ function isEditingSetLog(setLog = {}) {
             :exercise="exercise"
             mode="patch"
             :record-id="editState.recordId"
-            :display-set-number="editState.displaySetNumber"
             :initial-performed-value="editState.initialPerformedValue"
             @saved="handleEditSaved"
             @cancel="closeEditEditor"
@@ -249,7 +246,7 @@ function isEditingSetLog(setLog = {}) {
             :qualifies-for-progression="Boolean(setLog.qualifiesForProgression)"
             :can-edit="canEdit"
             :is-deleting="isDeletingSetLog(setLog)"
-            @edit="openEditEditor(setLog, index + 1)"
+            @edit="openEditEditor(setLog)"
             @delete="deleteSetLog(setLog)"
           />
         </template>
@@ -265,7 +262,6 @@ function isEditingSetLog(setLog = {}) {
           v-if="canEdit"
           :exercise="exercise"
           mode="create"
-          :display-set-number="nextDisplaySetNumber"
           @saved="handleCreateSaved"
           @dirty-state-changed="createEditorDirty = $event"
         />
