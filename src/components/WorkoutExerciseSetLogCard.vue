@@ -31,7 +31,6 @@ const emit = defineEmits([
 ]);
 
 const {
-  exerciseCurrentStepNumber,
   exerciseDetailLine,
   exerciseStatusColor,
   exerciseStatusLabel,
@@ -65,6 +64,12 @@ const savedSetLogs = computed(() => {
 });
 
 const nextDisplaySetNumber = computed(() => savedSetLogs.value.length + 1);
+const currentStepTitle = computed(() => exerciseDetailLine(props.exercise) || "No step data available.");
+const exerciseMetaParts = computed(() => ([
+  formatWorkSetLabel(props.exercise.plannedWorkSetsMin, props.exercise.plannedWorkSetsMax),
+  progressionTargetLabel(props.exercise) ? `Progression ${progressionTargetLabel(props.exercise)}` : "",
+  measurementUnit.value
+].filter(Boolean)));
 
 const hasDirtyDraft = computed(() => createEditorDirty.value || editEditorDirty.value);
 
@@ -147,55 +152,34 @@ function isEditingSetLog(setLog = {}) {
 </script>
 
 <template>
-  <v-card
+  <v-sheet
     rounded="xl"
-    elevation="1"
     border
     class="exercise-card"
   >
-    <v-card-item>
-      <template #prepend>
-        <v-avatar color="primary" variant="tonal" rounded="lg">
+    <header class="exercise-card__header">
+      <div class="exercise-card__identity">
+        <v-avatar color="primary" variant="tonal" rounded="lg" class="exercise-card__icon">
           <v-icon :icon="mdiDumbbell" />
         </v-avatar>
-      </template>
-      <div class="d-flex flex-column ga-1">
-        <h4 class="text-h6 mb-0">{{ exercise.exerciseName }}</h4>
-        <p class="text-body-2 text-medium-emphasis mb-0">
-          {{ exerciseDetailLine(exercise) }}
-        </p>
+        <div class="exercise-card__title-block">
+          <div class="exercise-card__family">{{ exercise.exerciseName }}</div>
+          <h4 class="exercise-card__step">{{ currentStepTitle }}</h4>
+        </div>
       </div>
-    </v-card-item>
-    <v-divider />
-    <v-card-text class="d-flex flex-column ga-4">
-      <div class="d-flex flex-wrap ga-2 align-center">
-        <v-chip color="primary" variant="tonal" size="small" label>
-          {{ formatWorkSetLabel(exercise.plannedWorkSetsMin, exercise.plannedWorkSetsMax) }}
-        </v-chip>
-        <v-chip
-          v-if="exerciseCurrentStepNumber(exercise)"
-          color="info"
-          variant="tonal"
-          size="small"
-          label
+      <v-chip :color="exerciseStatusColor(exercise.exerciseStatus)" variant="tonal" size="small" label>
+        {{ exerciseStatusLabel(exercise.exerciseStatus) }}
+      </v-chip>
+    </header>
+
+    <div class="exercise-card__body">
+      <div class="exercise-card__meta">
+        <span
+          v-for="metaPart in exerciseMetaParts"
+          :key="metaPart"
         >
-          Step {{ exerciseCurrentStepNumber(exercise) }}
-        </v-chip>
-        <v-chip color="secondary" variant="tonal" size="small" label>
-          {{ measurementUnit }}
-        </v-chip>
-        <v-chip
-          v-if="progressionTargetLabel(exercise)"
-          color="success"
-          variant="tonal"
-          size="small"
-          label
-        >
-          Progression {{ progressionTargetLabel(exercise) }}
-        </v-chip>
-        <v-chip :color="exerciseStatusColor(exercise.exerciseStatus)" variant="tonal" size="small" label>
-          {{ exerciseStatusLabel(exercise.exerciseStatus) }}
-        </v-chip>
+          {{ metaPart }}
+        </span>
       </div>
 
       <p
@@ -205,36 +189,41 @@ function isEditingSetLog(setLog = {}) {
         {{ exerciseInstructionText() }}
       </p>
 
-      <v-alert
+      <section
         v-if="canAdvanceExercise()"
-        type="success"
-        variant="tonal"
-        border="start"
-        :title="`Ready to advance to ${exercise.readyToAdvanceStepName}`"
-        :text="`You have earned the next canonical step. Stay on ${exercise.currentProgressStepName || exercise.currentStepName} as long as you like, or advance now.`"
+        class="exercise-card__advancement exercise-card__advancement--ready"
       >
-        <template #append>
-          <v-btn
-            color="success"
-            :prepend-icon="mdiArrowRightCircleOutline"
-            :loading="isApplyingAdvancement"
-            @click="emit('advance-requested')"
-          >
-            Advance now
-          </v-btn>
-        </template>
-      </v-alert>
+        <div>
+          <div class="exercise-card__advancement-title">
+            Ready to advance to {{ exercise.readyToAdvanceStepName }}
+          </div>
+          <p class="exercise-card__advancement-copy mb-0">
+            Stay on {{ exercise.currentProgressStepName || exercise.currentStepName }} as long as you like, or advance now.
+          </p>
+        </div>
+        <v-btn
+          color="success"
+          :prepend-icon="mdiArrowRightCircleOutline"
+          :loading="isApplyingAdvancement"
+          @click="emit('advance-requested')"
+        >
+          Advance now
+        </v-btn>
+      </section>
 
-      <v-alert
+      <section
         v-else-if="hasAdvancedPastWorkoutSnapshot()"
-        type="info"
-        variant="tonal"
-        border="start"
-        :title="`Current training step: ${exercise.currentProgressStepName}`"
-        :text="`This workout was logged against ${exercise.currentStepName}. Your live progress has already moved on.`"
-      />
+        class="exercise-card__advancement"
+      >
+        <div class="exercise-card__advancement-title">
+          Current training step: {{ exercise.currentProgressStepName }}
+        </div>
+        <p class="exercise-card__advancement-copy mb-0">
+          This workout was logged against {{ exercise.currentStepName }}. Your live progress has already moved on.
+        </p>
+      </section>
 
-      <div class="d-flex flex-column ga-3">
+      <div class="exercise-card__sets">
         <template
           v-for="(setLog, index) in savedSetLogs"
           :key="String(setLog.id || '')"
@@ -281,16 +270,121 @@ function isEditingSetLog(setLog = {}) {
           @dirty-state-changed="createEditorDirty = $event"
         />
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+  </v-sheet>
 </template>
 
 <style scoped>
 .exercise-card {
-  background: rgba(var(--v-theme-surface-variant), 0.12);
+  background:
+    linear-gradient(135deg, rgba(var(--v-theme-primary), 0.06), transparent 18rem),
+    rgb(var(--v-theme-surface));
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.exercise-card__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.85rem;
+  justify-content: space-between;
+}
+
+.exercise-card__identity {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.exercise-card__icon {
+  flex: 0 0 auto;
+}
+
+.exercise-card__title-block {
+  min-width: 0;
+}
+
+.exercise-card__family {
+  color: rgba(var(--v-theme-on-surface), 0.58);
+  font-size: 0.78rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.exercise-card__step {
+  color: rgba(var(--v-theme-on-surface), 0.94);
+  font-size: clamp(1.2rem, 3vw, 1.55rem);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.exercise-card__body,
+.exercise-card__sets {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.exercise-card__meta {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  gap: 0.35rem 0.75rem;
 }
 
 .exercise-card__instruction {
+  color: rgba(var(--v-theme-on-surface), 0.68);
   line-height: 1.5;
+}
+
+.exercise-card__advancement {
+  background: rgba(var(--v-theme-info), 0.08);
+  border: 1px solid rgba(var(--v-theme-info), 0.22);
+  border-radius: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.85rem;
+}
+
+.exercise-card__advancement--ready {
+  background: rgba(var(--v-theme-success), 0.1);
+  border-color: rgba(var(--v-theme-success), 0.24);
+}
+
+.exercise-card__advancement-title {
+  color: rgba(var(--v-theme-on-surface), 0.92);
+  font-size: 0.96rem;
+  font-weight: 740;
+  line-height: 1.3;
+}
+
+.exercise-card__advancement-copy {
+  color: rgba(var(--v-theme-on-surface), 0.64);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 640px) {
+  .exercise-card {
+    padding: 0.9rem;
+  }
+
+  .exercise-card__advancement {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .exercise-card__advancement :deep(.v-btn) {
+    min-height: 48px;
+  }
 }
 </style>

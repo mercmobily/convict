@@ -59,7 +59,7 @@ config.surfaceDefinitions.console = {
 
 config.surfaceDefinitions.app = {
   id: "app",
-  label: "App",
+  label: "Convict",
   pagesRoot: "app",
   enabled: true,
   requiresAuth: true,

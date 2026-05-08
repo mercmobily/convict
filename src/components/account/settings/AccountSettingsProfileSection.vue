@@ -10,9 +10,10 @@ const profile = props.runtime.profile;
 </script>
 
 <template>
-  <v-sheet rounded="lg" border class="account-settings-section">
+  <v-sheet rounded="xl" border class="account-settings-section">
     <header class="account-settings-section__header">
       <h2 class="account-settings-section__title">Profile</h2>
+      <p class="account-settings-section__subtitle mb-0">Name, email, and avatar.</p>
     </header>
     <div class="account-settings-section__body">
       <v-form @submit.prevent="profile.submit" novalidate>
@@ -22,7 +23,6 @@ const profile = props.runtime.profile;
               <v-img v-if="profile.avatar.effectiveUrl" :src="profile.avatar.effectiveUrl" cover />
               <span v-else class="text-h6">{{ profile.initials.value }}</span>
             </v-avatar>
-            <div class="text-caption text-medium-emphasis">Preview size: {{ profile.avatar.size }} px</div>
           </v-col>
 
           <v-col cols="12" md="8">
@@ -95,6 +95,7 @@ const profile = props.runtime.profile;
 <style scoped>
 .account-settings-section {
   overflow: hidden;
+  background: rgb(var(--v-theme-surface));
 }
 
 .account-settings-section__header {
@@ -102,10 +103,18 @@ const profile = props.runtime.profile;
 }
 
 .account-settings-section__title {
-  font-size: 1rem;
-  font-weight: 650;
-  line-height: 1.2;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 760;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   margin: 0;
+}
+
+.account-settings-section__subtitle {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  margin-top: 0.25rem;
 }
 
 .account-settings-section__body {

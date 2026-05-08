@@ -36,7 +36,7 @@ test("console settings lands on the app settings page and console can route back
   await expect(page.getByText("No app-level console settings are enabled")).toBeVisible();
 
   await page.goto("/console");
-  await expect(page.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/home");
+  await expect(page.getByRole("link", { name: "Back to app" })).toHaveAttribute("href", "/app");
 
   await page.goto("/home");
   await expect(page).toHaveURL(/\/app\/?$/);

@@ -90,10 +90,12 @@ const { measurementLabel } = useConvictWorkoutPresentation();
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
-  background: rgba(var(--v-theme-surface), 0.72);
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding: 0.72rem 0;
+  border-bottom: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
+}
+
+.set-log-row:last-child {
+  border-bottom: 0;
 }
 
 .set-log-row__main {

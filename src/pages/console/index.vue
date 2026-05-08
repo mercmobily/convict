@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 
 const paths = usePaths();
-const homePagePath = computed(() => paths.page("/", { surface: "home" }));
+const appPagePath = computed(() => paths.page("/", { surface: "app" }));
 </script>
 
 <template>
@@ -14,16 +14,16 @@ const homePagePath = computed(() => paths.page("/", { surface: "home" }));
         <h1 class="console-home-screen__title">Operations Console</h1>
         <p class="text-body-2 text-medium-emphasis mb-0">Operator tools, scripts, and diagnostics.</p>
       </div>
-      <v-btn color="primary" variant="flat" :to="homePagePath">Back to home</v-btn>
+      <v-btn color="primary" variant="flat" :to="appPagePath">Back to app</v-btn>
     </header>
 
-    <v-sheet rounded="lg" border class="console-home-screen__panel">
+    <v-sheet rounded="xl" border class="console-home-screen__panel">
       <div class="console-home-screen__status-row">
-        <v-chip color="secondary" variant="tonal" label>Route: /console</v-chip>
-        <v-chip color="info" variant="tonal" label>Surface status: enabled</v-chip>
+        <v-chip color="info" variant="tonal" label>Enabled</v-chip>
+        <v-chip color="secondary" variant="tonal" label>/console</v-chip>
       </div>
       <p class="text-body-2 text-medium-emphasis mb-0">
-        Use this surface for operator actions and technical insights that should stay out of the end-user app.
+        Operator-only diagnostics and app-level controls stay here, away from the training flow.
       </p>
     </v-sheet>
   </section>
