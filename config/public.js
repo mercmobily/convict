@@ -99,3 +99,27 @@ config.assistantSurfaces.admin = {
   settingsSurfaceId: "console",
   configScope: "global"
 };
+
+// jskit-mobile-capacitor:config:start
+config.mobile = {
+  enabled: true,
+  strategy: "capacitor",
+  appId: "ai.jskit.convict",
+  appName: "Convict",
+  assetMode: "bundled",
+  devServerUrl: "",
+  apiBaseUrl: "http://127.0.0.1:3000",
+  auth: {
+    callbackPath: "/auth/login",
+    customScheme: "convict",
+    appLinkDomains: []
+  },
+  android: {
+    packageName: "ai.jskit.convict",
+    minSdk: 26,
+    targetSdk: 35,
+    versionCode: 1,
+    versionName: "0.1.0"
+  }
+};
+// jskit-mobile-capacitor:config:end

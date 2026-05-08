@@ -1,0 +1,10 @@
+{
+  "appId": "ai.jskit.convict",
+  "appName": "Convict",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

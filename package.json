@@ -43,7 +43,15 @@
     "dev:app": "VITE_SURFACE=app vite",
     "dev:admin": "VITE_SURFACE=admin vite",
     "build:app": "VITE_SURFACE=app vite build",
-    "build:admin": "VITE_SURFACE=admin vite build"
+    "build:admin": "VITE_SURFACE=admin vite build",
+    "mobile:dev:android": "jskit mobile dev android",
+    "mobile:devices:android": "jskit mobile devices android",
+    "mobile:sync:android": "jskit mobile sync android",
+    "mobile:tunnel:android": "jskit mobile tunnel android",
+    "mobile:restart:android": "jskit mobile restart android",
+    "mobile:run:android": "jskit mobile run android",
+    "mobile:build:web": "npm run build",
+    "mobile:build:android": "jskit mobile build android"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -114,7 +122,12 @@
     "@local/workout-occurrences": "file:packages/workout-occurrences",
     "@local/workout-occurrence-exercises": "file:packages/workout-occurrence-exercises",
     "@local/workout-set-logs": "file:packages/workout-set-logs",
-    "@local/progress": "file:packages/progress"
+    "@local/progress": "file:packages/progress",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/browser": "^7.0.1",
+    "@capacitor/core": "^7.4.3",
+    "@jskit-ai/mobile-capacitor": "0.x"
   },
   "devDependencies": {
     "@jskit-ai/agent-docs": "0.x",
@@ -124,6 +137,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "eslint": "^9.39.1",
     "vite": "^6.1.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@capacitor/cli": "^7.4.3"
   }
 }
