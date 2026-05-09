@@ -12,6 +12,9 @@ import {
 const DEV_USER_EMAIL = "slice3-playwright@convict.local";
 const USERNAME = "slice3-playwright";
 const DISPLAY_NAME = "Slice 3 Playwright";
+const LIVE_SYNC_USER_EMAIL = "slice3-live-sync@convict.local";
+const LIVE_SYNC_USERNAME = "slice3-live-sync";
+const LIVE_SYNC_DISPLAY_NAME = "Slice 3 Live Sync";
 const WEDNESDAY_DAY_OF_WEEK = 3;
 
 function buildWorkoutLoggingFixturePlan() {
@@ -134,6 +137,14 @@ test("user can log reps and seconds on an in-progress workout and see them after
   }
 
   let delayedRefreshRequest = false;
+  let resolveDelayedRefreshStarted = () => {};
+  let releaseDelayedRefresh = () => {};
+  const delayedRefreshStarted = new Promise((resolve) => {
+    resolveDelayedRefreshStarted = resolve;
+  });
+  const releaseDelayedRefreshRequest = new Promise((resolve) => {
+    releaseDelayedRefresh = resolve;
+  });
   await page.route(`**/api/today/workouts/${fixturePlan.targetWorkoutDate}`, async (route, request) => {
     if (request.method() !== "GET" || delayedRefreshRequest) {
       await route.continue();
@@ -141,12 +152,14 @@ test("user can log reps and seconds on an in-progress workout and see them after
     }
 
     delayedRefreshRequest = true;
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    resolveDelayedRefreshStarted();
+    await releaseDelayedRefreshRequest;
     await route.continue();
   });
 
   await handstandCard.locator('input[type="number"]').first().fill("35");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
+  await delayedRefreshStarted;
   const refreshChip = page.locator(".workout-detail-page__refresh-chip");
   await expect(refreshChip).toBeVisible();
   await expect(refreshChip).toHaveCSS("position", "fixed");
@@ -155,6 +168,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
     throw new Error("Unable to measure the workout card during refresh.");
   }
   expect(Math.abs(cardBoxDuringRefresh.y - cardBoxBeforeRefresh.y)).toBeLessThan(1);
+  releaseDelayedRefresh();
   await expect(locateSavedSetRow(handstandCard, 1, "35 seconds")).toBeVisible();
   await handstandCard.locator('input[type="number"]').first().fill("45");
   await handstandCard.getByRole("button", { name: "Save set" }).click();
@@ -277,4 +291,50 @@ test("deleting the middle saved set renumbers the visible list without gaps", as
 
   await expect(locateSavedSetRow(handstandCard, 3, "65 seconds")).toBeVisible();
   await expect(handstandCard.getByLabel("Seconds in new set")).toBeVisible();
+});
+
+test("saved workout set logs live-update another open client", async ({ page }) => {
+  const fixturePlan = buildWorkoutLoggingFixturePlan();
+  await ensureWorkoutLoggingFixture({
+    email: LIVE_SYNC_USER_EMAIL,
+    username: LIVE_SYNC_USERNAME,
+    displayName: LIVE_SYNC_DISPLAY_NAME,
+    startOn: fixturePlan.startOn
+  });
+
+  await devLoginAs(page, {
+    email: LIVE_SYNC_USER_EMAIL
+  });
+
+  await page.goto("/app");
+
+  const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
+  await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
+
+  const secondPage = await page.context().newPage();
+  await secondPage.goto(`/app/workouts/${fixturePlan.targetWorkoutDate}`);
+
+  const firstClientHandstandCard = page.locator(".exercise-card").filter({
+    hasText: "Handstand Push-ups"
+  }).first();
+  const secondClientHandstandCard = secondPage.locator(".exercise-card").filter({
+    hasText: "Handstand Push-ups"
+  }).first();
+  await expect(firstClientHandstandCard).toBeVisible();
+  await expect(secondClientHandstandCard).toBeVisible();
+
+  await firstClientHandstandCard.locator('input[type="number"]').first().fill("37");
+  await firstClientHandstandCard.getByRole("button", { name: "Save set" }).click();
+
+  await expect(locateSavedSetRow(firstClientHandstandCard, 1, "37 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(secondClientHandstandCard, 1, "37 seconds")).toBeVisible();
+
+  await secondClientHandstandCard.locator('input[type="number"]').first().fill("41");
+  await secondClientHandstandCard.getByRole("button", { name: "Save set" }).click();
+
+  await expect(locateSavedSetRow(secondClientHandstandCard, 2, "41 seconds")).toBeVisible();
+  await expect(locateSavedSetRow(firstClientHandstandCard, 2, "41 seconds")).toBeVisible();
+
+  await secondPage.close();
 });

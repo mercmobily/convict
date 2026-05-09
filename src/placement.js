@@ -271,3 +271,21 @@ addPlacement({
   order: 950,
   componentToken: "realtime.web.connection.indicator"
 });
+// jskit:ui-generator.page.link:app:/convict-conditioning
+{
+  addPlacement({
+    id: "ui-generator.page.app.convict-conditioning.link",
+    target: "shell.secondary-nav",
+    kind: "link",
+    surfaces: ["app"],
+    order: 155,
+    props: {
+      label: "Convict Conditioning",
+      icon: "mdi-book-open-page-variant-outline",
+      surface: "app",
+      scopedSuffix: "/convict-conditioning",
+      unscopedSuffix: "/convict-conditioning",
+    },
+    when: ({ auth }) => auth?.authenticated === true
+  });
+}

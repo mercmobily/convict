@@ -21,6 +21,7 @@ import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vu
 import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { normalizeDateOnly, parseDateOnly } from "@local/main/shared";
+import { resource as workoutSetLogResource } from "@local/workout-set-logs/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
@@ -39,12 +40,16 @@ const syncingExerciseByKey = reactive({});
 const scheduledForDate = computed(() => String(route.params.scheduledForDate || "").trim());
 const homePagePath = computed(() => paths.page("/"));
 const detailApiPath = computed(() => paths.api(`/today/workouts/${scheduledForDate.value}`));
+const workoutDetailRealtime = Object.freeze({
+  events: workoutSetLogResource.operations?.list?.realtime?.events || []
+});
 
 const workoutDetailResource = useEndpointResource({
   queryKey: computed(() => ["today-workout-detail", detailApiPath.value]),
   path: detailApiPath,
   fallbackLoadError: "Unable to load this workout.",
   refreshOnPull: true,
+  realtime: workoutDetailRealtime,
   enabled: computed(() => Boolean(scheduledForDate.value))
 });
 

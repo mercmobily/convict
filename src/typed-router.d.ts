@@ -43,6 +43,7 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       Record<never, never>,
       | '/app/'
+      | '/app/convict-conditioning/'
       | '/app/history/'
       | '/app/progress/'
       | '/app/workouts/[scheduledForDate]'
@@ -50,6 +51,13 @@ declare module 'vue-router/auto-routes' {
     '/app/': RouteRecordInfo<
       '/app/',
       '/app',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/app/convict-conditioning/': RouteRecordInfo<
+      '/app/convict-conditioning/',
+      '/app/convict-conditioning',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -181,6 +189,7 @@ declare module 'vue-router/auto-routes' {
       routes:
         | '/app'
         | '/app/'
+        | '/app/convict-conditioning/'
         | '/app/history/'
         | '/app/progress/'
         | '/app/workouts/[scheduledForDate]'
@@ -190,6 +199,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/app/index.vue': {
       routes:
         | '/app/'
+      views:
+        | never
+    }
+    'src/pages/app/convict-conditioning/index.vue': {
+      routes:
+        | '/app/convict-conditioning/'
       views:
         | never
     }

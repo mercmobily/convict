@@ -22,10 +22,13 @@
           "scripts": {}
         },
         "text": {},
-        "files": []
+        "vite": {},
+        "files": [],
+        "migrations": []
       },
       "options": {},
-      "installedAt": "1970-01-01T00:00:00.000Z"
+      "installedAt": "1970-01-01T00:00:00.000Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@jskit-ai/shell-web": {
       "packageId": "@jskit-ai/shell-web",
@@ -178,7 +181,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T08:19:34.637Z",
-      "migrationSyncVersion": "0.1.65"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/auth-core": {
       "packageId": "@jskit-ai/auth-core",
@@ -200,7 +203,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.140Z",
-      "migrationSyncVersion": "0.1.65"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/auth-provider-supabase-core": {
       "packageId": "@jskit-ai/auth-provider-supabase-core",
@@ -301,7 +304,7 @@
         "app-public-url": "http://localhost:5173"
       },
       "installedAt": "2026-05-05T15:43:39.390Z",
-      "migrationSyncVersion": "0.1.58"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/http-runtime": {
       "packageId": "@jskit-ai/http-runtime",
@@ -323,7 +326,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.147Z",
-      "migrationSyncVersion": "0.1.65"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/auth-web": {
       "packageId": "@jskit-ai/auth-web",
@@ -392,7 +395,7 @@
       },
       "options": {},
       "installedAt": "2026-05-06T12:05:38.860Z",
-      "migrationSyncVersion": "0.1.63"
+      "migrationSyncVersion": "0.1.68"
     },
     "@jskit-ai/database-runtime": {
       "packageId": "@jskit-ai/database-runtime",
@@ -435,7 +438,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.142Z",
-      "migrationSyncVersion": "0.1.66"
+      "migrationSyncVersion": "0.1.67"
     },
     "@jskit-ai/database-runtime-mysql": {
       "packageId": "@jskit-ai/database-runtime-mysql",
@@ -541,7 +544,7 @@
         "db-password": "ppp"
       },
       "installedAt": "2026-05-05T15:43:48.972Z",
-      "migrationSyncVersion": "0.1.58"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/uploads-runtime": {
       "packageId": "@jskit-ai/uploads-runtime",
@@ -563,7 +566,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.147Z",
-      "migrationSyncVersion": "0.1.44"
+      "migrationSyncVersion": "0.1.45"
     },
     "@jskit-ai/uploads-image-web": {
       "packageId": "@jskit-ai/uploads-image-web",
@@ -585,7 +588,7 @@
       },
       "options": {},
       "installedAt": "2026-05-06T12:05:38.866Z",
-      "migrationSyncVersion": "0.1.40"
+      "migrationSyncVersion": "0.1.45"
     },
     "@jskit-ai/json-rest-api-core": {
       "packageId": "@jskit-ai/json-rest-api-core",
@@ -607,7 +610,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.147Z",
-      "migrationSyncVersion": "0.1.11"
+      "migrationSyncVersion": "0.1.12"
     },
     "@jskit-ai/resource-core": {
       "packageId": "@jskit-ai/resource-core",
@@ -629,7 +632,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.147Z",
-      "migrationSyncVersion": "0.1.11"
+      "migrationSyncVersion": "0.1.12"
     },
     "@jskit-ai/resource-crud-core": {
       "packageId": "@jskit-ai/resource-crud-core",
@@ -651,7 +654,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.147Z",
-      "migrationSyncVersion": "0.1.11"
+      "migrationSyncVersion": "0.1.12"
     },
     "@jskit-ai/storage-runtime": {
       "packageId": "@jskit-ai/storage-runtime",
@@ -673,7 +676,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.147Z",
-      "migrationSyncVersion": "0.1.65"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/users-core": {
       "packageId": "@jskit-ai/users-core",
@@ -816,7 +819,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T10:26:21.148Z",
-      "migrationSyncVersion": "0.1.76",
+      "migrationSyncVersion": "0.1.77",
       "warnings": [
         "@jskit-ai/users-core: skipped migration users-core-generic-initial-schema (already managed at migrations/20260505154452_users-core-generic-initial-schema.cjs).",
         "@jskit-ai/users-core: skipped migration users-core-profile-username-schema (already managed at migrations/20260505154452_users-core-profile-username-schema.cjs)."
@@ -883,7 +886,7 @@
       },
       "options": {},
       "installedAt": "2026-05-06T12:05:38.867Z",
-      "migrationSyncVersion": "0.1.77"
+      "migrationSyncVersion": "0.1.82"
     },
     "@local/users": {
       "packageId": "@local/users",
@@ -905,7 +908,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-05T15:45:05.293Z"
+      "installedAt": "2026-05-05T15:45:05.293Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@jskit-ai/console-core": {
       "packageId": "@jskit-ai/console-core",
@@ -934,7 +938,7 @@
             "id": "console-core-generic-initial-schema",
             "path": "migrations/20260505154508_console-core-generic-initial-schema.cjs",
             "hash": "f0e60826d827b88727fb90d9b9aa3dd0788ac95a1692b34845337b99ddb52d64",
-            "skipped": false,
+            "skipped": true,
             "reason": "Install console settings schema migration.",
             "category": "migration"
           }
@@ -942,7 +946,10 @@
       },
       "options": {},
       "installedAt": "2026-05-05T15:45:08.700Z",
-      "migrationSyncVersion": "0.1.22"
+      "migrationSyncVersion": "0.1.30",
+      "warnings": [
+        "@jskit-ai/console-core: skipped migration console-core-generic-initial-schema (already managed at migrations/20260505154508_console-core-generic-initial-schema.cjs)."
+      ]
     },
     "@jskit-ai/console-web": {
       "packageId": "@jskit-ai/console-web",
@@ -1064,7 +1071,7 @@
       },
       "options": {},
       "installedAt": "2026-05-05T15:45:15.326Z",
-      "migrationSyncVersion": "0.1.27"
+      "migrationSyncVersion": "0.1.35"
     },
     "@local/program-assignment": {
       "packageId": "@local/program-assignment",
@@ -1086,7 +1093,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T03:32:44.658Z"
+      "installedAt": "2026-05-06T03:32:44.658Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/today": {
       "packageId": "@local/today",
@@ -1108,7 +1116,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T04:54:20.143Z"
+      "installedAt": "2026-05-06T04:54:20.143Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@jskit-ai/realtime": {
       "packageId": "@jskit-ai/realtime",
@@ -1159,7 +1168,7 @@
         "realtime-redis-url": ""
       },
       "installedAt": "2026-05-06T12:05:38.795Z",
-      "migrationSyncVersion": "0.1.61"
+      "migrationSyncVersion": "0.1.66"
     },
     "@jskit-ai/crud-core": {
       "packageId": "@jskit-ai/crud-core",
@@ -1181,7 +1190,7 @@
       },
       "options": {},
       "installedAt": "2026-05-06T12:05:38.876Z",
-      "migrationSyncVersion": "0.1.70"
+      "migrationSyncVersion": "0.1.75"
     },
     "@local/exercise-steps": {
       "packageId": "@local/exercise-steps",
@@ -1203,7 +1212,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:16.864Z"
+      "installedAt": "2026-05-06T08:13:16.864Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/exercises": {
       "packageId": "@local/exercises",
@@ -1225,7 +1235,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:31.016Z"
+      "installedAt": "2026-05-06T08:13:31.016Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/programs": {
       "packageId": "@local/programs",
@@ -1247,7 +1258,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:31.568Z"
+      "installedAt": "2026-05-06T08:13:31.568Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/program-schedule-entries": {
       "packageId": "@local/program-schedule-entries",
@@ -1269,7 +1281,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:32.337Z"
+      "installedAt": "2026-05-06T08:13:32.337Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/user-program-assignments": {
       "packageId": "@local/user-program-assignments",
@@ -1291,7 +1304,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:33.150Z"
+      "installedAt": "2026-05-06T08:13:33.150Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/user-program-assignment-revisions": {
       "packageId": "@local/user-program-assignment-revisions",
@@ -1313,7 +1327,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:34.058Z"
+      "installedAt": "2026-05-06T08:13:34.058Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/personal-step-variations": {
       "packageId": "@local/personal-step-variations",
@@ -1335,7 +1350,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:34.990Z"
+      "installedAt": "2026-05-06T08:13:34.990Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/user-exercise-progress": {
       "packageId": "@local/user-exercise-progress",
@@ -1357,7 +1373,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:35.934Z"
+      "installedAt": "2026-05-06T08:13:35.934Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/workout-occurrences": {
       "packageId": "@local/workout-occurrences",
@@ -1379,7 +1396,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:36.882Z"
+      "installedAt": "2026-05-06T08:13:36.882Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/workout-occurrence-exercises": {
       "packageId": "@local/workout-occurrence-exercises",
@@ -1401,7 +1419,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:37.744Z"
+      "installedAt": "2026-05-06T08:13:37.744Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/workout-set-logs": {
       "packageId": "@local/workout-set-logs",
@@ -1423,7 +1442,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T08:13:38.695Z"
+      "installedAt": "2026-05-06T08:13:38.695Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/program-templates": {
       "packageId": "@local/program-templates",
@@ -1468,7 +1488,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T12:05:38.895Z"
+      "installedAt": "2026-05-06T12:05:38.895Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@local/progress": {
       "packageId": "@local/progress",
@@ -1490,7 +1511,8 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-06T23:42:33.285Z"
+      "installedAt": "2026-05-06T23:42:33.285Z",
+      "migrationSyncVersion": "0.1.0"
     },
     "@jskit-ai/mobile-capacitor": {
       "packageId": "@jskit-ai/mobile-capacitor",
@@ -1534,7 +1556,7 @@
       },
       "options": {},
       "installedAt": "2026-05-08T14:42:29.198Z",
-      "migrationSyncVersion": "0.1.3"
+      "migrationSyncVersion": "0.1.4"
     }
   }
 }

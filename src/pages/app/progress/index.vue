@@ -118,7 +118,7 @@ function exerciseMetaParts(exercise = {}) {
 </script>
 
 <template>
-  <section class="progress-page pa-4">
+  <section class="progress-page">
     <div class="progress-page__header mb-4">
       <div>
         <h1 class="text-h5 font-weight-bold">Progress</h1>
@@ -372,10 +372,6 @@ function exerciseMetaParts(exercise = {}) {
 }
 
 @media (max-width: 640px) {
-  .progress-page {
-    padding: 1rem !important;
-  }
-
   .progress-page__header,
   .progress-exercise-card__ready {
     align-items: stretch;
