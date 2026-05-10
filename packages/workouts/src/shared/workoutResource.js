@@ -139,14 +139,8 @@ const resource = defineCrudResource({
     programAssignmentRevisionIds: { type: "array", actualField: "program_assignment_revision_id", filterOperator: "in" },
     scheduledForDateRange: {
       type: "array",
-      applyFilter(query, rawValue) {
-        const values = Array.isArray(rawValue) ? rawValue : [];
-        const [startDate, endDate] = values.map((value) => String(value || "").trim());
-        if (!startDate || !endDate) {
-          return;
-        }
-        query.whereBetween("scheduled_for_date", [startDate, endDate]);
-      }
+      actualField: "scheduled_for_date",
+      filterOperator: "between"
     },
     q: { type: "string", oneOf: ["status","notes"], filterOperator: "like", splitBy: " ", matchAll: true },
   },

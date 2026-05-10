@@ -1,0 +1,10 @@
+{
+  "name": "@local/workflow-support",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server/jsonRestWorkflow": "./src/server/jsonRestWorkflow.js",
+    "./server/requestContext": "./src/server/requestContext.js"
+  }
+}

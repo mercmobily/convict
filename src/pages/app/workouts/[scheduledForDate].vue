@@ -17,7 +17,7 @@ import {
   mdiPlayCircleOutline
 } from "@mdi/js";
 import { useRoute, useRouter } from "vue-router";
-import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vue";
+import WorkoutExerciseSetCard from "@/components/WorkoutExerciseSetCard.vue";
 import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { normalizeDateOnly, parseDateOnly } from "@local/main/shared";
@@ -183,7 +183,7 @@ const isWorkoutSyncing = computed(() => {
 const savedWorkoutSetCount = computed(() => {
   const exercises = Array.isArray(workout.value?.exercises) ? workout.value.exercises : [];
   return exercises.reduce((totalCount, exercise) => {
-    const setCount = Array.isArray(exercise.setLogs) ? exercise.setLogs.length : 0;
+    const setCount = Array.isArray(exercise.workoutSets) ? exercise.workoutSets.length : 0;
     return totalCount + setCount;
   }, 0);
 });
@@ -351,7 +351,7 @@ async function goBackToToday() {
         v-if="workout && Array.isArray(workout.exercises) && workout.exercises.length > 0"
         class="exercise-grid"
       >
-        <WorkoutExerciseSetLogCard
+        <WorkoutExerciseSetCard
           v-for="exercise in workout.exercises"
           :key="`detail-${exerciseCardKey(exercise)}`"
           :exercise="exercise"

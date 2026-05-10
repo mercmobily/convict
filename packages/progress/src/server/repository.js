@@ -1,32 +1,28 @@
 import {
-  createJsonRestContext,
-  extractJsonRestCollectionRows
-} from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
+  compactIds,
+  jsonRestContext,
+  simplifiedRows,
+  transaction
+} from "@local/workflow-support/server/jsonRestWorkflow";
 import { normalizeSimplifiedRow } from "@local/main/shared";
 
-function compactIds(values = []) {
-  return [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || "").trim()).filter(Boolean))];
-}
-
-function jsonRestContext(options = {}) {
-  return createJsonRestContext(options?.context || null);
-}
-
-function transaction(options = {}) {
-  return options?.trx || null;
-}
-
 async function queryRows(api, resourceName, queryParams = {}, options = {}, normalize = (row) => row) {
-  return extractJsonRestCollectionRows(
-    await api.resources[resourceName].query(
+  const resource = api?.resources?.[resourceName];
+  if (!resource || typeof resource.query !== "function") {
+    throw new TypeError(`Missing JSON REST resource ${resourceName}.`);
+  }
+
+  return simplifiedRows(
+    await resource.query(
       {
         queryParams,
         transaction: transaction(options),
         simplified: true
       },
       jsonRestContext(options)
-    )
-  ).map((row) => normalize(row)).filter(Boolean);
+    ),
+    normalize
+  );
 }
 
 function normalizeStepRow(row = null) {

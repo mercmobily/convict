@@ -47,7 +47,7 @@ async function ensureWorkoutLoggingFixture({
   );
 }
 
-async function fetchSavedSetLogs(userId, scheduledForDate) {
+async function fetchSavedWorkoutSets(userId, scheduledForDate) {
   const connection = await createDbConnection();
 
   try {
@@ -80,7 +80,7 @@ async function fetchSavedSetLogs(userId, scheduledForDate) {
 }
 
 function locateSavedSetRow(card, displaySetNumber, valueText) {
-  return card.locator(".set-log-row").filter({
+  return card.locator(".workout-set-row").filter({
     hasText: `Set ${displaySetNumber}`
   }).filter({
     hasText: valueText
@@ -179,7 +179,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
   await handstandCard.getByRole("button", { name: "Edit set 1" }).click();
-  const editHandstandSetOne = handstandCard.locator(".set-log-editor").first();
+  const editHandstandSetOne = handstandCard.locator(".workout-set-editor").first();
   await expect(editHandstandSetOne).toBeVisible();
   await expect(editHandstandSetOne).not.toContainText("Edit set 1");
   await expect(editHandstandSetOne).not.toContainText("Update this saved set.");
@@ -209,8 +209,8 @@ test("user can log reps and seconds on an in-progress workout and see them after
   await expect(bridgesCard.getByText("LOG NOT SAVED")).toHaveCount(0);
   await expect(page.locator(".workout-detail-page").getByText("Set logs saved.")).toHaveCount(0);
 
-  const savedSetLogs = await fetchSavedSetLogs(fixtureState.userId, fixturePlan.targetWorkoutDate);
-  expect(savedSetLogs).toEqual([
+  const savedWorkoutSets = await fetchSavedWorkoutSets(fixtureState.userId, fixturePlan.targetWorkoutDate);
+  expect(savedWorkoutSets).toEqual([
     {
       exerciseName: "Wall Headstands",
       measurementUnit: "seconds",
@@ -293,7 +293,7 @@ test("deleting the middle saved set renumbers the visible list without gaps", as
   await expect(handstandCard.getByLabel("Seconds in new set")).toBeVisible();
 });
 
-test("saved workout set logs live-update another open client", async ({ page }) => {
+test("saved workout sets live-update another open client", async ({ page }) => {
   const fixturePlan = buildWorkoutLoggingFixturePlan();
   await ensureWorkoutLoggingFixture({
     email: LIVE_SYNC_USER_EMAIL,

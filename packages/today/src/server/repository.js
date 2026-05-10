@@ -1,26 +1,13 @@
 import {
-  createJsonRestContext,
-  extractJsonRestCollectionRows
-} from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
+  compactIds,
+  documentId,
+  jsonRestContext,
+  simplifiedRows,
+  transaction
+} from "@local/workflow-support/server/jsonRestWorkflow";
 import { normalizeSimplifiedRow } from "@local/main/shared";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
-
-function compactIds(values = []) {
-  return [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || "").trim()).filter(Boolean))];
-}
-
-function jsonRestContext(options = {}) {
-  return createJsonRestContext(options?.context || null);
-}
-
-function transaction(options = {}) {
-  return options?.trx || null;
-}
-
-function documentId(document = null) {
-  return document?.data?.id ? String(document.data.id) : null;
-}
 
 async function queryRows(api, resourceName, queryParams = {}, options = {}, normalize = (row) => row) {
   const resource = api?.resources?.[resourceName];
@@ -28,7 +15,7 @@ async function queryRows(api, resourceName, queryParams = {}, options = {}, norm
     throw new TypeError(`Missing JSON REST resource ${resourceName}.`);
   }
 
-  return extractJsonRestCollectionRows(
+  return simplifiedRows(
     await resource.query(
       {
         queryParams,
@@ -36,8 +23,9 @@ async function queryRows(api, resourceName, queryParams = {}, options = {}, norm
         simplified: true
       },
       jsonRestContext(options)
-    )
-  ).map((row) => normalize(row)).filter(Boolean);
+    ),
+    normalize
+  );
 }
 
 function normalizeAssignmentRow(row = null) {
@@ -166,7 +154,7 @@ function normalizeWorkoutExerciseRow(row = null) {
   return normalized;
 }
 
-function normalizeSetLogRow(row = null) {
+function normalizeWorkoutSetRow(row = null) {
   const normalized = normalizeSimplifiedRow(row, {
     relationIds: {
       workoutExerciseId: "workoutExercise"
@@ -517,7 +505,7 @@ function createRepository({
       );
     },
 
-    async listSetLogsByWorkoutExerciseIds(workoutExerciseIds = [], options = {}) {
+    async listWorkoutSetsByWorkoutExerciseIds(workoutExerciseIds = [], options = {}) {
       const ids = compactIds(workoutExerciseIds);
       if (ids.length < 1) {
         return [];
@@ -537,7 +525,7 @@ function createRepository({
           }
         },
         options,
-        normalizeSetLogRow
+        normalizeWorkoutSetRow
       );
     },
 

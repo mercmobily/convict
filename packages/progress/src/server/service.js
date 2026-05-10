@@ -3,7 +3,7 @@ import {
   localTodayDateString,
   withoutConvictPrefix
 } from "@local/main/shared";
-import { resolveCurrentUserId } from "@local/main/shared/requestContext";
+import { resolveCurrentUserId } from "@local/workflow-support/server/requestContext";
 
 function progressStatus(progressRow = null) {
   if (progressRow?.readyToAdvanceInstanceProgressionEntryId) {

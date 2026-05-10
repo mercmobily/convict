@@ -6,7 +6,7 @@ import {
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 
 defineProps({
-  setLog: {
+  workoutSet: {
     type: Object,
     required: true
   },
@@ -41,15 +41,15 @@ const { measurementLabel } = useConvictWorkoutPresentation();
 </script>
 
 <template>
-  <div class="set-log-row">
-    <div class="set-log-row__main">
+  <div class="workout-set-row">
+    <div class="workout-set-row__main">
       <div class="text-body-2 font-weight-medium">Set {{ displaySetNumber }}</div>
       <div class="text-body-2 text-medium-emphasis">
-        {{ setLog.performedValue }} {{ measurementLabel(measurementUnit) }}
+        {{ workoutSet.performedValue }} {{ measurementLabel(measurementUnit) }}
       </div>
     </div>
 
-    <div class="set-log-row__actions">
+    <div class="workout-set-row__actions">
       <v-chip
         v-if="qualifiesForProgression"
         color="success"
@@ -85,7 +85,7 @@ const { measurementLabel } = useConvictWorkoutPresentation();
 </template>
 
 <style scoped>
-.set-log-row {
+.workout-set-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,17 +94,17 @@ const { measurementLabel } = useConvictWorkoutPresentation();
   border-bottom: 1px solid rgba(var(--v-border-color), calc(var(--v-border-opacity) * 0.72));
 }
 
-.set-log-row:last-child {
+.workout-set-row:last-child {
   border-bottom: 0;
 }
 
-.set-log-row__main {
+.workout-set-row__main {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
 
-.set-log-row__actions {
+.workout-set-row__actions {
   display: flex;
   align-items: center;
   gap: 0.25rem;

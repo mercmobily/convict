@@ -4,8 +4,8 @@ import {
   mdiArrowRightCircleOutline,
   mdiDumbbell
 } from "@mdi/js";
-import WorkoutSetLogAddEditElement from "@/components/WorkoutSetLogAddEditElement.vue";
-import WorkoutSetLogListElement from "@/components/WorkoutSetLogListElement.vue";
+import WorkoutSetAddEditElement from "@/components/WorkoutSetAddEditElement.vue";
+import WorkoutSetListElement from "@/components/WorkoutSetListElement.vue";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 
@@ -48,7 +48,7 @@ const workoutExerciseId = computed(() => String(props.exercise?.workoutExerciseI
 const canEdit = computed(() => props.workoutStatus === "in_progress" && Boolean(workoutExerciseId.value));
 const measurementUnit = computed(() => measurementLabel(props.exercise?.measurementUnit));
 
-const deleteSetLogCommand = useCommand({
+const deleteWorkoutSetCommand = useCommand({
   apiSuffix: () => `/workout-sets/${activeDeleteRecordId.value}`,
   writeMethod: "DELETE",
   suppressSuccessMessage: true,
@@ -58,8 +58,8 @@ const deleteSetLogCommand = useCommand({
   }
 });
 
-const savedSetLogs = computed(() => {
-  const items = Array.isArray(props.exercise?.setLogs) ? props.exercise.setLogs : [];
+const savedWorkoutSets = computed(() => {
+  const items = Array.isArray(props.exercise?.workoutSets) ? props.exercise.workoutSets : [];
   return items.slice();
 });
 
@@ -97,10 +97,10 @@ function hasAdvancedPastWorkoutSnapshot() {
   return Boolean(props.exercise?.hasProgressStepChanged);
 }
 
-function openEditEditor(setLog = {}) {
+function openEditEditor(workoutSet = {}) {
   editState.value = {
-    recordId: String(setLog.id || "").trim(),
-    initialPerformedValue: String(setLog.performedValue ?? "")
+    recordId: String(workoutSet.id || "").trim(),
+    initialPerformedValue: String(workoutSet.performedValue ?? "")
   };
 }
 
@@ -119,8 +119,8 @@ async function handleEditSaved() {
   emit("logs-changed", props.exercise);
 }
 
-async function deleteSetLog(setLog = {}) {
-  const recordId = String(setLog.id || "").trim();
+async function deleteWorkoutSet(workoutSet = {}) {
+  const recordId = String(workoutSet.id || "").trim();
   if (!recordId) {
     return;
   }
@@ -131,23 +131,23 @@ async function deleteSetLog(setLog = {}) {
 
   activeDeleteRecordId.value = recordId;
   try {
-    await deleteSetLogCommand.run();
+    await deleteWorkoutSetCommand.run();
   } finally {
     activeDeleteRecordId.value = "";
   }
 }
 
-function isDeletingSetLog(setLog = {}) {
+function isDeletingWorkoutSet(workoutSet = {}) {
   return Boolean(
-    deleteSetLogCommand.isRunning &&
-    activeDeleteRecordId.value === String(setLog.id || "")
+    deleteWorkoutSetCommand.isRunning &&
+    activeDeleteRecordId.value === String(workoutSet.id || "")
   );
 }
 
-function isEditingSetLog(setLog = {}) {
+function isEditingWorkoutSet(workoutSet = {}) {
   return Boolean(
     editState.value &&
-    editState.value.recordId === String(setLog.id || "").trim()
+    editState.value.recordId === String(workoutSet.id || "").trim()
   );
 }
 </script>
@@ -226,11 +226,11 @@ function isEditingSetLog(setLog = {}) {
 
       <div class="exercise-card__sets">
         <template
-          v-for="(setLog, index) in savedSetLogs"
-          :key="String(setLog.id || '')"
+          v-for="(workoutSet, index) in savedWorkoutSets"
+          :key="String(workoutSet.id || '')"
         >
-          <WorkoutSetLogAddEditElement
-            v-if="isEditingSetLog(setLog)"
+          <WorkoutSetAddEditElement
+            v-if="isEditingWorkoutSet(workoutSet)"
             :key="`edit:${editState.recordId}`"
             :exercise="exercise"
             mode="patch"
@@ -241,27 +241,27 @@ function isEditingSetLog(setLog = {}) {
             @dirty-state-changed="editEditorDirty = $event"
           />
 
-          <WorkoutSetLogListElement
+          <WorkoutSetListElement
             v-else
-            :set-log="setLog"
+            :workout-set="workoutSet"
             :display-set-number="index + 1"
             :measurement-unit="exercise.measurementUnit"
-            :qualifies-for-progression="Boolean(setLog.qualifiesForProgression)"
+            :qualifies-for-progression="Boolean(workoutSet.qualifiesForProgression)"
             :can-edit="canEdit"
-            :is-deleting="isDeletingSetLog(setLog)"
-            @edit="openEditEditor(setLog)"
-            @delete="deleteSetLog(setLog)"
+            :is-deleting="isDeletingWorkoutSet(workoutSet)"
+            @edit="openEditEditor(workoutSet)"
+            @delete="deleteWorkoutSet(workoutSet)"
           />
         </template>
 
         <p
-          v-if="savedSetLogs.length < 1"
+          v-if="savedWorkoutSets.length < 1"
           class="text-body-2 text-medium-emphasis mb-0"
         >
           No saved sets yet.
         </p>
 
-        <WorkoutSetLogAddEditElement
+        <WorkoutSetAddEditElement
           v-if="canEdit"
           :exercise="exercise"
           mode="create"

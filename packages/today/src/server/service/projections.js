@@ -38,13 +38,13 @@ function buildRevisionsByAssignmentId(revisions = []) {
 function buildScheduleIndex(scheduleEntries = []) {
   const index = new Map();
   for (const entry of scheduleEntries) {
-    const programId = String(entry.programId || "");
+    const instanceProgramId = String(entry.instanceProgramId || "");
     const dayOfWeek = Number(entry.dayOfWeek || 0);
-    if (!index.has(programId)) {
-      index.set(programId, new Map());
+    if (!index.has(instanceProgramId)) {
+      index.set(instanceProgramId, new Map());
     }
 
-    const dayIndex = index.get(programId);
+    const dayIndex = index.get(instanceProgramId);
     if (!dayIndex.has(dayOfWeek)) {
       dayIndex.set(dayOfWeek, []);
     }
@@ -64,11 +64,11 @@ function buildScheduleIndex(scheduleEntries = []) {
 function buildProgramRoutineIndex(programRoutines = []) {
   const index = new Map();
   for (const routine of programRoutines) {
-    const programId = String(routine.programId || "");
-    if (!index.has(programId)) {
-      index.set(programId, []);
+    const instanceProgramId = String(routine.instanceProgramId || "");
+    if (!index.has(instanceProgramId)) {
+      index.set(instanceProgramId, []);
     }
-    index.get(programId).push(routine);
+    index.get(instanceProgramId).push(routine);
   }
   for (const rows of index.values()) {
     rows.sort((left, right) => {
@@ -126,7 +126,7 @@ function buildWorkoutExercisesIndex(rows = []) {
   return index;
 }
 
-function buildSetLogIndex(rows = []) {
+function buildWorkoutSetIndex(rows = []) {
   const index = new Map();
   for (const row of rows) {
     const workoutExerciseId = String(row.workoutExerciseId || "");
@@ -451,27 +451,27 @@ function qualifiesSetForProgression(exercise = {}, performedValue = 0) {
   return threshold > 0 && performedValue >= threshold;
 }
 
-function decorateSetLogForExercise(exercise = {}, setLog = {}) {
+function decorateWorkoutSetForExercise(exercise = {}, workoutSet = {}) {
   return {
-    ...setLog,
-    qualifiesForProgression: qualifiesSetForProgression(exercise, Number(setLog.performedValue || 0))
+    ...workoutSet,
+    qualifiesForProgression: qualifiesSetForProgression(exercise, Number(workoutSet.performedValue || 0))
   };
 }
 
-function deriveWorkoutExerciseStatus(exercise = {}, setLogs = []) {
-  if (!Array.isArray(setLogs) || setLogs.length < 1) {
+function deriveWorkoutExerciseStatus(exercise = {}, workoutSets = []) {
+  if (!Array.isArray(workoutSets) || workoutSets.length < 1) {
     return "pending";
   }
 
   const plannedWorkSetsMin = Number(exercise.plannedWorkSetsMin || 0);
-  if (plannedWorkSetsMin > 0 && setLogs.length < plannedWorkSetsMin) {
+  if (plannedWorkSetsMin > 0 && workoutSets.length < plannedWorkSetsMin) {
     return "in_progress";
   }
 
   return "logged";
 }
 
-function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByWorkoutExerciseId = new Map()) {
+function attachWorkoutSetsToWorkoutProjection(workoutProjection = null, workoutSetsByWorkoutExerciseId = new Map()) {
   if (!workoutProjection) {
     return null;
   }
@@ -482,13 +482,13 @@ function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByWor
     canLog: workoutProjection.status === "in_progress",
     exercises: Array.isArray(workoutProjection.exercises)
       ? workoutProjection.exercises.map((exercise) => {
-          const setLogs = (setLogsByWorkoutExerciseId.get(String(exercise.workoutExerciseId || "")) || [])
-            .map((setLog) => decorateSetLogForExercise(exercise, setLog));
+          const workoutSets = (workoutSetsByWorkoutExerciseId.get(String(exercise.workoutExerciseId || "")) || [])
+            .map((workoutSet) => decorateWorkoutSetForExercise(exercise, workoutSet));
 
           return {
             ...exercise,
-            exerciseStatus: deriveWorkoutExerciseStatus(exercise, setLogs),
-            setLogs
+            exerciseStatus: deriveWorkoutExerciseStatus(exercise, workoutSets),
+            workoutSets
           };
         })
       : []
@@ -578,9 +578,10 @@ function buildProjectedWorkout(
     return null;
   }
 
-  const program = programsById.get(String(revision.programId || "")) || null;
-  const scheduleEntries = (scheduleIndex.get(String(revision.programId || ""))?.get(dayOfWeek) || []).slice();
-  const programRoutines = programRoutineIndex.get(String(revision.programId || "")) || [];
+  const instanceProgramId = String(revision.instanceProgramId || "");
+  const program = programsById.get(instanceProgramId) || null;
+  const scheduleEntries = (scheduleIndex.get(instanceProgramId)?.get(dayOfWeek) || []).slice();
+  const programRoutines = programRoutineIndex.get(instanceProgramId) || [];
 
   if (workout?.id) {
     return {
@@ -590,7 +591,7 @@ function buildProjectedWorkout(
       status: workout.status,
       workoutId: workout.id,
       revisionId: workout.programAssignmentRevisionId || revision.id,
-      instanceProgramId: revision.instanceProgramId,
+      instanceProgramId,
       programName: program?.name || "",
       dayOfWeek,
       dayLabel,
@@ -616,7 +617,7 @@ function buildProjectedWorkout(
       status: "rest_day",
       workoutId: null,
       revisionId: revision.id,
-      instanceProgramId: revision.instanceProgramId,
+      instanceProgramId,
       programName: program?.name || "",
       dayOfWeek,
       dayLabel,
@@ -632,7 +633,7 @@ function buildProjectedWorkout(
     status: dateString < todayDate ? "overdue" : "scheduled",
     workoutId: null,
     revisionId: revision.id,
-    instanceProgramId: revision.instanceProgramId,
+    instanceProgramId,
     programName: program?.name || "",
     dayOfWeek,
     dayLabel,
@@ -674,7 +675,7 @@ function buildWorkoutExerciseSnapshots(workoutId, workoutProjection = {}) {
 }
 
 export {
-  attachSetLogsToWorkoutProjection,
+  attachWorkoutSetsToWorkoutProjection,
   buildFirstProgressionEntryIndex,
   buildNextProgressionEntryIndex,
   buildWorkoutExerciseProjection,
@@ -688,7 +689,7 @@ export {
   buildProjectedWorkout,
   buildRevisionsByAssignmentId,
   buildScheduleIndex,
-  buildSetLogIndex,
+  buildWorkoutSetIndex,
   buildStepIndex,
   findEffectiveRevision,
   mergeProgressStateIntoWorkoutProjection,

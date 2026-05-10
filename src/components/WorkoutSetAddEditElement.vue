@@ -82,7 +82,7 @@ const formRuntime = useCrudAddEdit({
     routeRecordId: normalizedRecordId,
     readEnabled: false,
     writeMethod: isCreateMode.value ? "POST" : "PATCH",
-    placementSource: "convict.workout-set-logs.editor",
+    placementSource: "convict.workout-sets.editor",
     fallbackSaveError: isCreateMode.value ? "Unable to add this set." : "Unable to update this set.",
     onSaveSuccess: async () => {
       if (isCreateMode.value) {
@@ -148,10 +148,10 @@ function cancel() {
   <v-sheet
     rounded="lg"
     border
-    class="set-log-editor set-log-editor--inline"
+    class="workout-set-editor workout-set-editor--inline"
   >
     <div
-      class="d-flex flex-column ga-3 set-log-editor__content set-log-editor__content--inline"
+      class="d-flex flex-column ga-3 workout-set-editor__content workout-set-editor__content--inline"
     >
       <v-alert
         v-if="addEdit.message && addEdit.messageType === 'error'"
@@ -162,7 +162,7 @@ function cancel() {
       />
 
       <v-form @submit.prevent="submit" novalidate>
-        <div class="set-log-editor__form-row">
+        <div class="workout-set-editor__form-row">
           <v-text-field
             v-model="formState.performedValue"
             :label="fieldLabel"
@@ -171,13 +171,13 @@ function cancel() {
             step="1"
             variant="outlined"
             density="comfortable"
-            class="set-log-editor__field"
+            class="workout-set-editor__field"
             :disabled="addEdit.isFieldLocked"
             hide-details="auto"
             :error-messages="resolveFieldErrors('performedValue')"
           />
 
-          <div class="set-log-editor__actions">
+          <div class="workout-set-editor__actions">
             <v-btn
               v-if="!isCreateMode"
               variant="text"
@@ -202,41 +202,41 @@ function cancel() {
 </template>
 
 <style scoped>
-.set-log-editor {
+.workout-set-editor {
   border-radius: 1rem;
   background: rgba(var(--v-theme-primary), 0.08);
   color: inherit;
 }
 
-.set-log-editor--inline {
+.workout-set-editor--inline {
   background: rgba(var(--v-theme-surface), 0.72);
 }
 
-.set-log-editor__content {
+.workout-set-editor__content {
   padding: 0.85rem;
 }
 
-.set-log-editor__content--inline {
+.workout-set-editor__content--inline {
   padding: 0.75rem 1rem !important;
 }
 
-.set-log-editor__form-row {
+.workout-set-editor__form-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;
 }
 
-.set-log-editor__field {
+.workout-set-editor__field {
   flex: 1 1 14rem;
   min-width: 10.75rem;
 }
 
-.set-log-editor__field :deep(.v-input__control) {
+.workout-set-editor__field :deep(.v-input__control) {
   min-width: 0;
 }
 
-.set-log-editor__actions {
+.workout-set-editor__actions {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;

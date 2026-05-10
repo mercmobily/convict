@@ -72,8 +72,10 @@ test("user can choose and start a Convict Conditioning program", async ({ page }
   await page.locator('input[type="date"]').fill(STARTS_ON);
   await page.getByRole("button", { name: "Start Program" }).click();
 
-  const activeProgramCard = page.locator(".active-program-card");
+  const activeProgramsPanel = page.locator(".active-programs-panel");
+  const activeProgramCard = activeProgramsPanel.locator(".active-program-card").filter({ hasText: "New Blood" }).first();
   await expect(page.getByRole("status").getByText("Program started.")).toBeVisible();
+  await expect(activeProgramsPanel.getByRole("heading", { name: "1 program" })).toBeVisible();
   await expect(activeProgramCard.getByRole("heading", { name: "New Blood" })).toBeVisible();
   await expect(activeProgramCard.getByRole("button", { name: "Show details" })).toBeVisible();
   await expect(activeProgramCard.getByText("working sets")).toHaveCount(0);
@@ -134,6 +136,7 @@ test("user adds a second program from the full picker but cannot copy the same p
 
   await expect(page.getByRole("status").getByText("Program started.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Add another program" })).toBeVisible();
+  await expect(page.locator(".active-programs-panel").getByRole("heading", { name: "2 programs" })).toBeVisible();
 
   const stateAfterSecondStart = await readProgramSelectionState(page);
   expect(stateAfterSecondStart.activeAssignments).toHaveLength(2);

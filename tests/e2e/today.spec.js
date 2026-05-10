@@ -134,12 +134,13 @@ test("active assignment shows today's projection and resolves overdue workouts",
 
   await page.goto("/app");
 
-  const activeProgramCard = page.locator(".active-program-card");
-  const todayCard = page.locator(".today-card");
+  const activeProgramsPanel = page.locator(".active-programs-panel");
+  const todayCard = page.locator(".today-card").first();
   const overdueCard = page.locator(".overdue-card");
-  await expect(activeProgramCard.getByRole("heading", { name: "Supermax" })).toBeVisible();
-  await expect(activeProgramCard.getByText("Supermax").first()).toBeVisible();
-  await expect(todayCard.getByRole("heading", { name: /^Today/ })).toBeVisible();
+  await expect(activeProgramsPanel.getByRole("heading", { name: "1 program" })).toBeVisible();
+  await expect(activeProgramsPanel.getByRole("heading", { name: "Supermax" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Today" })).toBeVisible();
+  await expect(todayCard.getByRole("heading", { name: "Supermax" })).toBeVisible();
   await expect(overdueCard.getByRole("heading", { name: "Missed workouts", exact: true })).toBeVisible();
 
   const primaryOverdueCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.primaryOverdueDate}"]`).first();
@@ -196,7 +197,6 @@ test("active assignment shows today's projection and resolves overdue workouts",
 
   await secondaryOverdueCard.getByRole("button", { name: "Mark definitely missed" }).click();
 
-  await expect(page.getByRole("status").getByText("Workout marked definitely missed.")).toBeVisible();
   await expect(page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.secondaryOverdueDate}"]`)).toHaveCount(0);
 
   const missedWorkout = await fetchWorkout(fixtureState.userId, fixturePlan.secondaryOverdueDate);

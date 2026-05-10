@@ -1788,6 +1788,28 @@
       },
       "options": {},
       "installedAt": "2026-05-10T01:16:04.284Z"
+    },
+    "@local/workflow-support": {
+      "packageId": "@local/workflow-support",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/workflow-support",
+        "descriptorPath": "packages/workflow-support/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T07:17:03.808Z"
     }
   }
 }

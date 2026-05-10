@@ -102,7 +102,7 @@
 - CRUD-first rule:
   Persisted app-owned entities must be scaffolded through `crud-server-generator` before custom workflow code is added. Generated resources own the canonical CRUD contract and migration scaffold. Custom services may orchestrate those entities later, but data reads and writes should go through JSKIT/internal `json-rest-api` seams rather than direct Knex unless there is a clear explicit exception.
 - Program-copy rule:
-  Program selection never points an assignment directly at source rows. The user first picks a `program_collection`, then picks the latest published `program_version`. The app clones that version plus entries, routines, routine entries, progressions, and progression entries into `instance_*` tables before the assignment revision is written.
+  Program selection never points an assignment directly at source rows. The user first picks a `program_collection`, then picks the latest published `program_version`. The app clones that version plus entries, routines, routine entries, progressions, and progression entries into `instance_*` tables before the assignment revision is written. A user cannot copy the same source `program` twice.
 - Multi-program rule:
   A user may have multiple active `program_assignments`. `user_progressions` are scoped to `program_assignment_id`, and `workouts` are unique by `(program_assignment_id, scheduled_for_date)` so two active programs can schedule work on the same date.
 - Delivery strategy:
@@ -129,6 +129,7 @@ Key constraints:
 - `program_versions` belong to `programs`; `programs` belong to `program_collections`.
 - `program_entries` and `program_routines` belong to `program_versions`, not directly to source `programs`.
 - `instance_programs` copy a `program_version` and retain `source_program_id` plus `source_program_version_id`.
+- `instance_programs` are unique by `(user_id, source_program_id)` so a user cannot copy the same source program twice.
 - `instance_program_entries` point to `instance_progressions` for progression work.
 - `instance_progressions` and `instance_progression_entries` copy the source progression data used by the selected program.
 - `program_assignments` allow multiple active rows per user.

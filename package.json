@@ -66,7 +66,7 @@
     "@jskit-ai/console-web": "0.1.35",
     "@jskit-ai/crud-core": "0.x",
     "@jskit-ai/database-runtime": "0.x",
-    "@jskit-ai/database-runtime-mysql": "0.1.66",
+    "@jskit-ai/database-runtime-mysql": "0.x",
     "@jskit-ai/http-runtime": "0.x",
     "@jskit-ai/json-rest-api-core": "0.x",
     "@jskit-ai/kernel": "0.x",
@@ -98,7 +98,7 @@
     "dotenv": "^16.4.5",
     "fastify": "^5.7.4",
     "jose": "^6.1.0",
-    "json-rest-schema": "^1.0.13",
+    "json-rest-schema": "1.x.x",
     "knex": "^3.1.0",
     "mysql2": "^3.11.2",
     "pinia": "^3.0.4",
@@ -127,7 +127,8 @@
     "@local/user-progressions": "file:packages/user-progressions",
     "@local/workouts": "file:packages/workouts",
     "@local/workout-exercises": "file:packages/workout-exercises",
-    "@local/workout-sets": "file:packages/workout-sets"
+    "@local/workout-sets": "file:packages/workout-sets",
+    "@local/workflow-support": "file:packages/workflow-support"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.4.3",

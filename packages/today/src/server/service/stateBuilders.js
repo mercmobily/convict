@@ -1,7 +1,7 @@
 import { addDays } from "@local/main/shared";
 import { dayLabelFromDate, dayOfWeekFromDate } from "./dateSupport.js";
 import {
-  attachSetLogsToWorkoutProjection,
+  attachWorkoutSetsToWorkoutProjection,
   buildFirstProgressionEntryIndex,
   buildWorkoutExercisesIndex,
   buildWorkoutIndex,
@@ -12,7 +12,7 @@ import {
   buildProjectedWorkout,
   buildRevisionsByAssignmentId,
   buildScheduleIndex,
-  buildSetLogIndex,
+  buildWorkoutSetIndex,
   findEffectiveRevision,
   mergeProgressStateIntoWorkoutProjection,
   workoutKey
@@ -489,25 +489,25 @@ async function buildWorkoutDetailState(
     ? workoutProjection.exercises.map((exercise) => exercise.workoutExerciseId).filter(Boolean)
     : [];
   const repositoryOptions = context ? { context } : {};
-  const setLogs = workoutExerciseIds.length > 0
-    ? await todayRepository.listSetLogsByWorkoutExerciseIds(workoutExerciseIds, repositoryOptions)
+  const workoutSets = workoutExerciseIds.length > 0
+    ? await todayRepository.listWorkoutSetsByWorkoutExerciseIds(workoutExerciseIds, repositoryOptions)
     : [];
-  const workoutWithSetLogs = attachSetLogsToWorkoutProjection(workoutProjection, buildSetLogIndex(setLogs));
-  const instanceProgressionIds = Array.isArray(workoutWithSetLogs?.exercises)
-    ? uniqueValues(workoutWithSetLogs.exercises.map((exercise) => exercise.instanceProgressionId))
+  const workoutWithSets = attachWorkoutSetsToWorkoutProjection(workoutProjection, buildWorkoutSetIndex(workoutSets));
+  const instanceProgressionIds = Array.isArray(workoutWithSets?.exercises)
+    ? uniqueValues(workoutWithSets.exercises.map((exercise) => exercise.instanceProgressionId))
     : [];
   const progressRows = instanceProgressionIds.length > 0
     ? await todayRepository.listUserProgressionsByInstanceProgressionIds(userId, instanceProgressionIds, repositoryOptions)
     : [];
   const readyStepIds = uniqueValues(progressRows.map((row) => row.readyToAdvanceInstanceProgressionEntryId));
-  const currentStepIds = Array.isArray(workoutWithSetLogs?.exercises)
-    ? uniqueValues(workoutWithSetLogs.exercises.map((exercise) => exercise.currentStepId))
+  const currentStepIds = Array.isArray(workoutWithSets?.exercises)
+    ? uniqueValues(workoutWithSets.exercises.map((exercise) => exercise.currentStepId))
     : [];
   const [readyStepRows, currentStepRows] = await Promise.all([
     readyStepIds.length > 0 ? todayRepository.listStepsByIds(readyStepIds, repositoryOptions) : Promise.resolve([]),
     currentStepIds.length > 0 ? todayRepository.listStepsByIds(currentStepIds, repositoryOptions) : Promise.resolve([])
   ]);
-  const workout = mergeProgressStateIntoWorkoutProjection(workoutWithSetLogs, {
+  const workout = mergeProgressStateIntoWorkoutProjection(workoutWithSets, {
     progressRows,
     readyStepRows,
     currentStepRows

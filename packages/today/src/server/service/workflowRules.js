@@ -36,13 +36,13 @@ function assertLoggableWorkout(workoutProjection, { scheduledForDate } = {}) {
   }
 }
 
-function countSavedSetLogs(exercise = {}) {
-  return Array.isArray(exercise.setLogs) ? exercise.setLogs.length : 0;
+function countSavedWorkoutSets(exercise = {}) {
+  return Array.isArray(exercise.workoutSets) ? exercise.workoutSets.length : 0;
 }
 
 function countSavedSetsAcrossWorkout(workoutProjection = null) {
   const exercises = Array.isArray(workoutProjection?.exercises) ? workoutProjection.exercises : [];
-  return exercises.reduce((totalCount, exercise) => totalCount + countSavedSetLogs(exercise), 0);
+  return exercises.reduce((totalCount, exercise) => totalCount + countSavedWorkoutSets(exercise), 0);
 }
 
 function assertSubmittableWorkout(workoutProjection, { scheduledForDate } = {}) {
@@ -78,8 +78,8 @@ function deriveEarnedReadyStepId(exercise = {}, nextStep = null) {
     return null;
   }
 
-  const qualifyingSetCount = Array.isArray(exercise.setLogs)
-    ? exercise.setLogs.filter((setLog) => setLog.qualifiesForProgression).length
+  const qualifyingSetCount = Array.isArray(exercise.workoutSets)
+    ? exercise.workoutSets.filter((workoutSet) => workoutSet.qualifiesForProgression).length
     : 0;
 
   return qualifyingSetCount >= requiredSetCount ? nextStep.id : null;
@@ -89,7 +89,7 @@ export {
   assertLoggableWorkout,
   assertSchedulableWorkout,
   assertSubmittableWorkout,
-  countSavedSetLogs,
+  countSavedWorkoutSets,
   countSavedSetsAcrossWorkout,
   deriveEarnedReadyStepId
 };

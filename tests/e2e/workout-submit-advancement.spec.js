@@ -102,7 +102,7 @@ async function fetchExerciseProgressRows(userId) {
 }
 
 function locateSavedSetRow(card, displaySetNumber, valueText) {
-  return card.locator(".set-log-row").filter({
+  return card.locator(".workout-set-row").filter({
     hasText: `Set ${displaySetNumber}`
   }).filter({
     hasText: valueText

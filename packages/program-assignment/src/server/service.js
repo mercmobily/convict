@@ -1,7 +1,7 @@
 import { NotFoundError, AppError } from "@jskit-ai/kernel/server/runtime/errors";
 import { normalizeText } from "@jskit-ai/kernel/shared/support/normalize";
 import { dayLabelForIsoDayOfWeek, formatWorkSetLabel, resolveScheduleEntryName } from "@local/main/shared";
-import { resolveCurrentUserId } from "@local/main/shared/requestContext";
+import { resolveCurrentUserId } from "@local/workflow-support/server/requestContext";
 
 const PROGRAM_METADATA = Object.freeze({
   "new-blood": Object.freeze({
@@ -28,6 +28,7 @@ const CANONICAL_PROGRAM_ORDER = Object.freeze({
   veterano: 3,
   supermax: 4
 });
+const DUPLICATE_INSTANCE_PROGRAM_INDEX = "uq_instance_programs_user_source_program";
 
 function normalizeStartsOn(value = "") {
   const normalized = normalizeText(value);
@@ -50,6 +51,24 @@ function normalizeEntryKind(value = "") {
   return normalized === "direct_exercise" || normalized === "exercise" || normalized === "direct"
     ? "direct_exercise"
     : "progression";
+}
+
+function isDuplicateProgramCopyError(error = null) {
+  let current = error;
+  while (current) {
+    const message = String(current?.message || "");
+    if (
+      current?.code === "ER_DUP_ENTRY" &&
+      message.includes(DUPLICATE_INSTANCE_PROGRAM_INDEX)
+    ) {
+      return true;
+    }
+    if (message.includes(DUPLICATE_INSTANCE_PROGRAM_INDEX)) {
+      return true;
+    }
+    current = current?.cause || null;
+  }
+  return false;
 }
 
 function buildRowsById(rows = [], key = "id") {
@@ -653,22 +672,29 @@ function createService({ programAssignmentRepository } = {}) {
         throw new AppError(500, "Program version is missing its source program.");
       }
 
-      await programAssignmentRepository.withTransaction(async (trx) => {
-        await assertSourceProgramNotAlreadyActive(programAssignmentRepository, selectedProgram.id, {
-          trx,
-          context
+      try {
+        await programAssignmentRepository.withTransaction(async (trx) => {
+          await assertSourceProgramNotAlreadyActive(programAssignmentRepository, selectedProgram.id, {
+            trx,
+            context
+          });
+          await copyProgramVersionToInstance(
+            programAssignmentRepository,
+            {
+              selectedVersion,
+              selectedProgram,
+              programEntries,
+              startsOn
+            },
+            { trx, context }
+          );
         });
-        await copyProgramVersionToInstance(
-          programAssignmentRepository,
-          {
-            selectedVersion,
-            selectedProgram,
-            programEntries,
-            startsOn
-          },
-          { trx, context }
-        );
-      });
+      } catch (error) {
+        if (isDuplicateProgramCopyError(error)) {
+          throw new AppError(409, "This program is already active.");
+        }
+        throw error;
+      }
 
       return buildSelectionState(programAssignmentRepository, {
         context

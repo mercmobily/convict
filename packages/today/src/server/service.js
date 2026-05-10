@@ -5,19 +5,19 @@ import {
 } from "@local/main/shared";
 import {
   resolveCurrentUserId
-} from "@local/main/shared/requestContext";
+} from "@local/workflow-support/server/requestContext";
 import {
   normalizeHistoryMonth,
   normalizeScheduledForDate
 } from "./service/dateSupport.js";
 import { buildHistoryState } from "./service/historyState.js";
 import {
-  attachSetLogsToWorkoutProjection,
+  attachWorkoutSetsToWorkoutProjection,
   buildNextProgressionEntryIndex,
   buildWorkoutExerciseProjection,
   buildWorkoutExerciseSnapshots,
   buildUserProgressionIndex,
-  buildSetLogIndex
+  buildWorkoutSetIndex
 } from "./service/projections.js";
 import {
   buildTodayState,
@@ -236,18 +236,18 @@ function createService({ todayRepository } = {}) {
           { trx, context }
         );
         const workoutExerciseIds = workoutExercises.map((exercise) => exercise.id).filter(Boolean);
-        const setLogsByWorkoutExerciseId = buildSetLogIndex(
+        const workoutSetsByWorkoutExerciseId = buildWorkoutSetIndex(
           workoutExerciseIds.length > 0
-            ? await todayRepository.listSetLogsByWorkoutExerciseIds(workoutExerciseIds, { trx, context })
+            ? await todayRepository.listWorkoutSetsByWorkoutExerciseIds(workoutExerciseIds, { trx, context })
             : []
         );
 
-        const refreshedWorkout = attachSetLogsToWorkoutProjection({
+        const refreshedWorkout = attachWorkoutSetsToWorkoutProjection({
           ...detailState.workout,
           workoutId,
           status: detailState.workout.status,
           exercises: workoutExercises.map(buildWorkoutExerciseProjection)
-        }, setLogsByWorkoutExerciseId);
+        }, workoutSetsByWorkoutExerciseId);
         const refreshedExercises = Array.isArray(refreshedWorkout?.exercises) ? refreshedWorkout.exercises : [];
 
         assertSubmittableWorkout(refreshedWorkout, {
