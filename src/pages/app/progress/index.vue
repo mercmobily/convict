@@ -110,7 +110,6 @@ function nextStepTitle(exercise = {}) {
 function exerciseMetaParts(exercise = {}) {
   return [
     progressionTargetLabel(exercise) ? `Progression ${progressionTargetLabel(exercise)}` : "",
-    exercise.activeVariationName ? `Variation: ${exercise.activeVariationName}` : "",
     lastCompletedLabel(exercise)
   ].filter(Boolean);
 }
@@ -181,9 +180,9 @@ function exerciseMetaParts(exercise = {}) {
       >
         <article
           v-for="exercise in progressCards"
-          :key="exercise.exerciseId"
+          :key="exercise.progressionTrackId"
           class="progress-exercise-card"
-          :data-testid="`progress-exercise-${exercise.exerciseSlug}`"
+          :data-testid="`progress-track-${exercise.progressionTrackSlug}`"
         >
           <header class="progress-exercise-card__header">
             <div class="progress-exercise-card__identity">
@@ -196,7 +195,7 @@ function exerciseMetaParts(exercise = {}) {
                 <v-icon :icon="mdiChartTimelineVariant" />
               </v-avatar>
               <div class="progress-exercise-card__title-block">
-                <div class="progress-exercise-card__family">{{ exercise.exerciseName }}</div>
+                <div class="progress-exercise-card__family">{{ exercise.progressionTrackName }}</div>
                 <h2 class="progress-exercise-card__step">{{ currentStepTitle(exercise) }}</h2>
               </div>
             </div>

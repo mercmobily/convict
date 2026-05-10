@@ -35,11 +35,7 @@ async function deleteUserTrainingRows(connection, userId) {
   );
 
   await connection.query(
-    "DELETE FROM user_exercise_progress WHERE user_id = ?",
-    [userId]
-  );
-  await connection.query(
-    "DELETE FROM personal_step_variations WHERE user_id = ?",
+    "DELETE FROM user_progression_track_progress WHERE user_id = ?",
     [userId]
   );
   await connection.query(
@@ -57,6 +53,19 @@ async function deleteUserTrainingRows(connection, userId) {
   );
   await connection.query(
     "DELETE FROM user_program_assignments WHERE user_id = ?",
+    [userId]
+  );
+  await connection.query(
+    [
+      "DELETE pre FROM program_routine_entries pre",
+      "INNER JOIN program_routines pr",
+      "ON pr.id = pre.program_routine_id",
+      "WHERE pre.user_id = ?"
+    ].join(" "),
+    [userId]
+  );
+  await connection.query(
+    "DELETE FROM program_routines WHERE user_id = ?",
     [userId]
   );
   await connection.query(
@@ -164,8 +173,15 @@ async function seedProgramCopyAssignment(
   await connection.query(
     [
       "INSERT INTO program_schedule_entries",
-      "(user_id, program_id, day_of_week, slot_number, exercise_id, work_sets_min, work_sets_max)",
-      "SELECT ?, ?, day_of_week, slot_number, exercise_id, work_sets_min, work_sets_max",
+      "(",
+      "  user_id, program_id, day_of_week, slot_number, entry_kind, progression_track_id, exercise_id,",
+      "  work_sets_min, work_sets_max, measurement_unit, target_reps_min, target_reps_max,",
+      "  target_seconds, rest_seconds, notes",
+      ")",
+      "SELECT",
+      "  ?, ?, day_of_week, slot_number, entry_kind, progression_track_id, exercise_id,",
+      "  work_sets_min, work_sets_max, measurement_unit, target_reps_min, target_reps_max,",
+      "  target_seconds, rest_seconds, notes",
       "FROM program_template_schedule_entries",
       "WHERE program_template_id = ?"
     ].join(" "),

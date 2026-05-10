@@ -4,9 +4,18 @@ import {
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
 import { normalizeSimplifiedRow } from "@local/main/shared";
 
+function jsonRestContext(options = {}) {
+  return createJsonRestContext(options?.context || null);
+}
+
+function transaction(options = {}) {
+  return options?.trx || null;
+}
+
 function normalizeStepRow(row = null) {
   return normalizeSimplifiedRow(row, {
     relationIds: {
+      progressionTrackId: "progressionTrack",
       exerciseId: "exercise"
     }
   });
@@ -15,10 +24,9 @@ function normalizeStepRow(row = null) {
 function normalizeProgressRow(row = null) {
   const normalizedRow = normalizeSimplifiedRow(row, {
     relationIds: {
-      exerciseId: "exercise",
-      currentStepId: "currentStep",
-      readyToAdvanceStepId: "readyToAdvanceStep",
-      activeVariationId: "activeVariation",
+      progressionTrackId: "progressionTrack",
+      currentProgressionTrackStepId: "currentProgressionTrackStep",
+      readyToAdvanceProgressionTrackStepId: "readyToAdvanceProgressionTrackStep",
       lastCompletedOccurrenceId: "lastCompletedOccurrence"
     }
   });
@@ -41,72 +49,80 @@ function createRepository({ api } = {}) {
   }
 
   return Object.freeze({
-    async listExercises(options = {}) {
+    async listProgressionTracks(options = {}) {
       return extractJsonRestCollectionRows(
-        await api.resources.exercises.query(
+        await api.resources.progressionTracks.query(
           {
             queryParams: {
-              sort: ["slug"],
+              include: ["defaultExerciseCategory"],
+              sort: ["sortOrder", "slug"],
               page: {
-                size: 64
+                size: 128
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       );
     },
-    async listExerciseProgressByUserId(userId, options = {}) {
+
+    async listProgressionTrackProgressByUserId(userId, options = {}) {
       if (!userId) {
         return [];
       }
 
       return extractJsonRestCollectionRows(
-        await api.resources.userExerciseProgress.query(
+        await api.resources.userProgressionTrackProgress.query(
           {
             queryParams: {
               filters: {
                 userId
               },
-              include: ["exercise", "currentStep", "readyToAdvanceStep", "activeVariation", "lastCompletedOccurrence"],
+              include: [
+                "progressionTrack",
+                "currentProgressionTrackStep",
+                "readyToAdvanceProgressionTrackStep",
+                "lastCompletedOccurrence"
+              ],
               sort: ["createdAt"],
               page: {
-                size: 64
+                size: 128
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeProgressRow(row)).filter(Boolean);
     },
-    async listFirstStepsByExerciseIds(exerciseIds = [], options = {}) {
-      const ids = Array.isArray(exerciseIds) ? exerciseIds.filter(Boolean) : [];
+
+    async listFirstStepsByTrackIds(progressionTrackIds = [], options = {}) {
+      const ids = Array.isArray(progressionTrackIds) ? progressionTrackIds.filter(Boolean) : [];
       if (ids.length < 1) {
         return [];
       }
 
       return extractJsonRestCollectionRows(
-        await api.resources.exerciseSteps.query(
+        await api.resources.progressionTrackSteps.query(
           {
             queryParams: {
               filters: {
-                exerciseIds: ids,
+                progressionTrackIds: ids,
                 stepNumber: 1
               },
-              include: ["exercise"],
-              sort: ["exerciseId", "stepNumber"],
+              include: ["progressionTrack", "exercise"],
+              sort: ["progressionTrackId", "stepNumber"],
               page: {
-                size: 64
+                size: 128
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeStepRow(row)).filter(Boolean);
     }

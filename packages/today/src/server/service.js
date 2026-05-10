@@ -67,6 +67,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts are not available yet.");
@@ -76,6 +77,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
+        userProgramAssignmentId,
         context
       });
 
@@ -95,6 +97,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts cannot be started yet.");
@@ -106,13 +109,19 @@ function createService({ todayRepository } = {}) {
         context
       });
 
-      if (!state.assignment?.id) {
+      if (!state.assignments?.length) {
         throw new ConflictError("Choose a program before starting workouts.");
       }
 
-      const targetWorkout = scheduledForDate === todayDate
-        ? state.today
-        : state.overdue.find((entry) => String(entry.scheduledForDate || "") === scheduledForDate) || null;
+      const candidateWorkouts = [
+        ...(Array.isArray(state.todayWorkouts) ? state.todayWorkouts : []),
+        ...(Array.isArray(state.overdue) ? state.overdue : [])
+      ].filter((entry) => String(entry.scheduledForDate || "") === scheduledForDate);
+      const targetWorkout = (
+        userProgramAssignmentId
+          ? candidateWorkouts.find((entry) => String(entry.userProgramAssignmentId || "") === String(userProgramAssignmentId)) || null
+          : candidateWorkouts.length === 1 ? candidateWorkouts[0] : null
+      );
 
       assertSchedulableWorkout(targetWorkout, {
         scheduledForDate
@@ -128,7 +137,7 @@ function createService({ todayRepository } = {}) {
 
       await todayRepository.withTransaction(async (trx) => {
         const existingOccurrence = await todayRepository.findOccurrenceByAssignmentAndDate(
-          state.assignment.id,
+          targetWorkout.userProgramAssignmentId,
           scheduledForDate,
           { trx, context }
         );
@@ -155,8 +164,7 @@ function createService({ todayRepository } = {}) {
 
         const occurrenceId = await todayRepository.createOccurrence(
           {
-            userId,
-            userProgramAssignmentId: state.assignment.id,
+            userProgramAssignmentId: targetWorkout.userProgramAssignmentId,
             userProgramAssignmentRevisionId: targetWorkout.revisionId,
             scheduledForDate,
             performedOnDate: todayDate,
@@ -188,11 +196,13 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
 
       const detailState = await buildWorkoutDetailState(todayRepository, {
         userId,
         todayDate,
         scheduledForDate,
+        userProgramAssignmentId,
         context
       });
 
@@ -244,17 +254,19 @@ function createService({ todayRepository } = {}) {
           scheduledForDate
         });
 
-        const exerciseIds = [...new Set(refreshedExercises.map((exercise) => exercise.exerciseId).filter(Boolean))];
+        const progressionTrackIds = [
+          ...new Set(refreshedExercises.map((exercise) => exercise.progressionTrackId).filter(Boolean))
+        ];
         const [progressRows, stepRows] = await Promise.all([
-          exerciseIds.length > 0
-            ? todayRepository.listExerciseProgressByUserAndExerciseIds(userId, exerciseIds, { trx, context })
+          progressionTrackIds.length > 0
+            ? todayRepository.listProgressionTrackProgressByUserAndTrackIds(userId, progressionTrackIds, { trx, context })
             : Promise.resolve([]),
-          exerciseIds.length > 0
-            ? todayRepository.listStepsByExerciseIds(exerciseIds, { trx, context })
+          progressionTrackIds.length > 0
+            ? todayRepository.listStepsByTrackIds(progressionTrackIds, { trx, context })
             : Promise.resolve([])
         ]);
 
-        const progressByExerciseId = buildProgressIndex(progressRows);
+        const progressByTrackId = buildProgressIndex(progressRows);
         const nextStepByCurrentStepId = buildNextStepIndex(stepRows);
 
         await todayRepository.updateOccurrence(
@@ -277,19 +289,17 @@ function createService({ todayRepository } = {}) {
           );
         }
 
-        for (const exercise of refreshedExercises) {
-          const progressRow = progressByExerciseId.get(String(exercise.exerciseId || "")) || null;
+        for (const exercise of refreshedExercises.filter((row) => row.isProgression)) {
+          const progressRow = progressByTrackId.get(String(exercise.progressionTrackId || "")) || null;
           const nextStep = nextStepByCurrentStepId.get(String(exercise.currentStepId || "")) || null;
           const earnedReadyStepId = deriveEarnedReadyStepId(exercise, nextStep);
 
           if (!progressRow?.id) {
-            await todayRepository.createExerciseProgress(
+            await todayRepository.createProgressionTrackProgress(
               {
-                userId,
-                exerciseId: exercise.exerciseId,
-                currentStepId: exercise.currentStepId,
-                readyToAdvanceStepId: earnedReadyStepId,
-                activeVariationId: exercise.activeVariationId,
+                progressionTrackId: exercise.progressionTrackId,
+                currentProgressionTrackStepId: exercise.currentStepId,
+                readyToAdvanceProgressionTrackStepId: earnedReadyStepId,
                 readyToAdvanceAt: earnedReadyStepId ? submittedAt : null,
                 lastCompletedOccurrenceId: workoutOccurrenceId,
                 lastCompletedAt: submittedAt,
@@ -305,11 +315,11 @@ function createService({ todayRepository } = {}) {
             lastCompletedAt: submittedAt
           };
 
-          if (String(progressRow.currentStepId || "") === String(exercise.currentStepId || "")) {
+          if (String(progressRow.currentProgressionTrackStepId || "") === String(exercise.currentStepId || "")) {
             if (earnedReadyStepId) {
-              updateFields.readyToAdvanceStepId = earnedReadyStepId;
+              updateFields.readyToAdvanceProgressionTrackStepId = earnedReadyStepId;
               if (
-                String(progressRow.readyToAdvanceStepId || "") !== String(earnedReadyStepId) ||
+                String(progressRow.readyToAdvanceProgressionTrackStepId || "") !== String(earnedReadyStepId) ||
                 !progressRow.readyToAdvanceAt
               ) {
                 updateFields.readyToAdvanceAt = submittedAt;
@@ -317,7 +327,7 @@ function createService({ todayRepository } = {}) {
             }
           }
 
-          await todayRepository.updateExerciseProgress(progressRow.id, updateFields, { trx, context });
+          await todayRepository.updateProgressionTrackProgress(progressRow.id, updateFields, { trx, context });
         }
       });
 
@@ -325,6 +335,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
+        userProgramAssignmentId,
         context
       });
     },
@@ -332,45 +343,51 @@ function createService({ todayRepository } = {}) {
     async applyAdvancement(input = {}, options = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const exerciseId = input?.exerciseId || null;
+      const progressionTrackId = input?.progressionTrackId || null;
 
-      if (!exerciseId) {
-        throw new AppError(400, "exerciseId is required.");
+      if (!progressionTrackId) {
+        throw new AppError(400, "progressionTrackId is required.");
       }
 
-      const progressRows = await todayRepository.listExerciseProgressByUserAndExerciseIds(userId, [exerciseId], { context });
+      const progressRows = await todayRepository.listProgressionTrackProgressByUserAndTrackIds(
+        userId,
+        [progressionTrackId],
+        { context }
+      );
       const progressRow = progressRows[0] || null;
       if (!progressRow?.id) {
-        throw new NotFoundError("Progress state was not found for this exercise.");
+        throw new NotFoundError("Progress state was not found for this track.");
       }
-      if (!progressRow.readyToAdvanceStepId) {
-        throw new ConflictError("This exercise is not ready to advance.");
+      if (!progressRow.readyToAdvanceProgressionTrackStepId) {
+        throw new ConflictError("This track is not ready to advance.");
       }
 
-      const readyStepRows = await todayRepository.listStepsByIds([progressRow.readyToAdvanceStepId], { context });
+      const readyStepRows = await todayRepository.listStepsByIds(
+        [progressRow.readyToAdvanceProgressionTrackStepId],
+        { context }
+      );
       const readyStep = readyStepRows[0] || null;
       if (!readyStep?.id) {
-        throw new ConflictError("The next canonical step is unavailable.");
+        throw new ConflictError("The next progression step is unavailable.");
       }
-      if (String(readyStep.exerciseId || "") !== String(progressRow.exerciseId || "")) {
-        throw new ConflictError("The next step does not belong to this exercise family.");
+      if (String(readyStep.progressionTrackId || "") !== String(progressRow.progressionTrackId || "")) {
+        throw new ConflictError("The next step does not belong to this progression track.");
       }
 
-      await todayRepository.updateExerciseProgress(
+      await todayRepository.updateProgressionTrackProgress(
         progressRow.id,
         {
-          currentStepId: readyStep.id,
-          readyToAdvanceStepId: null,
-          readyToAdvanceAt: null,
-          activeVariationId: null
+          currentProgressionTrackStepId: readyStep.id,
+          readyToAdvanceProgressionTrackStepId: null,
+          readyToAdvanceAt: null
         },
         { context }
       );
 
       return {
-        exerciseId: progressRow.exerciseId,
+        progressionTrackId: progressRow.progressionTrackId,
         currentStepId: readyStep.id,
-        currentStepName: readyStep.stepName
+        currentStepName: readyStep.stepLabel
       };
     },
 
@@ -379,6 +396,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
+      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
 
       if (scheduledForDate >= todayDate) {
         throw new ConflictError("Only overdue workouts can be marked definitely missed.");
@@ -390,11 +408,14 @@ function createService({ todayRepository } = {}) {
         context
       });
 
-      if (!state.assignment?.id) {
+      if (!state.assignments?.length) {
         throw new ConflictError("Choose a program before resolving overdue workouts.");
       }
 
-      const targetWorkout = state.overdue.find((entry) => String(entry.scheduledForDate || "") === scheduledForDate) || null;
+      const overdueCandidates = state.overdue.filter((entry) => String(entry.scheduledForDate || "") === scheduledForDate);
+      const targetWorkout = userProgramAssignmentId
+        ? overdueCandidates.find((entry) => String(entry.userProgramAssignmentId || "") === String(userProgramAssignmentId)) || null
+        : overdueCandidates.length === 1 ? overdueCandidates[0] : null;
       assertSchedulableWorkout(targetWorkout, {
         scheduledForDate,
         allowOverdue: true
@@ -402,7 +423,7 @@ function createService({ todayRepository } = {}) {
 
       await todayRepository.withTransaction(async (trx) => {
         const existingOccurrence = await todayRepository.findOccurrenceByAssignmentAndDate(
-          state.assignment.id,
+          targetWorkout.userProgramAssignmentId,
           scheduledForDate,
           { trx, context }
         );
@@ -428,8 +449,7 @@ function createService({ todayRepository } = {}) {
 
         const occurrenceId = await todayRepository.createOccurrence(
           {
-            userId,
-            userProgramAssignmentId: state.assignment.id,
+            userProgramAssignmentId: targetWorkout.userProgramAssignmentId,
             userProgramAssignmentRevisionId: targetWorkout.revisionId,
             scheduledForDate,
             performedOnDate: null,

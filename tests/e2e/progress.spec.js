@@ -50,12 +50,12 @@ async function fetchPushupProgress(userId) {
   try {
     const [rows] = await connection.query(
       [
-        "SELECT cs.step_name AS currentStepName, rs.step_name AS readyStepName",
-        "FROM user_exercise_progress uep",
-        "INNER JOIN exercises e ON e.id = uep.exercise_id",
-        "INNER JOIN exercise_steps cs ON cs.id = uep.current_step_id",
-        "LEFT JOIN exercise_steps rs ON rs.id = uep.ready_to_advance_step_id",
-        "WHERE uep.user_id = ? AND e.slug = 'push-ups'",
+        "SELECT cs.step_label AS currentStepName, rs.step_label AS readyStepName",
+        "FROM user_progression_track_progress uptp",
+        "INNER JOIN progression_tracks pt ON pt.id = uptp.progression_track_id",
+        "INNER JOIN progression_track_steps cs ON cs.id = uptp.current_progression_track_step_id",
+        "LEFT JOIN progression_track_steps rs ON rs.id = uptp.ready_to_advance_progression_track_step_id",
+        "WHERE uptp.user_id = ? AND pt.slug = 'convict-push-ups'",
         "LIMIT 1"
       ].join(" "),
       [userId]
@@ -134,10 +134,10 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
   await expect(page.getByTestId("progress-summary-ready")).toContainText("1");
 
-  const progressPushupsCard = page.getByTestId("progress-exercise-push-ups");
-  const progressSquatsCard = page.getByTestId("progress-exercise-squats");
+  const progressPushupsCard = page.getByTestId("progress-track-convict-push-ups");
+  const progressSquatsCard = page.getByTestId("progress-track-convict-squats");
 
-  await expect(progressPushupsCard.getByText("Step 1: Wall Push-ups")).toBeVisible();
+  await expect(progressPushupsCard.getByRole("heading", { name: "Wall Push-ups" })).toBeVisible();
   await expect(progressPushupsCard.getByText("Step 2: Incline Push-ups")).toBeVisible();
   await expect(progressPushupsCard.getByRole("button", { name: "Advance now" })).toBeVisible();
   await expect(progressSquatsCard.getByText("Not started")).toBeVisible();

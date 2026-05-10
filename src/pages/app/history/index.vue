@@ -158,7 +158,9 @@ const workoutDetailPagePath = computed(() => {
     return "";
   }
 
-  return paths.page(`/workouts/${selectedDay.value.scheduledForDate}`);
+  const assignmentId = String(selectedDay.value.userProgramAssignmentId || "").trim();
+  const query = assignmentId ? `?userProgramAssignmentId=${encodeURIComponent(assignmentId)}` : "";
+  return paths.page(`/workouts/${selectedDay.value.scheduledForDate}${query}`);
 });
 
 const selectedDayDescription = computed(() => {

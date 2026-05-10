@@ -2,7 +2,7 @@ import { AppError } from "@jskit-ai/kernel/server/runtime/errors";
 import {
   buildProgressDisplayState,
   dayLabelForIsoDayOfWeek,
-  resolveScheduleExerciseName
+  withoutConvictPrefix
 } from "@local/main/shared";
 import { dayOfWeekFromDate } from "./dateSupport.js";
 
@@ -10,6 +10,27 @@ function buildProgramIndex(programs = []) {
   const index = new Map();
   for (const program of programs) {
     index.set(String(program.id || ""), program);
+  }
+  return index;
+}
+
+function buildRevisionsByAssignmentId(revisions = []) {
+  const index = new Map();
+  for (const revision of revisions) {
+    const assignmentId = String(revision.userProgramAssignmentId || "");
+    if (!index.has(assignmentId)) {
+      index.set(assignmentId, []);
+    }
+    index.get(assignmentId).push(revision);
+  }
+  for (const rows of index.values()) {
+    rows.sort((left, right) => {
+      const effectiveDateDelta = String(left.effectiveFromDate || "").localeCompare(String(right.effectiveFromDate || ""));
+      if (effectiveDateDelta !== 0) {
+        return effectiveDateDelta;
+      }
+      return String(left.createdAt || "").localeCompare(String(right.createdAt || ""));
+    });
   }
   return index;
 }
@@ -40,10 +61,50 @@ function buildScheduleIndex(scheduleEntries = []) {
   return index;
 }
 
+function buildProgramRoutineIndex(programRoutines = []) {
+  const index = new Map();
+  for (const routine of programRoutines) {
+    const programId = String(routine.programId || "");
+    if (!index.has(programId)) {
+      index.set(programId, []);
+    }
+    index.get(programId).push(routine);
+  }
+  for (const rows of index.values()) {
+    rows.sort((left, right) => {
+      const timingDelta = String(left.timing || "").localeCompare(String(right.timing || ""));
+      if (timingDelta !== 0) {
+        return timingDelta;
+      }
+      return Number(left.slotNumber || 0) - Number(right.slotNumber || 0);
+    });
+  }
+  return index;
+}
+
+function buildProgramRoutineEntriesIndex(programRoutineEntries = []) {
+  const index = new Map();
+  for (const entry of programRoutineEntries) {
+    const routineId = String(entry.programRoutineId || "");
+    if (!index.has(routineId)) {
+      index.set(routineId, []);
+    }
+    index.get(routineId).push(entry);
+  }
+  for (const rows of index.values()) {
+    rows.sort((left, right) => Number(left.slotNumber || 0) - Number(right.slotNumber || 0));
+  }
+  return index;
+}
+
+function occurrenceKey(userProgramAssignmentId, scheduledForDate) {
+  return `${String(userProgramAssignmentId || "")}:${String(scheduledForDate || "")}`;
+}
+
 function buildOccurrenceIndex(occurrences = []) {
   const index = new Map();
   for (const occurrence of occurrences) {
-    index.set(String(occurrence.scheduledForDate || ""), occurrence);
+    index.set(occurrenceKey(occurrence.userProgramAssignmentId, occurrence.scheduledForDate), occurrence);
   }
   return index;
 }
@@ -80,11 +141,7 @@ function buildSetLogIndex(rows = []) {
       const leftLoggedAt = String(left.loggedAt || left.createdAt || "");
       const rightLoggedAt = String(right.loggedAt || right.createdAt || "");
       const loggedAtDelta = leftLoggedAt.localeCompare(rightLoggedAt);
-      if (loggedAtDelta !== 0) {
-        return loggedAtDelta;
-      }
-
-      return Number(left.id || 0) - Number(right.id || 0);
+      return loggedAtDelta || Number(left.id || 0) - Number(right.id || 0);
     });
   }
 
@@ -94,7 +151,7 @@ function buildSetLogIndex(rows = []) {
 function buildProgressIndex(progressRows = []) {
   const index = new Map();
   for (const row of progressRows) {
-    index.set(String(row.exerciseId || ""), row);
+    index.set(String(row.progressionTrackId || ""), row);
   }
   return index;
 }
@@ -102,7 +159,7 @@ function buildProgressIndex(progressRows = []) {
 function buildFirstStepIndex(stepRows = []) {
   const index = new Map();
   for (const row of stepRows) {
-    index.set(String(row.exerciseId || ""), row);
+    index.set(String(row.progressionTrackId || ""), row);
   }
   return index;
 }
@@ -120,19 +177,17 @@ function buildNextStepIndex(stepRows = []) {
   const nextStepIndex = new Map();
 
   for (const row of stepRows) {
-    const exerciseId = String(row.exerciseId || "");
-    if (!groupedRows.has(exerciseId)) {
-      groupedRows.set(exerciseId, []);
+    const progressionTrackId = String(row.progressionTrackId || "");
+    if (!groupedRows.has(progressionTrackId)) {
+      groupedRows.set(progressionTrackId, []);
     }
-    groupedRows.get(exerciseId).push(row);
+    groupedRows.get(progressionTrackId).push(row);
   }
 
   for (const rows of groupedRows.values()) {
     rows.sort((left, right) => Number(left.stepNumber || 0) - Number(right.stepNumber || 0));
     for (let index = 0; index < rows.length; index += 1) {
-      const currentRow = rows[index];
-      const nextRow = rows[index + 1] || null;
-      nextStepIndex.set(String(currentRow.id || ""), nextRow);
+      nextStepIndex.set(String(rows[index].id || ""), rows[index + 1] || null);
     }
   }
 
@@ -151,73 +206,240 @@ function findEffectiveRevision(revisions = [], dateString = "") {
   return activeRevision;
 }
 
-function selectMeasurementUnit(progressRow = null, fallbackStep = null) {
-  const variationUnit = String(progressRow?.activeVariation?.measurementUnit || "").trim().toLowerCase();
-  if (variationUnit) {
-    return variationUnit;
+function selectMeasurementUnit(...values) {
+  for (const value of values) {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (normalized) {
+      return normalized;
+    }
   }
-
-  return String(
-    progressRow?.currentStep?.measurementUnit ||
-    fallbackStep?.measurementUnit ||
-    "reps"
-  ).trim().toLowerCase() || "reps";
+  return "reps";
 }
 
-function buildDerivedExerciseProjection(scheduleEntry, progressRow = null, firstStep = null) {
-  const currentStep = progressRow?.currentStep || firstStep || null;
+function buildProgressionExerciseProjection(scheduleEntry, progressRow = null, firstStep = null, slotNumber = 0) {
+  const currentStep = progressRow?.currentProgressionTrackStep || firstStep || null;
   if (!currentStep?.id) {
-    throw new AppError(500, `Missing canonical step data for exercise ${scheduleEntry.exerciseId}.`);
+    throw new AppError(500, `Missing progression step data for track ${scheduleEntry.progressionTrackId}.`);
+  }
+
+  const exercise = currentStep.exercise || null;
+  if (!exercise?.id) {
+    throw new AppError(500, `Missing concrete exercise data for progression step ${currentStep.id}.`);
   }
 
   return {
     occurrenceExerciseId: null,
-    slotNumber: Number(scheduleEntry.slotNumber || 0),
-    exerciseId: scheduleEntry.exerciseId,
-    exerciseName: resolveScheduleExerciseName(scheduleEntry),
+    slotNumber,
+    section: "main",
+    sourceKind: "program_schedule_entry",
+    programScheduleEntryId: scheduleEntry.id,
+    programRoutineEntryId: null,
+    entryKind: "progression_track",
+    isProgression: true,
+    progressionTrackId: scheduleEntry.progressionTrackId,
+    progressionTrackName: withoutConvictPrefix(scheduleEntry.progressionTrack?.name || ""),
+    progressionTrackStepId: currentStep.id,
+    exerciseId: exercise.id,
+    exerciseName: exercise.name,
     plannedWorkSetsMin: Number(scheduleEntry.workSetsMin || 0),
     plannedWorkSetsMax: Number(scheduleEntry.workSetsMax || 0),
     currentStepId: currentStep.id,
     currentStepNumber: Number(currentStep.stepNumber || 0),
-    currentStepName: currentStep.stepName,
+    currentStepName: currentStep.stepLabel,
     currentStepInstruction: currentStep.instructionText || "",
-    measurementUnit: selectMeasurementUnit(progressRow, firstStep),
-    activeVariationId: progressRow?.activeVariationId || null,
-    activeVariationName: progressRow?.activeVariation?.name || null,
-    readyToAdvanceStepId: progressRow?.readyToAdvanceStepId || null,
+    measurementUnit: selectMeasurementUnit(currentStep.measurementUnit, exercise.defaultMeasurementUnit),
+    readyToAdvanceStepId: progressRow?.readyToAdvanceProgressionTrackStepId || null,
     progressionSets: currentStep.progressionSets,
     progressionRepsMin: currentStep.progressionRepsMin,
     progressionRepsMax: currentStep.progressionRepsMax,
-    progressionSeconds: currentStep.progressionSeconds
+    progressionSeconds: currentStep.progressionSeconds,
+    targetRepsMin: scheduleEntry.targetRepsMin ?? null,
+    targetRepsMax: scheduleEntry.targetRepsMax ?? null,
+    targetSeconds: scheduleEntry.targetSeconds ?? null,
+    restSeconds: scheduleEntry.restSeconds ?? null,
+    notes: scheduleEntry.notes ?? null
   };
 }
 
-function buildOccurrenceExerciseProjection(row = {}) {
-  const canonicalStepNumber = Number(row.canonicalStep?.stepNumber || 0);
+function buildDirectScheduleExerciseProjection(scheduleEntry, slotNumber = 0) {
+  const exercise = scheduleEntry.exercise || null;
+  if (!exercise?.id) {
+    throw new AppError(500, `Missing direct exercise data for schedule entry ${scheduleEntry.id}.`);
+  }
 
+  return {
+    occurrenceExerciseId: null,
+    slotNumber,
+    section: "main",
+    sourceKind: "program_schedule_entry",
+    programScheduleEntryId: scheduleEntry.id,
+    programRoutineEntryId: null,
+    entryKind: "direct_exercise",
+    isProgression: false,
+    progressionTrackId: null,
+    progressionTrackName: "",
+    progressionTrackStepId: null,
+    exerciseId: exercise.id,
+    exerciseName: exercise.name,
+    plannedWorkSetsMin: Number(scheduleEntry.workSetsMin || 0),
+    plannedWorkSetsMax: Number(scheduleEntry.workSetsMax || 0),
+    currentStepId: null,
+    currentStepNumber: null,
+    currentStepName: exercise.name,
+    currentStepInstruction: exercise.instructionText || "",
+    measurementUnit: selectMeasurementUnit(scheduleEntry.measurementUnit, exercise.defaultMeasurementUnit),
+    readyToAdvanceStepId: null,
+    progressionSets: null,
+    progressionRepsMin: null,
+    progressionRepsMax: null,
+    progressionSeconds: null,
+    targetRepsMin: scheduleEntry.targetRepsMin ?? null,
+    targetRepsMax: scheduleEntry.targetRepsMax ?? null,
+    targetSeconds: scheduleEntry.targetSeconds ?? null,
+    restSeconds: scheduleEntry.restSeconds ?? null,
+    notes: scheduleEntry.notes ?? null
+  };
+}
+
+function buildRoutineExerciseProjection(programRoutine, routineEntry, section, slotNumber = 0) {
+  return {
+    occurrenceExerciseId: null,
+    slotNumber,
+    section,
+    sourceKind: "program_routine_entry",
+    programScheduleEntryId: null,
+    programRoutineEntryId: routineEntry.id,
+    entryKind: "direct_exercise",
+    isProgression: false,
+    progressionTrackId: null,
+    progressionTrackName: "",
+    progressionTrackStepId: null,
+    exerciseId: routineEntry.exerciseId,
+    exerciseName: routineEntry.exerciseNameSnapshot || routineEntry.exercise?.name || "",
+    routineName: programRoutine.nameSnapshot || "",
+    plannedWorkSetsMin: Number(routineEntry.targetSets || 0),
+    plannedWorkSetsMax: Number(routineEntry.targetSets || 0),
+    currentStepId: null,
+    currentStepNumber: null,
+    currentStepName: routineEntry.exerciseNameSnapshot || routineEntry.exercise?.name || "",
+    currentStepInstruction: routineEntry.exercise?.instructionText || "",
+    measurementUnit: selectMeasurementUnit(routineEntry.measurementUnit, routineEntry.exercise?.defaultMeasurementUnit),
+    readyToAdvanceStepId: null,
+    progressionSets: null,
+    progressionRepsMin: null,
+    progressionRepsMax: null,
+    progressionSeconds: null,
+    targetRepsMin: routineEntry.targetRepsMin ?? null,
+    targetRepsMax: routineEntry.targetRepsMax ?? null,
+    targetSeconds: routineEntry.targetSeconds ?? null,
+    restSeconds: routineEntry.restSeconds ?? null,
+    notes: routineEntry.notes ?? null
+  };
+}
+
+function routineAppliesToDay(programRoutine = {}, dayOfWeek = 0) {
+  return programRoutine.dayOfWeek == null || Number(programRoutine.dayOfWeek) === Number(dayOfWeek);
+}
+
+function buildRoutineSectionExercises(programRoutines = [], routineEntriesByRoutineId = new Map(), section = "", dayOfWeek = 0, startSlot = 1) {
+  const rows = [];
+  let slotNumber = startSlot;
+  const matchingRoutines = programRoutines
+    .filter((routine) => String(routine.timing || "").trim().toLowerCase() === section)
+    .filter((routine) => routineAppliesToDay(routine, dayOfWeek))
+    .sort((left, right) => Number(left.slotNumber || 0) - Number(right.slotNumber || 0));
+
+  for (const routine of matchingRoutines) {
+    const routineEntries = routineEntriesByRoutineId.get(String(routine.id || "")) || [];
+    for (const entry of routineEntries) {
+      rows.push(buildRoutineExerciseProjection(routine, entry, section, slotNumber));
+      slotNumber += 1;
+    }
+  }
+
+  return {
+    rows,
+    nextSlotNumber: slotNumber
+  };
+}
+
+function buildPlannedExerciseProjections(
+  {
+    scheduleEntries = [],
+    programRoutines = [],
+    routineEntriesByRoutineId = new Map(),
+    progressByTrackId = new Map(),
+    firstStepsByTrackId = new Map(),
+    dayOfWeek = 0
+  } = {}
+) {
+  let slotNumber = 1;
+  const warmup = buildRoutineSectionExercises(programRoutines, routineEntriesByRoutineId, "warmup", dayOfWeek, slotNumber);
+  slotNumber = warmup.nextSlotNumber;
+
+  const main = [];
+  for (const entry of scheduleEntries) {
+    if (String(entry.entryKind || "").trim().toLowerCase() === "direct_exercise") {
+      main.push(buildDirectScheduleExerciseProjection(entry, slotNumber));
+    } else {
+      main.push(
+        buildProgressionExerciseProjection(
+          entry,
+          progressByTrackId.get(String(entry.progressionTrackId || "")) || null,
+          firstStepsByTrackId.get(String(entry.progressionTrackId || "")) || null,
+          slotNumber
+        )
+      );
+    }
+    slotNumber += 1;
+  }
+
+  const cooldown = buildRoutineSectionExercises(programRoutines, routineEntriesByRoutineId, "cooldown", dayOfWeek, slotNumber);
+
+  return [...warmup.rows, ...main, ...cooldown.rows];
+}
+
+function buildOccurrenceExerciseProjection(row = {}) {
   return {
     occurrenceExerciseId: row.id,
     slotNumber: Number(row.slotNumber || 0),
+    section: String(row.section || "main").trim(),
+    sourceKind: String(row.sourceKind || "").trim(),
+    programScheduleEntryId: row.programScheduleEntryId || null,
+    programRoutineEntryId: row.programRoutineEntryId || null,
+    entryKind: row.progressionTrackId ? "progression_track" : "direct_exercise",
+    isProgression: Boolean(row.progressionTrackId && row.progressionTrackStepId),
+    progressionTrackId: row.progressionTrackId || null,
+    progressionTrackName: row.progressionTrackNameSnapshot || withoutConvictPrefix(row.progressionTrack?.name || ""),
+    progressionTrackStepId: row.progressionTrackStepId || null,
     exerciseId: row.exerciseId,
     exerciseName: row.exerciseNameSnapshot,
-    plannedWorkSetsMin: Number(row.plannedWorkSetsMin || 0),
-    plannedWorkSetsMax: Number(row.plannedWorkSetsMax || 0),
-    currentStepId: row.canonicalStepId,
-    currentStepNumber: canonicalStepNumber > 0 ? canonicalStepNumber : null,
-    currentStepName: row.canonicalStepNameSnapshot,
+    plannedWorkSetsMin: Number(row.plannedSetsMin || 0),
+    plannedWorkSetsMax: Number(row.plannedSetsMax || 0),
+    currentStepId: row.progressionTrackStepId || null,
+    currentStepNumber: row.progressionTrackStep?.stepNumber ?? null,
+    currentStepName: row.progressionStepLabelSnapshot || row.exerciseNameSnapshot,
+    currentStepInstruction: row.progressionTrackStep?.instructionText || row.exercise?.instructionText || "",
     measurementUnit: row.measurementUnitSnapshot,
-    activeVariationId: row.personalStepVariationId,
-    activeVariationName: row.variationNameSnapshot,
     readyToAdvanceStepId: null,
     progressionSets: row.progressionSetsSnapshot,
     progressionRepsMin: row.progressionRepsMinSnapshot,
     progressionRepsMax: row.progressionRepsMaxSnapshot,
     progressionSeconds: row.progressionSecondsSnapshot,
+    targetRepsMin: row.targetRepsMinSnapshot,
+    targetRepsMax: row.targetRepsMaxSnapshot,
+    targetSeconds: row.targetSecondsSnapshot,
+    restSeconds: row.restSecondsSnapshot,
+    notes: row.notesSnapshot || row.notes || null,
     exerciseStatus: row.status
   };
 }
 
 function qualifiesSetForProgression(exercise = {}, performedValue = 0) {
+  if (!exercise.isProgression) {
+    return false;
+  }
+
   const measurementUnit = String(exercise.measurementUnit || "").trim().toLowerCase();
   if (measurementUnit === "seconds") {
     const threshold = Number(exercise.progressionSeconds || 0);
@@ -285,7 +507,7 @@ function mergeProgressStateIntoWorkoutProjection(
     return null;
   }
 
-  const progressByExerciseId = buildProgressIndex(progressRows);
+  const progressByTrackId = buildProgressIndex(progressRows);
   const readyStepsById = buildStepIndex(readyStepRows);
   const currentStepsById = buildStepIndex(currentStepRows);
 
@@ -293,14 +515,17 @@ function mergeProgressStateIntoWorkoutProjection(
     ...workoutProjection,
     exercises: Array.isArray(workoutProjection.exercises)
       ? workoutProjection.exercises.map((exercise) => {
-          const progressRow = progressByExerciseId.get(String(exercise.exerciseId || "")) || null;
-          const readyStep = readyStepsById.get(String(progressRow?.readyToAdvanceStepId || "")) || null;
+          if (!exercise.isProgression) {
+            return exercise;
+          }
+
+          const progressRow = progressByTrackId.get(String(exercise.progressionTrackId || "")) || null;
+          const readyStep = readyStepsById.get(String(progressRow?.readyToAdvanceProgressionTrackStepId || "")) || null;
           const currentSnapshotStep = currentStepsById.get(String(exercise.currentStepId || "")) || null;
-          const currentProgressStep = progressRow?.currentStep || null;
           const progressDisplayState = buildProgressDisplayState(
             {
               progressRow,
-              currentStep: currentProgressStep,
+              currentStep: progressRow?.currentProgressionTrackStep || null,
               fallbackStep: currentSnapshotStep,
               readyStep,
               base: exercise
@@ -314,7 +539,7 @@ function mergeProgressStateIntoWorkoutProjection(
             ...exercise,
             ...progressDisplayState,
             canApplyAdvancement: Boolean(
-              progressRow?.readyToAdvanceStepId &&
+              progressRow?.readyToAdvanceProgressionTrackStepId &&
               progressDisplayState.currentProgressStepId &&
               exercise.currentStepId &&
               String(progressDisplayState.currentProgressStepId) === String(exercise.currentStepId)
@@ -333,12 +558,15 @@ function mergeProgressStateIntoWorkoutProjection(
 function buildProjectedWorkout(
   dateString,
   {
+    assignment = null,
     todayDate,
     revisions,
     programsById,
     scheduleIndex,
-    progressByExerciseId,
-    firstStepsByExerciseId,
+    programRoutineIndex,
+    routineEntriesByRoutineId,
+    progressByTrackId,
+    firstStepsByTrackId,
     occurrence = null,
     occurrenceExercises = []
   } = {}
@@ -352,25 +580,11 @@ function buildProjectedWorkout(
 
   const program = programsById.get(String(revision.programId || "")) || null;
   const scheduleEntries = (scheduleIndex.get(String(revision.programId || ""))?.get(dayOfWeek) || []).slice();
-
-  if (scheduleEntries.length < 1) {
-    return {
-      scheduledForDate: dateString,
-      performedOnDate: null,
-      status: "rest_day",
-      occurrenceId: null,
-      revisionId: revision.id,
-      programId: revision.programId,
-      programName: program?.name || "",
-      dayOfWeek,
-      dayLabel,
-      isRestDay: true,
-      exercises: []
-    };
-  }
+  const programRoutines = programRoutineIndex.get(String(revision.programId || "")) || [];
 
   if (occurrence?.id) {
     return {
+      userProgramAssignmentId: assignment?.id || occurrence.userProgramAssignmentId || null,
       scheduledForDate: dateString,
       performedOnDate: occurrence.performedOnDate,
       status: occurrence.status,
@@ -385,15 +599,34 @@ function buildProjectedWorkout(
     };
   }
 
-  const exercises = scheduleEntries.map((entry) =>
-    buildDerivedExerciseProjection(
-      entry,
-      progressByExerciseId.get(String(entry.exerciseId || "")) || null,
-      firstStepsByExerciseId.get(String(entry.exerciseId || "")) || null
-    )
-  );
+  const exercises = buildPlannedExerciseProjections({
+    scheduleEntries,
+    programRoutines,
+    routineEntriesByRoutineId,
+    progressByTrackId,
+    firstStepsByTrackId,
+    dayOfWeek
+  });
+
+  if (exercises.length < 1) {
+    return {
+      userProgramAssignmentId: assignment?.id || null,
+      scheduledForDate: dateString,
+      performedOnDate: null,
+      status: "rest_day",
+      occurrenceId: null,
+      revisionId: revision.id,
+      programId: revision.programId,
+      programName: program?.name || "",
+      dayOfWeek,
+      dayLabel,
+      isRestDay: true,
+      exercises: []
+    };
+  }
 
   return {
+    userProgramAssignmentId: assignment?.id || null,
     scheduledForDate: dateString,
     performedOnDate: null,
     status: dateString < todayDate ? "overdue" : "scheduled",
@@ -413,19 +646,28 @@ function buildOccurrenceExerciseSnapshots(workoutOccurrenceId, workoutProjection
   return exercises.map((exercise) => ({
     workoutOccurrenceId,
     slotNumber: Number(exercise.slotNumber || 0),
+    section: exercise.section || "main",
+    sourceKind: exercise.sourceKind || "program_schedule_entry",
+    programScheduleEntryId: exercise.programScheduleEntryId || null,
+    programRoutineEntryId: exercise.programRoutineEntryId || null,
+    progressionTrackId: exercise.progressionTrackId || null,
+    progressionTrackStepId: exercise.progressionTrackStepId || exercise.currentStepId || null,
     exerciseId: exercise.exerciseId,
     exerciseNameSnapshot: exercise.exerciseName,
-    canonicalStepId: exercise.currentStepId,
-    canonicalStepNameSnapshot: exercise.currentStepName,
-    personalStepVariationId: exercise.activeVariationId,
-    variationNameSnapshot: exercise.activeVariationName,
+    progressionTrackNameSnapshot: exercise.progressionTrackName || null,
+    progressionStepLabelSnapshot: exercise.currentStepName || null,
     measurementUnitSnapshot: exercise.measurementUnit,
-    plannedWorkSetsMin: Number(exercise.plannedWorkSetsMin || 0),
-    plannedWorkSetsMax: Number(exercise.plannedWorkSetsMax || 0),
+    plannedSetsMin: Number(exercise.plannedWorkSetsMin || 0),
+    plannedSetsMax: Number(exercise.plannedWorkSetsMax || 0),
+    targetRepsMinSnapshot: exercise.targetRepsMin ?? null,
+    targetRepsMaxSnapshot: exercise.targetRepsMax ?? null,
+    targetSecondsSnapshot: exercise.targetSeconds ?? null,
     progressionSetsSnapshot: exercise.progressionSets,
     progressionRepsMinSnapshot: exercise.progressionRepsMin,
     progressionRepsMaxSnapshot: exercise.progressionRepsMax,
     progressionSecondsSnapshot: exercise.progressionSeconds,
+    restSecondsSnapshot: exercise.restSeconds ?? null,
+    notesSnapshot: exercise.notes ?? null,
     status: "pending",
     notes: null
   }));
@@ -440,12 +682,16 @@ export {
   buildOccurrenceExercisesIndex,
   buildOccurrenceIndex,
   buildProgramIndex,
+  buildProgramRoutineEntriesIndex,
+  buildProgramRoutineIndex,
   buildProgressIndex,
   buildProjectedWorkout,
+  buildRevisionsByAssignmentId,
   buildScheduleIndex,
   buildSetLogIndex,
   buildStepIndex,
   findEffectiveRevision,
   mergeProgressStateIntoWorkoutProjection,
+  occurrenceKey,
   qualifiesSetForProgression
 };

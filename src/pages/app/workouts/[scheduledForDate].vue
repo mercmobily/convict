@@ -38,8 +38,14 @@ const dirtyExerciseByKey = reactive({});
 const syncingExerciseByKey = reactive({});
 
 const scheduledForDate = computed(() => String(route.params.scheduledForDate || "").trim());
+const userProgramAssignmentId = computed(() => String(route.query.userProgramAssignmentId || "").trim());
 const homePagePath = computed(() => paths.page("/"));
-const detailApiPath = computed(() => paths.api(`/today/workouts/${scheduledForDate.value}`));
+const detailApiPath = computed(() => {
+  const query = userProgramAssignmentId.value
+    ? `?userProgramAssignmentId=${encodeURIComponent(userProgramAssignmentId.value)}`
+    : "";
+  return paths.api(`/today/workouts/${scheduledForDate.value}${query}`);
+});
 const workoutDetailRealtime = Object.freeze({
   events: workoutSetLogResource.operations?.list?.realtime?.events || []
 });
@@ -58,7 +64,8 @@ const startWorkoutCommand = useCommand({
   writeMethod: "POST",
   fallbackRunError: "Unable to open this workout.",
   buildRawPayload: () => ({
-    scheduledForDate: scheduledForDate.value
+    scheduledForDate: scheduledForDate.value,
+    userProgramAssignmentId: userProgramAssignmentId.value
   }),
   messages: {
     success: "Workout occurrence opened.",
@@ -70,7 +77,12 @@ const startWorkoutCommand = useCommand({
 });
 
 const submitWorkoutCommand = useCommand({
-  apiSuffix: () => `/today/workouts/${scheduledForDate.value}/submit`,
+  apiSuffix: () => {
+    const query = userProgramAssignmentId.value
+      ? `?userProgramAssignmentId=${encodeURIComponent(userProgramAssignmentId.value)}`
+      : "";
+    return `/today/workouts/${scheduledForDate.value}/submit${query}`;
+  },
   writeMethod: "POST",
   fallbackRunError: "Unable to finish this workout.",
   messages: {

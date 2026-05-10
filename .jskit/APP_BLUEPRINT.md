@@ -42,18 +42,25 @@
 
 | Entity | Purpose | Ownership | Notes |
 | --- | --- | --- | --- |
-| exercises | Canonical Big 6 exercise families | system | One row per family |
-| exercise_steps | Canonical progression steps and thresholds | system | Includes `measurement_unit` |
+| exercise_categories | Canonical grouping/search taxonomy | system | Includes the Convict movement families as categories |
+| exercises | Canonical concrete movements | system | One row per actual exercise movement |
+| exercise_category_memberships | Exercise-to-category taxonomy links | system | Supports primary and secondary category metadata |
+| progression_tracks | Canonical ordered progression paths | system | Convict families are progression tracks, not exercises |
+| progression_track_steps | Canonical progression track steps and thresholds | system | Points each step at a concrete exercise |
+| routines | Canonical reusable direct-exercise routine definitions | system | Used for warmups/cooldowns, not main progression work |
+| routine_entries | Ordered direct exercises inside canonical routines | system | Direct exercises only |
 | program_templates | Canonical Convict Conditioning templates | system | Built-in schedules shown during program selection |
-| program_template_schedule_entries | Day-by-day canonical template prescriptions | system | One row per weekday exercise entry for a template |
+| program_template_schedule_entries | Day-by-day canonical template main-work prescriptions | system | Schedules a progression track or a direct exercise |
+| program_template_routine_assignments | Canonical template warmup/cooldown routine attachments | system | Copied into user-owned program routine rows |
 | programs | User-owned copies of templates | user | A full copy is created when the user selects a template |
-| program_schedule_entries | Day-by-day prescriptions for a user-owned program copy | user | One row per weekday exercise entry for a copied program |
+| program_schedule_entries | Day-by-day main-work prescriptions for a copied program | user | Schedules a progression track or a direct exercise |
+| program_routines | Copied warmup/cooldown routine headers for a user program | user | Direct `user_id` owner and snapshot fields |
+| program_routine_entries | Copied warmup/cooldown routine rows for a user program | user | Direct `user_id` owner and exercise snapshots |
 | user_program_assignments | User's active training timeline | user | Owns program lifecycle, start/end dates, and active status |
 | user_program_assignment_revisions | Effective-dated schedule revisions for an assignment | user | Source of truth for derived future workouts |
-| user_exercise_progress | Current step and state per user per exercise family | user | Global across programs; separates earned advancement from current active step |
-| personal_step_variations | User-defined variants of a canonical step | user | For injury, rehab, or practical substitutions |
+| user_progression_track_progress | Current step and state per user per progression track | user | Global across programs; separates earned advancement from current active step |
 | workout_occurrences | Persisted actualized or explicitly resolved workouts | user | Stores `scheduled_for_date`, `performed_on_date`, and resolution state |
-| workout_occurrence_exercises | Exercise rows within a workout occurrence | user | Captures canonical step, optional variation, and planned set range |
+| workout_occurrence_exercises | Exercise rows within a workout occurrence | user | Snapshots warmup/main/cooldown, direct exercise, optional track step, and planned set range |
 | workout_set_logs | Actual logged sets within an occurrence exercise row | user | Stores reps or seconds per set |
 
 ## Route And Screen Plan
@@ -83,7 +90,7 @@
 ## Implementation Notes
 
 - CRUDs to scaffold:
-  `exercises`, `exercise_steps`, `program_templates`, `program_template_schedule_entries`, `programs`, `program_schedule_entries`, `user_program_assignments`, `user_program_assignment_revisions`, `personal_step_variations`, `user_exercise_progress`, `workout_occurrences`, `workout_occurrence_exercises`, and `workout_set_logs`
+  `exercise_categories`, `exercises`, `exercise_category_memberships`, `progression_tracks`, `progression_track_steps`, `routines`, `routine_entries`, `program_templates`, `program_template_schedule_entries`, `program_template_routine_assignments`, `programs`, `program_schedule_entries`, `program_routines`, `program_routine_entries`, `user_program_assignments`, `user_program_assignment_revisions`, `user_progression_track_progress`, `workout_occurrences`, `workout_occurrence_exercises`, and `workout_set_logs`
 - Non-CRUD pages to scaffold:
   Today, Choose Program, Progress, History, Missed Workouts
 - Custom code areas:
@@ -91,7 +98,7 @@
 - CRUD-first rule:
   Persisted app-owned entities must be scaffolded through `crud-server-generator` before custom workflow code is added. Generated resources own the canonical CRUD contract and migration scaffold. Custom services may orchestrate those entities later, but data reads and writes should go through JSKIT/internal `json-rest-api` seams rather than direct Knex unless there is a clear explicit exception.
 - Program-copy rule:
-  Program selection never points an assignment directly at a canonical template. The user sees `program_templates`, picks one, and the app clones that template plus its schedule rows into a new user-owned `program` and `program_schedule_entries` set before the first assignment revision is written.
+  Program selection never points an assignment directly at a canonical template. The user sees `program_templates`, picks one, and the app clones that template plus its schedule rows and routine attachments into a new user-owned `program`, `program_schedule_entries`, `program_routines`, and `program_routine_entries` set before the first assignment revision is written.
 - Delivery strategy:
   Use very vertical slices.
   Every new service, query, or mutation must ship with the smallest usable UI that exercises it in the same chunk.

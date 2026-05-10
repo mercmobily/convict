@@ -13,9 +13,9 @@ class ProgressProvider {
     "json-rest-api.core",
     "auth.policy.fastify",
     "crud.exercises",
-    "crud.exercise_steps",
-    "crud.personal_step_variations",
-    "crud.user_exercise_progress",
+    "crud.progression_tracks",
+    "crud.progression_track_steps",
+    "crud.user_progression_track_progress",
     "crud.workout_occurrences"
   ];
 

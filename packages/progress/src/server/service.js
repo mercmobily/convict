@@ -1,12 +1,13 @@
 import {
   buildProgressDisplayState,
   localTodayDateString,
-  sortCanonicalExercises
+  sortCanonicalProgressionTracks,
+  withoutConvictPrefix
 } from "@local/main/shared";
 import { resolveCurrentUserId } from "@local/main/shared/requestContext";
 
 function progressStatus(progressRow = null) {
-  if (progressRow?.readyToAdvanceStepId) {
+  if (progressRow?.readyToAdvanceProgressionTrackStepId) {
     return "ready_to_advance";
   }
 
@@ -17,10 +18,10 @@ function progressStatus(progressRow = null) {
   return "not_started";
 }
 
-function buildSummary(exerciseProgress = []) {
-  const totalExercises = exerciseProgress.length;
-  const startedExercises = exerciseProgress.filter((exercise) => exercise.status !== "not_started").length;
-  const readyToAdvanceExercises = exerciseProgress.filter((exercise) => exercise.status === "ready_to_advance").length;
+function buildSummary(trackProgress = []) {
+  const totalExercises = trackProgress.length;
+  const startedExercises = trackProgress.filter((track) => track.status !== "not_started").length;
+  const readyToAdvanceExercises = trackProgress.filter((track) => track.status === "ready_to_advance").length;
 
   return {
     totalExercises,
@@ -40,34 +41,34 @@ function createService({ progressRepository } = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
 
-      const [exerciseRows, progressRows] = await Promise.all([
-        progressRepository.listExercises({ context }),
-        progressRepository.listExerciseProgressByUserId(userId, { context })
+      const [trackRows, progressRows] = await Promise.all([
+        progressRepository.listProgressionTracks({ context }),
+        progressRepository.listProgressionTrackProgressByUserId(userId, { context })
       ]);
 
-      const progressByExerciseId = new Map(
+      const progressByTrackId = new Map(
         progressRows
-          .filter((row) => row?.exerciseId)
-          .map((row) => [String(row.exerciseId), row])
+          .filter((row) => row?.progressionTrackId)
+          .map((row) => [String(row.progressionTrackId), row])
       );
 
-      const missingExerciseIds = exerciseRows
-        .map((exercise) => String(exercise.id || "").trim())
+      const missingTrackIds = trackRows
+        .map((track) => String(track.id || "").trim())
         .filter(Boolean)
-        .filter((exerciseId) => !progressByExerciseId.has(exerciseId));
+        .filter((trackId) => !progressByTrackId.has(trackId));
 
-      const firstStepRows = await progressRepository.listFirstStepsByExerciseIds(missingExerciseIds, { context });
-      const firstStepByExerciseId = new Map(
+      const firstStepRows = await progressRepository.listFirstStepsByTrackIds(missingTrackIds, { context });
+      const firstStepByTrackId = new Map(
         firstStepRows
-          .filter((row) => row?.exerciseId)
-          .map((row) => [String(row.exerciseId), row])
+          .filter((row) => row?.progressionTrackId)
+          .map((row) => [String(row.progressionTrackId), row])
       );
 
-      const exerciseProgress = sortCanonicalExercises(exerciseRows).map((exercise) => {
-        const exerciseId = String(exercise.id || "").trim();
-        const progressRow = progressByExerciseId.get(exerciseId) || null;
-        const currentStep = progressRow?.currentStep || firstStepByExerciseId.get(exerciseId) || null;
-        const readyStep = progressRow?.readyToAdvanceStep || null;
+      const trackProgress = sortCanonicalProgressionTracks(trackRows).map((track) => {
+        const progressionTrackId = String(track.id || "").trim();
+        const progressRow = progressByTrackId.get(progressionTrackId) || null;
+        const currentStep = progressRow?.currentProgressionTrackStep || firstStepByTrackId.get(progressionTrackId) || null;
+        const readyStep = progressRow?.readyToAdvanceProgressionTrackStep || null;
         const lastCompletedOccurrence = progressRow?.lastCompletedOccurrence || null;
         const status = progressStatus(progressRow);
         const progressDisplayState = buildProgressDisplayState({
@@ -77,24 +78,27 @@ function createService({ progressRepository } = {}) {
         });
 
         return {
-          exerciseId,
-          exerciseSlug: String(exercise.slug || "").trim(),
-          exerciseName: String(exercise.name || "").trim(),
+          progressionTrackId,
+          progressionTrackSlug: String(track.slug || "").trim(),
+          progressionTrackName: withoutConvictPrefix(track.name || ""),
+          exerciseId: currentStep?.exerciseId || null,
+          exerciseSlug: String(currentStep?.exercise?.slug || "").trim(),
+          exerciseName: String(currentStep?.exercise?.name || "").trim(),
           status,
           ...progressDisplayState,
           measurementUnit: String(currentStep?.measurementUnit || "").trim(),
           beginnerSets: currentStep?.beginnerSets ?? null,
-          beginnerReps: currentStep?.beginnerReps ?? null,
+          beginnerRepsMin: currentStep?.beginnerRepsMin ?? null,
+          beginnerRepsMax: currentStep?.beginnerRepsMax ?? null,
           beginnerSeconds: currentStep?.beginnerSeconds ?? null,
           intermediateSets: currentStep?.intermediateSets ?? null,
-          intermediateReps: currentStep?.intermediateReps ?? null,
+          intermediateRepsMin: currentStep?.intermediateRepsMin ?? null,
+          intermediateRepsMax: currentStep?.intermediateRepsMax ?? null,
           intermediateSeconds: currentStep?.intermediateSeconds ?? null,
           progressionSets: currentStep?.progressionSets ?? null,
           progressionRepsMin: currentStep?.progressionRepsMin ?? null,
           progressionRepsMax: currentStep?.progressionRepsMax ?? null,
           progressionSeconds: currentStep?.progressionSeconds ?? null,
-          activeVariationId: progressRow?.activeVariationId || null,
-          activeVariationName: String(progressRow?.activeVariation?.name || "").trim(),
           lastCompletedAt: progressRow?.lastCompletedAt || null,
           lastCompletedScheduledForDate: lastCompletedOccurrence?.scheduledForDate || null,
           lastPerformedOnDate: lastCompletedOccurrence?.performedOnDate || null,
@@ -104,8 +108,8 @@ function createService({ progressRepository } = {}) {
 
       return {
         date: localTodayDateString(),
-        summary: buildSummary(exerciseProgress),
-        progress: exerciseProgress
+        summary: buildSummary(trackProgress),
+        progress: trackProgress
       };
     }
   });

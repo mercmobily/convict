@@ -17,6 +17,16 @@ const scheduledForDateRouteParamsValidator = deepFreeze({
   mode: "patch"
 });
 
+const assignmentQueryRouteValidator = deepFreeze({
+  schema: createSchema({
+    userProgramAssignmentId: {
+      type: "id",
+      required: false
+    }
+  }),
+  mode: "patch"
+});
+
 const historyProjectionQueryRouteValidator = deepFreeze({
   schema: createSchema({
     month: {
@@ -41,21 +51,29 @@ const historyProjectionQueryInputValidator = composeSchemaDefinitions([
 
 const startWorkoutBodyInputValidator = deepFreeze({
   schema: createSchema({
-    scheduledForDate: scheduledForDateSchema
+    scheduledForDate: scheduledForDateSchema,
+    userProgramAssignmentId: {
+      type: "id",
+      required: false
+    }
   }),
   mode: "patch"
 });
 
 const markWorkoutDefinitelyMissedBodyInputValidator = deepFreeze({
   schema: createSchema({
-    scheduledForDate: scheduledForDateSchema
+    scheduledForDate: scheduledForDateSchema,
+    userProgramAssignmentId: {
+      type: "id",
+      required: false
+    }
   }),
   mode: "patch"
 });
 
 const applyAdvancementBodyInputValidator = deepFreeze({
   schema: createSchema({
-    exerciseId: {
+    progressionTrackId: {
       type: "id",
       required: true
     }
@@ -72,11 +90,13 @@ const markWorkoutDefinitelyMissedCommandInputValidator = composeSchemaDefinition
 ]);
 
 const workoutDetailQueryInputValidator = composeSchemaDefinitions([
-  scheduledForDateRouteParamsValidator
+  scheduledForDateRouteParamsValidator,
+  assignmentQueryRouteValidator
 ]);
 
 const submitWorkoutCommandInputValidator = composeSchemaDefinitions([
-  scheduledForDateRouteParamsValidator
+  scheduledForDateRouteParamsValidator,
+  assignmentQueryRouteValidator
 ]);
 
 const applyAdvancementCommandInputValidator = composeSchemaDefinitions([
@@ -86,6 +106,7 @@ const applyAdvancementCommandInputValidator = composeSchemaDefinitions([
 export {
   todayProjectionQueryInputValidator,
   historyProjectionQueryRouteValidator,
+  assignmentQueryRouteValidator,
   historyProjectionQueryInputValidator,
   workoutDetailQueryInputValidator,
   startWorkoutBodyInputValidator,

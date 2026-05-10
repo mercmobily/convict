@@ -109,7 +109,7 @@ test("history page shows month projection and links into workout detail", async 
   }
 
   await page.getByRole("link", { name: "Open workout detail" }).click();
-  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetHistoryDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetHistoryDate}(\\?.*)?$`));
 
   await page.goto("/app/history");
 

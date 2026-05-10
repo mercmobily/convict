@@ -139,7 +139,7 @@ test("active assignment shows today's projection and resolves overdue workouts",
   const overdueCard = page.locator(".overdue-card");
   await expect(activeProgramCard.getByRole("heading", { name: "Supermax" })).toBeVisible();
   await expect(activeProgramCard.getByText("Supermax").first()).toBeVisible();
-  await expect(todayCard.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
+  await expect(todayCard.getByRole("heading", { name: /^Today/ })).toBeVisible();
   await expect(overdueCard.getByRole("heading", { name: "Missed workouts", exact: true })).toBeVisible();
 
   const primaryOverdueCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.primaryOverdueDate}"]`).first();
@@ -160,7 +160,7 @@ test("active assignment shows today's projection and resolves overdue workouts",
 
     await todayCard.getByRole("button", { name: "Start today's workout" }).click();
 
-    await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.todayDate}$`));
+    await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.todayDate}(\\?.*)?$`));
     await expect(page.getByRole("button", { name: "Back to today" })).toBeVisible();
 
     const todayOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.todayDate);
@@ -171,15 +171,15 @@ test("active assignment shows today's projection and resolves overdue workouts",
     expect(todayExerciseCount).toBe(fixturePlan.todayExercises.length);
 
     await page.getByRole("button", { name: "Back to today" }).click();
-    await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Today/ })).toBeVisible();
   } else {
-    await expect(todayCard.getByText("Rest day")).toBeVisible();
-    await expect(todayCard.getByText("No prescribed work today.")).toBeVisible();
+    await expect(todayCard.getByText("Rest day").first()).toBeVisible();
+    await expect(todayCard.getByText("Rest today.")).toBeVisible();
   }
 
   await primaryOverdueCard.getByRole("button", { name: "Start overdue workout" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.primaryOverdueDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.primaryOverdueDate}(\\?.*)?$`));
   await expect(page.getByRole("button", { name: "Back to today" })).toBeVisible();
 
   const overdueOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.primaryOverdueDate);
@@ -190,7 +190,7 @@ test("active assignment shows today's projection and resolves overdue workouts",
   expect(overdueExerciseCount).toBe(2);
 
   await page.getByRole("button", { name: "Back to today" }).click();
-  await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Today/ })).toBeVisible();
   await expect(primaryOverdueCard.getByRole("button", { name: "Resume workout" })).toBeVisible();
   await expect(primaryOverdueCard.getByText("Open workout")).toHaveCount(0);
 

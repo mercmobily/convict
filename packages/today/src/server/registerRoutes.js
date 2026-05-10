@@ -12,6 +12,7 @@ import {
 import {
   historyProjectionQueryRouteValidator,
   workoutDetailQueryInputValidator,
+  assignmentQueryRouteValidator,
   startWorkoutBodyInputValidator,
   markWorkoutDefinitelyMissedBodyInputValidator,
   applyAdvancementBodyInputValidator
@@ -92,12 +93,16 @@ function registerRoutes(
         tags: ["feature"],
         summary: "Read the workout detail projection and saved set logs for a scheduled date."
       },
-      params: workoutDetailQueryInputValidator
+      params: workoutDetailQueryInputValidator,
+      query: assignmentQueryRouteValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: READ_WORKOUT_DETAIL,
-        input: request.input.params || {}
+        input: {
+          ...(request.input.params || {}),
+          ...(request.input.query || {})
+        }
       });
 
       reply.code(200).send(response);
@@ -138,12 +143,16 @@ function registerRoutes(
         tags: ["feature"],
         summary: "Finish an in-progress workout occurrence and evaluate earned advancement."
       },
-      params: workoutDetailQueryInputValidator
+      params: workoutDetailQueryInputValidator,
+      query: assignmentQueryRouteValidator
     },
     async function (request, reply) {
       const response = await request.executeAction({
         actionId: SUBMIT_WORKOUT_OCCURRENCE,
-        input: request.input.params || {}
+        input: {
+          ...(request.input.params || {}),
+          ...(request.input.query || {})
+        }
       });
 
       reply.code(200).send(response);

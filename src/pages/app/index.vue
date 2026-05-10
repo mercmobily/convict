@@ -70,9 +70,10 @@ const selectionState = computed(() => {
   return payload && typeof payload === "object" ? payload : {};
 });
 const programTemplates = computed(() => (Array.isArray(selectionState.value.programTemplates) ? selectionState.value.programTemplates : []));
+const activeAssignments = computed(() => (Array.isArray(selectionState.value.activeAssignments) ? selectionState.value.activeAssignments : []));
 const activeAssignment = computed(() => selectionState.value.activeAssignment || null);
-const hasActiveAssignment = computed(() => Boolean(activeAssignment.value));
-const canStartProgram = computed(() => selectionState.value?.rules?.canStartProgram === true && !hasActiveAssignment.value);
+const hasActiveAssignment = computed(() => activeAssignments.value.length > 0);
+const canStartProgram = computed(() => selectionState.value?.rules?.canStartProgram === true);
 const selectedProgramTemplate = computed(() => {
   const currentId = String(selectedProgramTemplateId.value || "").trim();
   return programTemplates.value.find((programTemplate) => String(programTemplate.id) === currentId) || null;
@@ -108,7 +109,8 @@ const startWorkoutCommand = useCommand({
   writeMethod: "POST",
   fallbackRunError: "Unable to open this workout.",
   buildRawPayload: (_model, { context }) => ({
-    scheduledForDate: String(context?.scheduledForDate || "").trim()
+    scheduledForDate: String(context?.scheduledForDate || "").trim(),
+    userProgramAssignmentId: String(context?.userProgramAssignmentId || "").trim()
   }),
   messages: {
     success: "Workout occurrence opened.",
@@ -120,7 +122,10 @@ const startWorkoutCommand = useCommand({
       await todayResource.reload();
       return;
     }
-    await router.push(workoutDetailPagePath(scheduledForDate));
+    await router.push(workoutDetailPagePath({
+      scheduledForDate,
+      userProgramAssignmentId: rawPayload?.userProgramAssignmentId || ""
+    }));
   }
 });
 
@@ -129,7 +134,8 @@ const markWorkoutDefinitelyMissedCommand = useCommand({
   writeMethod: "POST",
   fallbackRunError: "Unable to mark this workout definitely missed.",
   buildRawPayload: (_model, { context }) => ({
-    scheduledForDate: String(context?.scheduledForDate || "").trim()
+    scheduledForDate: String(context?.scheduledForDate || "").trim(),
+    userProgramAssignmentId: String(context?.userProgramAssignmentId || "").trim()
   }),
   messages: {
     success: "Workout marked definitely missed.",
@@ -145,6 +151,10 @@ const todayState = computed(() => {
   return payload && typeof payload === "object" ? payload : {};
 });
 const todayProjection = computed(() => todayState.value.today || null);
+const todayWorkouts = computed(() => {
+  const rows = Array.isArray(todayState.value.todayWorkouts) ? todayState.value.todayWorkouts : [];
+  return rows.length > 0 ? rows : todayProjection.value ? [todayProjection.value] : [];
+});
 const overdueWorkouts = computed(() => (Array.isArray(todayState.value.overdue) ? todayState.value.overdue : []));
 const todayLoadError = computed(() => String(todayResource.loadError.value || "").trim());
 const isTodayLoading = computed(() => Boolean(hasActiveAssignment.value && todayResource.isInitialLoading.value));
@@ -284,8 +294,26 @@ function workoutSupportLine(workout = {}) {
   return "";
 }
 
-function workoutDetailPagePath(scheduledForDate) {
-  return paths.page(`/workouts/${String(scheduledForDate || "").trim()}`);
+function workoutActionContext(workoutOrDate = {}) {
+  if (typeof workoutOrDate === "string") {
+    return {
+      scheduledForDate: workoutOrDate,
+      userProgramAssignmentId: ""
+    };
+  }
+
+  return {
+    scheduledForDate: String(workoutOrDate?.scheduledForDate || "").trim(),
+    userProgramAssignmentId: String(workoutOrDate?.userProgramAssignmentId || "").trim()
+  };
+}
+
+function workoutDetailPagePath(workoutOrDate = {}) {
+  const context = workoutActionContext(workoutOrDate);
+  const query = context.userProgramAssignmentId
+    ? `?userProgramAssignmentId=${encodeURIComponent(context.userProgramAssignmentId)}`
+    : "";
+  return paths.page(`/workouts/${context.scheduledForDate}${query}`);
 }
 
 function isStartActionLoading(dateString = "") {
@@ -303,27 +331,25 @@ async function startSelectedProgram() {
   await startProgramCommand.run();
 }
 
-async function startWorkoutForDate(scheduledForDate) {
-  activeStartScheduledForDate.value = String(scheduledForDate || "").trim();
+async function startWorkoutForDate(workoutOrDate) {
+  const context = workoutActionContext(workoutOrDate);
+  activeStartScheduledForDate.value = context.scheduledForDate;
   try {
-    await startWorkoutCommand.run({
-      scheduledForDate: activeStartScheduledForDate.value
-    });
+    await startWorkoutCommand.run(context);
   } finally {
     activeStartScheduledForDate.value = "";
   }
 }
 
-async function openWorkoutDetail(scheduledForDate) {
-  await router.push(workoutDetailPagePath(scheduledForDate));
+async function openWorkoutDetail(workoutOrDate) {
+  await router.push(workoutDetailPagePath(workoutOrDate));
 }
 
-async function markWorkoutDefinitelyMissed(scheduledForDate) {
-  activeMissedScheduledForDate.value = String(scheduledForDate || "").trim();
+async function markWorkoutDefinitelyMissed(workoutOrDate) {
+  const context = workoutActionContext(workoutOrDate);
+  activeMissedScheduledForDate.value = context.scheduledForDate;
   try {
-    await markWorkoutDefinitelyMissedCommand.run({
-      scheduledForDate: activeMissedScheduledForDate.value
-    });
+    await markWorkoutDefinitelyMissedCommand.run(context);
   } finally {
     activeMissedScheduledForDate.value = "";
   }
@@ -464,6 +490,57 @@ function toggleActiveProgramExpanded() {
             </v-expand-transition>
           </v-card>
 
+          <v-sheet rounded="xl" border class="start-program-card start-program-card--compact">
+            <header class="start-program-card__header">
+              <v-avatar color="secondary" variant="tonal" rounded="lg">
+                <v-icon :icon="mdiCalendarStart" />
+              </v-avatar>
+              <div>
+                <h3 class="start-program-card__title">Add another program</h3>
+                <p class="start-program-card__copy mb-0">
+                  Start another template without closing your current training.
+                </p>
+              </div>
+            </header>
+
+            <div class="start-program-card__controls">
+              <v-select
+                v-model="selectionModel.programTemplateId"
+                :items="programTemplates"
+                item-title="name"
+                item-value="id"
+                label="Program"
+                variant="outlined"
+                density="comfortable"
+                hide-details="auto"
+              />
+
+              <div class="start-program-card__date">
+                <label class="text-body-2 text-medium-emphasis" for="add-starts-on-input">Start date</label>
+                <v-text-field
+                  id="add-starts-on-input"
+                  v-model="selectionModel.startsOn"
+                  type="date"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details="auto"
+                />
+              </div>
+
+              <v-btn
+                color="primary"
+                size="large"
+                :prepend-icon="mdiFlagCheckered"
+                :disabled="startProgramDisabled"
+                :loading="startProgramCommand.isRunning"
+                class="start-program-card__button"
+                @click="startSelectedProgram"
+              >
+                Start
+              </v-btn>
+            </div>
+          </v-sheet>
+
           <v-skeleton-loader
             v-if="isTodayLoading"
             type="article, card"
@@ -472,6 +549,8 @@ function toggleActiveProgramExpanded() {
 
           <template v-else>
             <v-sheet
+              v-for="todayWorkout in todayWorkouts"
+              :key="`today-${todayWorkout.userProgramAssignmentId || 'none'}-${todayWorkout.scheduledForDate}`"
               rounded="xl"
               border
               class="training-panel today-card"
@@ -479,36 +558,38 @@ function toggleActiveProgramExpanded() {
               <header class="training-panel__header">
                 <div class="training-panel__identity">
                   <v-avatar
-                    :color="todayProjection?.status === 'rest_day' ? 'surface-variant' : 'secondary'"
+                    :color="todayWorkout?.status === 'rest_day' ? 'surface-variant' : 'secondary'"
                     variant="tonal"
                     rounded="lg"
                     class="training-panel__icon"
                   >
-                    <v-icon :icon="todayProjection?.status === 'rest_day' ? mdiSleep : mdiCalendarClock" />
+                    <v-icon :icon="todayWorkout?.status === 'rest_day' ? mdiSleep : mdiCalendarClock" />
                   </v-avatar>
                   <div class="training-panel__title-block">
-                    <h3 class="training-panel__title">Today</h3>
+                    <h3 class="training-panel__title">
+                      {{ todayWorkout.programName ? `Today: ${todayWorkout.programName}` : "Today" }}
+                    </h3>
                     <p class="training-panel__date mb-0">
                       {{ todayDate ? formatDateLabel(todayDate) : "Current date unavailable" }}
                     </p>
                   </div>
                 </div>
                 <v-chip
-                  v-if="todayProjection"
-                  :color="workoutStatusColor(todayProjection.status)"
+                  v-if="todayWorkout"
+                  :color="workoutStatusColor(todayWorkout.status)"
                   variant="tonal"
                   label
                   class="training-panel__status"
                 >
-                  {{ workoutStatusLabel(todayProjection.status) }}
+                  {{ workoutStatusLabel(todayWorkout.status) }}
                 </v-chip>
               </header>
 
-              <template v-if="todayProjection">
+              <template v-if="todayWorkout">
                 <WorkoutExercisePreviewList
-                  v-if="Array.isArray(todayProjection.exercises) && todayProjection.exercises.length > 0"
-                  :exercises="todayProjection.exercises"
-                  :key-prefix="`today-${todayProjection.scheduledForDate}`"
+                  v-if="Array.isArray(todayWorkout.exercises) && todayWorkout.exercises.length > 0"
+                  :exercises="todayWorkout.exercises"
+                  :key-prefix="`today-${todayWorkout.userProgramAssignmentId}-${todayWorkout.scheduledForDate}`"
                   :stacked="smAndDown"
                   class="training-panel__exercise-list"
                 />
@@ -516,19 +597,19 @@ function toggleActiveProgramExpanded() {
                 <section
                   class="training-panel__summary"
                   :class="{
-                    'training-panel__summary--actionable': todayProjection.status === 'scheduled',
-                    'training-panel__summary--button-only': ['scheduled', 'in_progress'].includes(todayProjection.status)
+                    'training-panel__summary--actionable': todayWorkout.status === 'scheduled',
+                    'training-panel__summary--button-only': ['scheduled', 'in_progress'].includes(todayWorkout.status)
                   }"
                 >
-                  <div v-if="!['scheduled', 'in_progress'].includes(todayProjection.status)" class="training-panel__copy">
-                    <div class="training-panel__headline">{{ workoutHeadline(todayProjection) }}</div>
-                    <p v-if="workoutSupportLine(todayProjection)" class="training-panel__support mb-0">
-                      {{ workoutSupportLine(todayProjection) }}
+                  <div v-if="!['scheduled', 'in_progress'].includes(todayWorkout.status)" class="training-panel__copy">
+                    <div class="training-panel__headline">{{ workoutHeadline(todayWorkout) }}</div>
+                    <p v-if="workoutSupportLine(todayWorkout)" class="training-panel__support mb-0">
+                      {{ workoutSupportLine(todayWorkout) }}
                     </p>
                   </div>
                   <div class="training-panel__actions">
                     <v-btn
-                      v-if="todayProjection.status === 'scheduled'"
+                      v-if="todayWorkout.status === 'scheduled'"
                       color="primary"
                       variant="flat"
                       size="large"
@@ -536,20 +617,20 @@ function toggleActiveProgramExpanded() {
                       aria-label="Start today's workout"
                       :prepend-icon="mdiPlayCircleOutline"
                       class="training-panel__primary-action"
-                      :loading="isStartActionLoading(todayProjection.scheduledForDate)"
-                      @click="startWorkoutForDate(todayProjection.scheduledForDate)"
+                      :loading="isStartActionLoading(todayWorkout.scheduledForDate)"
+                      @click="startWorkoutForDate(todayWorkout)"
                     >
                       Start workout
                     </v-btn>
                     <v-btn
-                      v-else-if="todayProjection.status === 'in_progress'"
+                      v-else-if="todayWorkout.status === 'in_progress'"
                       color="primary"
                       variant="flat"
                       rounded="pill"
                       aria-label="Resume workout"
                       :prepend-icon="mdiPlayCircleOutline"
                       class="training-panel__primary-action"
-                      @click="openWorkoutDetail(todayProjection.scheduledForDate)"
+                      @click="openWorkoutDetail(todayWorkout)"
                     >
                       Resume
                     </v-btn>
@@ -588,7 +669,7 @@ function toggleActiveProgramExpanded() {
               <div class="missed-panel__list">
                 <article
                   v-for="workout in overdueWorkouts"
-                  :key="`overdue-${workout.scheduledForDate}`"
+                  :key="`overdue-${workout.userProgramAssignmentId || 'none'}-${workout.scheduledForDate}`"
                   class="missed-workout-row overdue-workout-card"
                   :data-scheduled-for-date="workout.scheduledForDate"
                 >
@@ -630,7 +711,7 @@ function toggleActiveProgramExpanded() {
                         aria-label="Start overdue workout"
                         :prepend-icon="mdiPlayCircleOutline"
                         :loading="isStartActionLoading(workout.scheduledForDate)"
-                        @click="startWorkoutForDate(workout.scheduledForDate)"
+                        @click="startWorkoutForDate(workout)"
                       >
                         Start
                       </v-btn>
@@ -640,7 +721,7 @@ function toggleActiveProgramExpanded() {
                         aria-label="Mark definitely missed"
                         :prepend-icon="mdiCheckCircleOutline"
                         :loading="isMarkMissedActionLoading(workout.scheduledForDate)"
-                        @click="markWorkoutDefinitelyMissed(workout.scheduledForDate)"
+                        @click="markWorkoutDefinitelyMissed(workout)"
                       >
                         Mark missed
                       </v-btn>
@@ -653,7 +734,7 @@ function toggleActiveProgramExpanded() {
                       aria-label="Resume workout"
                       :prepend-icon="mdiPlayCircleOutline"
                       class="training-panel__primary-action missed-workout-row__primary-action"
-                      @click="openWorkoutDetail(workout.scheduledForDate)"
+                      @click="openWorkoutDetail(workout)"
                     >
                       Resume
                     </v-btn>

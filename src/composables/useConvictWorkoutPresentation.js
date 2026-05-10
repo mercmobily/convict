@@ -129,15 +129,11 @@ function exerciseDetailLine(exercise = {}) {
   const detailParts = [];
   const currentStepNumber = exerciseCurrentStepNumber(exercise);
   const currentStepName = exerciseCurrentStepName(exercise);
-  const variationName = String(exercise.activeVariationName || "").trim();
 
-  if (currentStepNumber && currentStepName) {
+  if (exercise.isProgression && currentStepNumber && currentStepName) {
     detailParts.push(`Step ${currentStepNumber}: ${currentStepName}`);
   } else if (currentStepName) {
     detailParts.push(currentStepName);
-  }
-  if (variationName) {
-    detailParts.push(`Variation: ${variationName}`);
   }
 
   return detailParts.join(" • ");

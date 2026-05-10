@@ -64,6 +64,9 @@ const savedSetLogs = computed(() => {
 });
 
 const currentStepTitle = computed(() => exerciseDetailLine(props.exercise) || "No step data available.");
+const exerciseEyebrow = computed(() => (
+  String(props.exercise.progressionTrackName || props.exercise.section || "").trim()
+));
 const exerciseMetaParts = computed(() => ([
   formatWorkSetLabel(props.exercise.plannedWorkSetsMin, props.exercise.plannedWorkSetsMax),
   progressionTargetLabel(props.exercise) ? `Progression ${progressionTargetLabel(props.exercise)}` : "",
@@ -161,7 +164,7 @@ function isEditingSetLog(setLog = {}) {
           <v-icon :icon="mdiDumbbell" />
         </v-avatar>
         <div class="exercise-card__title-block">
-          <div class="exercise-card__family">{{ exercise.exerciseName }}</div>
+          <div v-if="exerciseEyebrow" class="exercise-card__family">{{ exerciseEyebrow }}</div>
           <h4 class="exercise-card__step">{{ currentStepTitle }}</h4>
         </div>
       </div>

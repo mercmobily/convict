@@ -6,6 +6,20 @@ import { normalizeSimplifiedRow } from "@local/main/shared";
 
 const ACTIVE_ASSIGNMENT_STATUS = "active";
 
+function jsonRestContext(options = {}) {
+  return createJsonRestContext(options?.context || null);
+}
+
+function transaction(options = {}) {
+  return options?.trx || null;
+}
+
+function normalizeAssignmentRow(row = null) {
+  return normalizeSimplifiedRow(row, {
+    dateOnlyFields: ["startsOn", "endsOn"]
+  });
+}
+
 function normalizeAssignmentRevisionRow(row = null) {
   return normalizeSimplifiedRow(row, {
     relationIds: {
@@ -20,6 +34,25 @@ function normalizeProgramScheduleEntryRow(row = null) {
   return normalizeSimplifiedRow(row, {
     relationIds: {
       programId: "program",
+      progressionTrackId: "progressionTrack",
+      exerciseId: "exercise"
+    }
+  });
+}
+
+function normalizeProgramRoutineRow(row = null) {
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      programId: "program",
+      sourceRoutineId: "sourceRoutine"
+    }
+  });
+}
+
+function normalizeProgramRoutineEntryRow(row = null) {
+  return normalizeSimplifiedRow(row, {
+    relationIds: {
+      programRoutineId: "programRoutine",
       exerciseId: "exercise"
     }
   });
@@ -39,9 +72,11 @@ function normalizeOccurrenceExerciseRow(row = null) {
   return normalizeSimplifiedRow(row, {
     relationIds: {
       workoutOccurrenceId: "workoutOccurrence",
-      exerciseId: "exercise",
-      canonicalStepId: "canonicalStep",
-      personalStepVariationId: "personalStepVariation"
+      programScheduleEntryId: "programScheduleEntry",
+      programRoutineEntryId: "programRoutineEntry",
+      progressionTrackId: "progressionTrack",
+      progressionTrackStepId: "progressionTrackStep",
+      exerciseId: "exercise"
     }
   });
 }
@@ -54,48 +89,43 @@ function normalizeSetLogRow(row = null) {
   });
 }
 
-function normalizeExerciseProgressRow(row = null) {
+function normalizeProgressionTrackProgressRow(row = null) {
   return normalizeSimplifiedRow(row, {
     relationIds: {
-      exerciseId: "exercise",
-      currentStepId: "currentStep",
-      readyToAdvanceStepId: "readyToAdvanceStep",
-      activeVariationId: "activeVariation",
+      progressionTrackId: "progressionTrack",
+      currentProgressionTrackStepId: "currentProgressionTrackStep",
+      readyToAdvanceProgressionTrackStepId: "readyToAdvanceProgressionTrackStep",
       lastCompletedOccurrenceId: "lastCompletedOccurrence"
     }
   });
 }
 
-function normalizeExerciseStepRow(row = null) {
+function normalizeProgressionTrackStepRow(row = null) {
   return normalizeSimplifiedRow(row, {
     relationIds: {
+      progressionTrackId: "progressionTrack",
       exerciseId: "exercise"
     }
   });
 }
 
-function normalizeAssignmentRow(row = null) {
-  return normalizeSimplifiedRow(row, {
-    dateOnlyFields: ["startsOn", "endsOn"]
-  });
-}
-
 function createRepository({
   api,
-  userExerciseProgressRepository,
+  userProgressionTrackProgressRepository,
   workoutOccurrencesRepository,
   workoutOccurrenceExercisesRepository
 } = {}) {
   const withTransaction = workoutOccurrencesRepository.withTransaction;
 
-  const repository = {
+  return Object.freeze({
     withTransaction,
-    async findActiveAssignmentByUserId(userId, options = {}) {
+
+    async listActiveAssignmentsByUserId(userId, options = {}) {
       if (!userId) {
-        return null;
+        return [];
       }
 
-      const rows = extractJsonRestCollectionRows(
+      return extractJsonRestCollectionRows(
         await api.resources.userProgramAssignments.query(
           {
             queryParams: {
@@ -105,20 +135,20 @@ function createRepository({
               },
               sort: ["-createdAt"],
               page: {
-                size: 1
+                size: 128
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
-      );
-
-      return normalizeAssignmentRow(rows[0] || null);
+      ).map((row) => normalizeAssignmentRow(row)).filter(Boolean);
     },
-    async listAssignmentRevisions(userProgramAssignmentId, options = {}) {
-      if (!userProgramAssignmentId) {
+
+    async listAssignmentRevisionsByAssignmentIds(userProgramAssignmentIds = [], options = {}) {
+      const ids = Array.isArray(userProgramAssignmentIds) ? userProgramAssignmentIds.filter(Boolean) : [];
+      if (ids.length < 1) {
         return [];
       }
 
@@ -127,21 +157,22 @@ function createRepository({
           {
             queryParams: {
               filters: {
-                userProgramAssignment: userProgramAssignmentId
+                userProgramAssignmentIds: ids
               },
               include: ["userProgramAssignment", "program"],
-              sort: ["effectiveFromDate", "createdAt"],
+              sort: ["userProgramAssignmentId", "effectiveFromDate", "createdAt"],
               page: {
-                size: 256
+                size: 512
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeAssignmentRevisionRow(row)).filter(Boolean);
     },
+
     async listProgramsByIds(programIds = [], options = {}) {
       const ids = Array.isArray(programIds) ? programIds.filter(Boolean) : [];
       if (ids.length < 1) {
@@ -157,16 +188,43 @@ function createRepository({
               },
               sort: ["createdAt"],
               page: {
-                size: 256
+                size: 512
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       );
     },
+
+    async listExercisesByIds(exerciseIds = [], options = {}) {
+      const ids = Array.isArray(exerciseIds) ? exerciseIds.filter(Boolean) : [];
+      if (ids.length < 1) {
+        return [];
+      }
+
+      return extractJsonRestCollectionRows(
+        await api.resources.exercises.query(
+          {
+            queryParams: {
+              filters: {
+                ids
+              },
+              sort: ["name"],
+              page: {
+                size: 2048
+              }
+            },
+            transaction: transaction(options),
+            simplified: true
+          },
+          jsonRestContext(options)
+        )
+      );
+    },
+
     async listScheduleEntriesForProgramIds(programIds = [], options = {}) {
       const ids = Array.isArray(programIds) ? programIds.filter(Boolean) : [];
       if (ids.length < 1) {
@@ -180,21 +238,77 @@ function createRepository({
               filters: {
                 programIds: ids
               },
-              include: ["program", "exercise"],
+              include: ["program", "progressionTrack", "exercise"],
               sort: ["programId", "dayOfWeek", "slotNumber"],
+              page: {
+                size: 1024
+              }
+            },
+            transaction: transaction(options),
+            simplified: true
+          },
+          jsonRestContext(options)
+        )
+      ).map((row) => normalizeProgramScheduleEntryRow(row)).filter(Boolean);
+    },
+
+    async listProgramRoutinesForProgramIds(programIds = [], options = {}) {
+      const ids = Array.isArray(programIds) ? programIds.filter(Boolean) : [];
+      if (ids.length < 1) {
+        return [];
+      }
+
+      return extractJsonRestCollectionRows(
+        await api.resources.programRoutines.query(
+          {
+            queryParams: {
+              filters: {
+                programIds: ids
+              },
+              include: ["program", "sourceRoutine"],
+              sort: ["programId", "timing", "dayOfWeek", "slotNumber"],
               page: {
                 size: 512
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
-      ).map((row) => normalizeProgramScheduleEntryRow(row)).filter(Boolean);
+      ).map((row) => normalizeProgramRoutineRow(row)).filter(Boolean);
     },
-    async listOccurrencesByAssignmentBetweenDates(userProgramAssignmentId, startDate, endDate, options = {}) {
-      if (!userProgramAssignmentId || !startDate || !endDate || startDate > endDate) {
+
+    async listProgramRoutineEntriesForRoutineIds(programRoutineIds = [], options = {}) {
+      const ids = Array.isArray(programRoutineIds) ? programRoutineIds.filter(Boolean) : [];
+      if (ids.length < 1) {
+        return [];
+      }
+
+      return extractJsonRestCollectionRows(
+        await api.resources.programRoutineEntries.query(
+          {
+            queryParams: {
+              filters: {
+                programRoutineIds: ids
+              },
+              include: ["programRoutine", "exercise"],
+              sort: ["programRoutineId", "slotNumber"],
+              page: {
+                size: 1024
+              }
+            },
+            transaction: transaction(options),
+            simplified: true
+          },
+          jsonRestContext(options)
+        )
+      ).map((row) => normalizeProgramRoutineEntryRow(row)).filter(Boolean);
+    },
+
+    async listOccurrencesByAssignmentsBetweenDates(userProgramAssignmentIds = [], startDate, endDate, options = {}) {
+      const ids = Array.isArray(userProgramAssignmentIds) ? userProgramAssignmentIds.filter(Boolean) : [];
+      if (ids.length < 1 || !startDate || !endDate || startDate > endDate) {
         return [];
       }
 
@@ -203,7 +317,7 @@ function createRepository({
           {
             queryParams: {
               filters: {
-                userProgramAssignment: userProgramAssignmentId,
+                userProgramAssignmentIds: ids,
                 scheduledForDateRange: [startDate, endDate]
               },
               include: ["userProgramAssignment", "userProgramAssignmentRevision"],
@@ -212,13 +326,14 @@ function createRepository({
                 size: 4096
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeOccurrenceRow(row)).filter(Boolean);
     },
+
     async findOccurrenceByAssignmentAndDate(userProgramAssignmentId, scheduledForDate, options = {}) {
       if (!userProgramAssignmentId || !scheduledForDate) {
         return null;
@@ -229,7 +344,7 @@ function createRepository({
           {
             queryParams: {
               filters: {
-                userProgramAssignment: userProgramAssignmentId,
+                userProgramAssignmentId,
                 scheduledForDateRange: [scheduledForDate, scheduledForDate]
               },
               include: ["userProgramAssignment", "userProgramAssignmentRevision"],
@@ -238,15 +353,16 @@ function createRepository({
                 size: 1
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeOccurrenceRow(row)).filter(Boolean);
 
       return rows[0] || null;
     },
+
     async listOccurrenceExercisesByOccurrenceIds(occurrenceIds = [], options = {}) {
       const ids = Array.isArray(occurrenceIds) ? occurrenceIds.filter(Boolean) : [];
       if (ids.length < 1) {
@@ -260,19 +376,27 @@ function createRepository({
               filters: {
                 workoutOccurrenceIds: ids
               },
-              include: ["workoutOccurrence", "exercise", "canonicalStep", "personalStepVariation"],
+              include: [
+                "workoutOccurrence",
+                "exercise",
+                "programScheduleEntry",
+                "programRoutineEntry",
+                "progressionTrack",
+                "progressionTrackStep"
+              ],
               sort: ["workoutOccurrenceId", "slotNumber"],
               page: {
-                size: 2048
+                size: 4096
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeOccurrenceExerciseRow(row)).filter(Boolean);
     },
+
     async listSetLogsByOccurrenceExerciseIds(occurrenceExerciseIds = [], options = {}) {
       const ids = Array.isArray(occurrenceExerciseIds) ? occurrenceExerciseIds.filter(Boolean) : [];
       if (ids.length < 1) {
@@ -292,66 +416,74 @@ function createRepository({
                 size: 4096
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
       ).map((row) => normalizeSetLogRow(row)).filter(Boolean);
     },
-    async listExerciseProgressByUserAndExerciseIds(userId, exerciseIds = [], options = {}) {
-      const ids = Array.isArray(exerciseIds) ? exerciseIds.filter(Boolean) : [];
+
+    async listProgressionTrackProgressByUserAndTrackIds(userId, progressionTrackIds = [], options = {}) {
+      const ids = Array.isArray(progressionTrackIds) ? progressionTrackIds.filter(Boolean) : [];
       if (!userId || ids.length < 1) {
         return [];
       }
 
       return extractJsonRestCollectionRows(
-        await api.resources.userExerciseProgress.query(
+        await api.resources.userProgressionTrackProgress.query(
           {
             queryParams: {
               filters: {
                 userId,
-                exerciseIds: ids
+                progressionTrackIds: ids
               },
-              include: ["exercise", "currentStep", "readyToAdvanceStep", "activeVariation", "lastCompletedOccurrence"],
+              include: [
+                "progressionTrack",
+                "currentProgressionTrackStep",
+                "readyToAdvanceProgressionTrackStep",
+                "lastCompletedOccurrence"
+              ],
               page: {
-                size: 256
+                size: 512
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
-      ).map((row) => normalizeExerciseProgressRow(row)).filter(Boolean);
+      ).map((row) => normalizeProgressionTrackProgressRow(row)).filter(Boolean);
     },
-    async listFirstStepsByExerciseIds(exerciseIds = [], options = {}) {
-      const ids = Array.isArray(exerciseIds) ? exerciseIds.filter(Boolean) : [];
+
+    async listFirstStepsByTrackIds(progressionTrackIds = [], options = {}) {
+      const ids = Array.isArray(progressionTrackIds) ? progressionTrackIds.filter(Boolean) : [];
       if (ids.length < 1) {
         return [];
       }
 
       return extractJsonRestCollectionRows(
-        await api.resources.exerciseSteps.query(
+        await api.resources.progressionTrackSteps.query(
           {
             queryParams: {
               filters: {
-                exerciseIds: ids,
+                progressionTrackIds: ids,
                 stepNumber: 1
               },
-              include: ["exercise"],
-              sort: ["exerciseId"],
+              include: ["progressionTrack", "exercise"],
+              sort: ["progressionTrackId", "stepNumber"],
               page: {
-                size: 256
+                size: 512
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
-      ).map((row) => normalizeExerciseStepRow(row)).filter(Boolean);
+      ).map((row) => normalizeProgressionTrackStepRow(row)).filter(Boolean);
     },
+
     async listStepsByIds(stepIds = [], options = {}) {
       const ids = Array.isArray(stepIds) ? stepIds.filter(Boolean) : [];
       if (ids.length < 1) {
@@ -359,54 +491,55 @@ function createRepository({
       }
 
       return extractJsonRestCollectionRows(
-        await api.resources.exerciseSteps.query(
+        await api.resources.progressionTrackSteps.query(
           {
             queryParams: {
               filters: {
                 ids
               },
-              include: ["exercise"],
-              sort: ["exerciseId", "stepNumber"],
+              include: ["progressionTrack", "exercise"],
+              sort: ["progressionTrackId", "stepNumber"],
               page: {
                 size: 2048
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
-      ).map((row) => normalizeExerciseStepRow(row)).filter(Boolean);
+      ).map((row) => normalizeProgressionTrackStepRow(row)).filter(Boolean);
     },
-    async listStepsByExerciseIds(exerciseIds = [], options = {}) {
-      const ids = Array.isArray(exerciseIds) ? exerciseIds.filter(Boolean) : [];
+
+    async listStepsByTrackIds(progressionTrackIds = [], options = {}) {
+      const ids = Array.isArray(progressionTrackIds) ? progressionTrackIds.filter(Boolean) : [];
       if (ids.length < 1) {
         return [];
       }
 
       return extractJsonRestCollectionRows(
-        await api.resources.exerciseSteps.query(
+        await api.resources.progressionTrackSteps.query(
           {
             queryParams: {
               filters: {
-                exerciseIds: ids
+                progressionTrackIds: ids
               },
-              include: ["exercise"],
-              sort: ["exerciseId", "stepNumber"],
+              include: ["progressionTrack", "exercise"],
+              sort: ["progressionTrackId", "stepNumber"],
               page: {
                 size: 2048
               }
             },
-            transaction: options?.trx || null,
+            transaction: transaction(options),
             simplified: true
           },
-          createJsonRestContext(options?.context || null)
+          jsonRestContext(options)
         )
-      ).map((row) => normalizeExerciseStepRow(row)).filter(Boolean);
+      ).map((row) => normalizeProgressionTrackStepRow(row)).filter(Boolean);
     },
+
     async createOccurrence(
       {
-        userId,
         userProgramAssignmentId,
         userProgramAssignmentRevisionId,
         scheduledForDate,
@@ -419,8 +552,8 @@ function createRepository({
       } = {},
       options = {}
     ) {
-      if (!userId || !userProgramAssignmentId || !userProgramAssignmentRevisionId || !scheduledForDate) {
-        throw new TypeError("createOccurrence requires user, assignment, revision, and scheduled date.");
+      if (!userProgramAssignmentId || !userProgramAssignmentRevisionId || !scheduledForDate) {
+        throw new TypeError("createOccurrence requires assignment, revision, and scheduled date.");
       }
 
       const document = await workoutOccurrencesRepository.createDocument(
@@ -436,98 +569,63 @@ function createRepository({
           notes: notes == null ? null : String(notes)
         },
         {
-          trx: options?.trx || null,
+          trx: transaction(options),
           context: options?.context || null
         }
       );
 
       return document?.data?.id || null;
     },
+
     async updateOccurrence(occurrenceId, fields = {}, options = {}) {
       if (!occurrenceId) {
         throw new TypeError("updateOccurrence requires occurrence id.");
       }
       return workoutOccurrencesRepository.patchDocumentById(occurrenceId, fields, {
-        trx: options?.trx || null,
+        trx: transaction(options),
         context: options?.context || null
       });
     },
+
     async createOccurrenceExercises(records = [], options = {}) {
       const normalizedRecords = Array.isArray(records) ? records : [];
-      if (normalizedRecords.length < 1) {
-        return 0;
-      }
-
       for (const record of normalizedRecords) {
-        await workoutOccurrenceExercisesRepository.createDocument(
-          record,
-          {
-            trx: options?.trx || null,
-            context: options?.context || null
-          }
-        );
+        await workoutOccurrenceExercisesRepository.createDocument(record, {
+          trx: transaction(options),
+          context: options?.context || null
+        });
       }
-
       return normalizedRecords.length;
     },
+
     async updateOccurrenceExercise(occurrenceExerciseId, fields = {}, options = {}) {
       if (!occurrenceExerciseId) {
         throw new TypeError("updateOccurrenceExercise requires occurrence exercise id.");
       }
       return workoutOccurrenceExercisesRepository.patchDocumentById(occurrenceExerciseId, fields, {
-        trx: options?.trx || null,
+        trx: transaction(options),
         context: options?.context || null
       });
     },
-    async createExerciseProgress(
-      {
-        userId,
-        exerciseId,
-        currentStepId,
-        readyToAdvanceStepId = null,
-        activeVariationId = null,
-        readyToAdvanceAt = null,
-        lastCompletedOccurrenceId = null,
-        lastCompletedAt = null,
-        stallCount = 0
-      } = {},
-      options = {}
-    ) {
-      if (!userId || !exerciseId || !currentStepId) {
-        throw new TypeError("createExerciseProgress requires user, exercise, and current step ids.");
-      }
 
-      const document = await userExerciseProgressRepository.createDocument(
-        {
-          exerciseId,
-          currentStepId,
-          readyToAdvanceStepId,
-          activeVariationId,
-          readyToAdvanceAt: readyToAdvanceAt || null,
-          lastCompletedOccurrenceId,
-          lastCompletedAt: lastCompletedAt || null,
-          stallCount
-        },
-        {
-          trx: options?.trx || null,
-          context: options?.context || null
-        }
-      );
-
+    async createProgressionTrackProgress(record = {}, options = {}) {
+      const document = await userProgressionTrackProgressRepository.createDocument(record, {
+        trx: transaction(options),
+        context: options?.context || null
+      });
       return document?.data?.id || null;
     },
-    async updateExerciseProgress(progressId, fields = {}, options = {}) {
+
+    async updateProgressionTrackProgress(progressId, fields = {}, options = {}) {
       if (!progressId) {
-        throw new TypeError("updateExerciseProgress requires progress id.");
+        throw new TypeError("updateProgressionTrackProgress requires progress id.");
       }
-      return userExerciseProgressRepository.patchDocumentById(progressId, fields, {
-        trx: options?.trx || null,
+      return userProgressionTrackProgressRepository.patchDocumentById(progressId, fields, {
+        trx: transaction(options),
         context: options?.context || null
       });
     }
-  };
-
-  return Object.freeze(repository);
+  });
 }
 
 export { createRepository };

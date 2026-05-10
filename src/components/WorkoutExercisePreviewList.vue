@@ -47,6 +47,10 @@ function exerciseMetaLine(exercise = {}) {
 
   return parts.filter(Boolean).join(" / ");
 }
+
+function exerciseEyebrow(exercise = {}) {
+  return String(exercise.progressionTrackName || exercise.section || "").trim();
+}
 </script>
 
 <template>
@@ -63,7 +67,7 @@ function exerciseMetaLine(exercise = {}) {
       role="listitem"
     >
       <div class="exercise-preview-list__main">
-        <div class="exercise-preview-list__eyebrow">{{ exercise.exerciseName }}</div>
+        <div v-if="exerciseEyebrow(exercise)" class="exercise-preview-list__eyebrow">{{ exerciseEyebrow(exercise) }}</div>
         <div class="exercise-preview-list__title">{{ exerciseDetailLine(exercise) || exercise.exerciseName }}</div>
       </div>
       <div class="exercise-preview-list__meta">{{ exerciseMetaLine(exercise) }}</div>

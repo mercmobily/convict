@@ -14,12 +14,14 @@ class TodayProvider {
     "auth.policy.fastify",
     "crud.programs",
     "crud.program_schedule_entries",
+    "crud.program_routines",
+    "crud.program_routine_entries",
     "crud.exercises",
-    "crud.exercise_steps",
+    "crud.progression_tracks",
+    "crud.progression_track_steps",
     "crud.user_program_assignments",
     "crud.user_program_assignment_revisions",
-    "crud.personal_step_variations",
-    "crud.user_exercise_progress",
+    "crud.user_progression_track_progress",
     "crud.workout_occurrences",
     "crud.workout_occurrence_exercises",
     "crud.workout_set_logs"
@@ -38,7 +40,7 @@ class TodayProvider {
     app.singleton("feature.today.repository", (scope) => {
       return createRepository({
         api: scope.make(INTERNAL_JSON_REST_API),
-        userExerciseProgressRepository: scope.make("repository.user_exercise_progress"),
+        userProgressionTrackProgressRepository: scope.make("repository.user_progression_track_progress"),
         workoutOccurrencesRepository: scope.make("repository.workout_occurrences"),
         workoutOccurrenceExercisesRepository: scope.make("repository.workout_occurrence_exercises")
       });

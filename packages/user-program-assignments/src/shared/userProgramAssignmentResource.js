@@ -60,6 +60,7 @@ const resource = defineCrudResource({
   },
   searchSchema: {
     id: { type: "id", actualField: "id" },
+    status: { type: "string", actualField: "status", filterOperator: "=" },
     q: { type: "string", oneOf: ["status"], filterOperator: "like", splitBy: " ", matchAll: true },
   },
   defaultSort: ["-createdAt"],

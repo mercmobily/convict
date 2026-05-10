@@ -78,15 +78,15 @@ async function fetchExerciseProgressRows(userId) {
     const [rows] = await connection.query(
       [
         "SELECT",
-        "  e.name AS exerciseName,",
-        "  cs.step_name AS currentStepName,",
-        "  rs.step_name AS readyStepName",
-        "FROM user_exercise_progress uep",
-        "INNER JOIN exercises e ON e.id = uep.exercise_id",
-        "INNER JOIN exercise_steps cs ON cs.id = uep.current_step_id",
-        "LEFT JOIN exercise_steps rs ON rs.id = uep.ready_to_advance_step_id",
-        "WHERE uep.user_id = ?",
-        "ORDER BY e.name ASC"
+        "  REPLACE(pt.name, 'Convict ', '') AS exerciseName,",
+        "  cs.step_label AS currentStepName,",
+        "  rs.step_label AS readyStepName",
+        "FROM user_progression_track_progress uptp",
+        "INNER JOIN progression_tracks pt ON pt.id = uptp.progression_track_id",
+        "INNER JOIN progression_track_steps cs ON cs.id = uptp.current_progression_track_step_id",
+        "LEFT JOIN progression_track_steps rs ON rs.id = uptp.ready_to_advance_progression_track_step_id",
+        "WHERE uptp.user_id = ?",
+        "ORDER BY exerciseName ASC"
       ].join(" "),
       [userId]
     );
@@ -128,7 +128,7 @@ test("user can finish a workout and manually apply earned advancement", async ({
   await expect(targetWorkoutCard).toBeVisible();
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}(\\?.*)?$`));
 
   const pushupsCard = page.locator(".exercise-card").filter({
     hasText: "Push-ups"
@@ -192,7 +192,7 @@ test("user can finish a workout and manually apply earned advancement", async ({
 
   await pushupAdvancementButton.click();
 
-  await expect(pushupsCard.getByText("Current training step: Incline Push-ups")).toBeVisible();
+  await expect(pushupsCard.getByText("Incline Push-ups")).toBeVisible();
   await expect(pushupsCard.getByRole("button", { name: "Advance now" })).toHaveCount(0);
 
   const progressRowsAfterAdvancement = await fetchExerciseProgressRows(fixtureState.userId);

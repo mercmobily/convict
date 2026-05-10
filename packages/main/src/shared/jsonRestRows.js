@@ -16,7 +16,11 @@ function normalizeSimplifiedRow(
   };
 
   for (const [fieldName, relationName] of Object.entries(relationIds)) {
-    normalizedRow[fieldName] = row[fieldName] ?? row[relationName]?.id ?? null;
+    const fieldValue = row[fieldName];
+    normalizedRow[fieldName] =
+      fieldValue && typeof fieldValue === "object"
+        ? fieldValue.id ?? row[relationName]?.id ?? null
+        : fieldValue ?? row[relationName]?.id ?? null;
   }
 
   for (const fieldName of dateOnlyFields) {

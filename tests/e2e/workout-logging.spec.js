@@ -107,7 +107,7 @@ test("user can log reps and seconds on an in-progress workout and see them after
 
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}(\\?.*)?$`));
   await expect(page.locator(".workout-detail-card")).toBeVisible();
 
   const handstandCard = page.locator(".exercise-card").filter({
@@ -212,17 +212,17 @@ test("user can log reps and seconds on an in-progress workout and see them after
   const savedSetLogs = await fetchSavedSetLogs(fixtureState.userId, fixturePlan.targetWorkoutDate);
   expect(savedSetLogs).toEqual([
     {
-      exerciseName: "Handstand Push-ups",
+      exerciseName: "Wall Headstands",
       measurementUnit: "seconds",
       performedValue: 36
     },
     {
-      exerciseName: "Handstand Push-ups",
+      exerciseName: "Wall Headstands",
       measurementUnit: "seconds",
       performedValue: 45
     },
     {
-      exerciseName: "Bridges",
+      exerciseName: "Short Bridges",
       measurementUnit: "reps",
       performedValue: 20
     }
@@ -310,7 +310,7 @@ test("saved workout set logs live-update another open client", async ({ page }) 
 
   const targetWorkoutCard = page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.targetWorkoutDate}"]`).first();
   await targetWorkoutCard.getByRole("button", { name: "Start overdue workout" }).click();
-  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}$`));
+  await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.targetWorkoutDate}(\\?.*)?$`));
 
   const secondPage = await page.context().newPage();
   await secondPage.goto(`/app/workouts/${fixturePlan.targetWorkoutDate}`);

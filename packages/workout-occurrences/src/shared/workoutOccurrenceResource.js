@@ -132,6 +132,8 @@ const resource = defineCrudResource({
   },
   searchSchema: {
     id: { type: "id", actualField: "id" },
+    userProgramAssignmentId: { type: "id", actualField: "user_program_assignment_id", filterOperator: "=" },
+    userProgramAssignmentIds: { type: "array", actualField: "user_program_assignment_id", filterOperator: "in" },
     scheduledForDateRange: { type: "array", actualField: "scheduledForDate", filterOperator: "between" },
     q: { type: "string", oneOf: ["status","notes"], filterOperator: "like", splitBy: " ", matchAll: true },
   },

@@ -7,11 +7,20 @@ function formatWorkSetLabel(min, max) {
   return `${safeMin}-${safeMax} work sets`;
 }
 
-function resolveScheduleExerciseName(entry = {}) {
+function withoutConvictPrefix(value = "") {
+  return String(value || "").replace(/^Convict\s+/i, "").trim();
+}
+
+function resolveScheduleEntryName(entry = {}) {
+  const entryKind = String(entry?.entryKind || "").trim().toLowerCase();
+  if (entryKind === "progression_track") {
+    return withoutConvictPrefix(entry?.progressionTrack?.name || entry?.progressionTrackName || "");
+  }
   return String(entry?.exercise?.name || entry?.exerciseName || "").trim();
 }
 
 export {
   formatWorkSetLabel,
-  resolveScheduleExerciseName
+  resolveScheduleEntryName,
+  withoutConvictPrefix
 };

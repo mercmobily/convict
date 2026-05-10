@@ -6,14 +6,17 @@ import {
   lastDateOfCalendarGrid,
   lastDateOfMonth
 } from "@local/main/shared";
-import { dayLabelFromDate, dayOfWeekFromDate } from "./dateSupport.js";
 import {
   buildOccurrenceExercisesIndex,
   buildOccurrenceIndex,
   buildProjectedWorkout,
-  findEffectiveRevision
+  occurrenceKey
 } from "./projections.js";
-import { loadAssignmentProjectionContext } from "./stateBuilders.js";
+import {
+  buildAssignmentProgramSummary,
+  buildNotStartedYetProjection,
+  loadAssignmentsProjectionContext
+} from "./stateBuilders.js";
 
 function buildEmptyHistorySummary() {
   return {
@@ -25,44 +28,6 @@ function buildEmptyHistorySummary() {
     scheduledDays: 0,
     restDays: 0,
     notStartedYetDays: 0
-  };
-}
-
-function buildAssignmentProgramSummary(
-  assignment,
-  revisions = [],
-  programsById = new Map(),
-  dateString = ""
-) {
-  const effectiveRevision = findEffectiveRevision(revisions, dateString) || revisions[revisions.length - 1] || null;
-  const program = effectiveRevision ? programsById.get(String(effectiveRevision.programId || "")) || null : null;
-
-  return {
-    ...assignment,
-    program: program
-      ? {
-          id: program.id,
-          slug: program.slug,
-          name: program.name
-        }
-      : null
-  };
-}
-
-function buildNotStartedYetProjection(dateString, assignment = {}, assignmentProgram = null) {
-  return {
-    scheduledForDate: dateString,
-    performedOnDate: null,
-    status: "not_started_yet",
-    occurrenceId: null,
-    revisionId: null,
-    programId: assignmentProgram?.id || null,
-    programName: assignmentProgram?.name || "",
-    dayOfWeek: dayOfWeekFromDate(dateString),
-    dayLabel: dayLabelFromDate(dateString),
-    isRestDay: false,
-    exercises: [],
-    assignmentStartsOn: assignment.startsOn || null
   };
 }
 
@@ -111,6 +76,54 @@ function summarizeHistoryDays(days = []) {
   }, buildEmptyHistorySummary());
 }
 
+function statusRank(status = "") {
+  switch (String(status || "").trim().toLowerCase()) {
+    case "in_progress":
+      return 1;
+    case "overdue":
+      return 2;
+    case "scheduled":
+      return 3;
+    case "completed":
+      return 4;
+    case "definitely_missed":
+      return 5;
+    case "not_started_yet":
+      return 6;
+    case "rest_day":
+      return 7;
+    default:
+      return 99;
+  }
+}
+
+function aggregateDayProjection(date, workouts = []) {
+  const realWorkouts = workouts.filter(Boolean);
+  if (realWorkouts.length < 1) {
+    return null;
+  }
+
+  const sortedWorkouts = [...realWorkouts].sort((left, right) => statusRank(left.status) - statusRank(right.status));
+  const statusSource = sortedWorkouts[0];
+  const nonRestWorkouts = realWorkouts.filter((workout) => workout.isRestDay !== true && workout.status !== "not_started_yet");
+
+  return {
+    scheduledForDate: date,
+    userProgramAssignmentId: statusSource.userProgramAssignmentId || null,
+    performedOnDate: statusSource.performedOnDate || null,
+    status: statusSource.status,
+    occurrenceId: statusSource.occurrenceId || null,
+    revisionId: statusSource.revisionId || null,
+    programId: statusSource.programId || null,
+    programName: statusSource.programName || "",
+    dayOfWeek: statusSource.dayOfWeek,
+    dayLabel: statusSource.dayLabel,
+    isRestDay: nonRestWorkouts.length < 1,
+    exercises: realWorkouts.flatMap((workout) => Array.isArray(workout.exercises) ? workout.exercises : []),
+    workouts: realWorkouts
+  };
+}
+
 async function buildHistoryState(
   todayRepository,
   {
@@ -125,9 +138,9 @@ async function buildHistoryState(
   const monthEnd = lastDateOfMonth(historyMonth);
   const gridStart = firstDateOfCalendarGrid(historyMonth);
   const gridEnd = lastDateOfCalendarGrid(historyMonth);
-  const assignment = await todayRepository.findActiveAssignmentByUserId(userId, repositoryOptions);
+  const assignments = await todayRepository.listActiveAssignmentsByUserId(userId, repositoryOptions);
 
-  if (!assignment?.id) {
+  if (assignments.length < 1) {
     return {
       date: todayDate,
       month: historyMonth,
@@ -138,6 +151,7 @@ async function buildHistoryState(
         gridEnd
       },
       assignment: null,
+      assignments: [],
       summary: buildEmptyHistorySummary(),
       days: [],
       rules: {
@@ -146,15 +160,18 @@ async function buildHistoryState(
     };
   }
 
-  const projectionContext = await loadAssignmentProjectionContext(todayRepository, {
-    assignment,
+  const projectionContext = await loadAssignmentsProjectionContext(todayRepository, {
+    assignments,
     userId,
     context
   });
-  const occurrenceQueryStart = assignment.startsOn > gridStart ? assignment.startsOn : gridStart;
+  const occurrenceQueryStart = assignments
+    .map((assignment) => assignment.startsOn)
+    .filter(Boolean)
+    .sort()[0] || gridStart;
   const occurrences = occurrenceQueryStart <= gridEnd
-    ? await todayRepository.listOccurrencesByAssignmentBetweenDates(
-        assignment.id,
+    ? await todayRepository.listOccurrencesByAssignmentsBetweenDates(
+        assignments.map((assignment) => assignment.id),
         occurrenceQueryStart,
         gridEnd,
         repositoryOptions
@@ -168,36 +185,45 @@ async function buildHistoryState(
       )
     : [];
   const occurrenceExercisesByOccurrenceId = buildOccurrenceExercisesIndex(occurrenceExercises);
-  const assignmentSummary = buildAssignmentProgramSummary(
-    assignment,
-    projectionContext.revisions,
-    projectionContext.programsById,
-    todayDate
-  );
-  const assignmentProgram = assignmentSummary.program || null;
+  const assignmentSummaries = assignments.map((assignment) => {
+    const revisions = projectionContext.revisionsByAssignmentId.get(String(assignment.id || "")) || [];
+    return buildAssignmentProgramSummary(assignment, revisions, projectionContext.programsById, todayDate);
+  });
   const days = [];
 
   for (let date = gridStart; date <= gridEnd; date = addDays(date, 1)) {
-    const occurrence = occurrenceIndex.get(date) || null;
-    let dayProjection = null;
+    const workouts = assignments.map((assignment) => {
+      const assignmentRevisions = projectionContext.revisionsByAssignmentId.get(String(assignment.id || "")) || [];
+      const assignmentSummary = buildAssignmentProgramSummary(
+        assignment,
+        assignmentRevisions,
+        projectionContext.programsById,
+        date
+      );
 
-    if (date < assignment.startsOn) {
-      dayProjection = buildNotStartedYetProjection(date, assignmentSummary, assignmentProgram);
-    } else {
-      dayProjection = buildProjectedWorkout(date, {
+      if (date < assignment.startsOn) {
+        return buildNotStartedYetProjection(date, assignmentSummary, assignmentSummary.program);
+      }
+
+      const occurrence = occurrenceIndex.get(occurrenceKey(assignment.id, date)) || null;
+      return buildProjectedWorkout(date, {
+        assignment,
         todayDate,
-        revisions: projectionContext.revisions,
+        revisions: assignmentRevisions,
         programsById: projectionContext.programsById,
         scheduleIndex: projectionContext.scheduleIndex,
-        progressByExerciseId: projectionContext.progressByExerciseId,
-        firstStepsByExerciseId: projectionContext.firstStepsByExerciseId,
+        programRoutineIndex: projectionContext.programRoutineIndex,
+        routineEntriesByRoutineId: projectionContext.routineEntriesByRoutineId,
+        progressByTrackId: projectionContext.progressByTrackId,
+        firstStepsByTrackId: projectionContext.firstStepsByTrackId,
         occurrence,
         occurrenceExercises: occurrence?.id
           ? occurrenceExercisesByOccurrenceId.get(String(occurrence.id || "")) || []
           : []
       });
-    }
+    });
 
+    const dayProjection = aggregateDayProjection(date, workouts);
     if (!dayProjection) {
       throw new AppError(500, `Unable to build a history projection for ${date}.`);
     }
@@ -220,11 +246,13 @@ async function buildHistoryState(
       gridStart,
       gridEnd
     },
-    assignment: assignmentSummary,
+    assignment: assignmentSummaries[0] || null,
+    assignments: assignmentSummaries,
     summary: summarizeHistoryDays(days.filter((day) => day.isCurrentMonth)),
     days,
     rules: {
-      hasActiveAssignment: true
+      hasActiveAssignment: true,
+      multipleActivePrograms: assignments.length > 1
     }
   };
 }
