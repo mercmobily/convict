@@ -68,7 +68,7 @@ const startWorkoutCommand = useCommand({
     programAssignmentId: programAssignmentId.value
   }),
   messages: {
-    success: "Workout occurrence opened.",
+    success: "Workout opened.",
     error: "Unable to open this workout."
   },
   async onRunSuccess() {
@@ -164,9 +164,9 @@ function formatDateLabel(dateString = "", { includeYear = true } = {}) {
 }
 
 function exerciseCardKey(exercise = {}) {
-  const occurrenceExerciseId = String(exercise.occurrenceExerciseId || "").trim();
-  if (occurrenceExerciseId) {
-    return occurrenceExerciseId;
+  const workoutExerciseId = String(exercise.workoutExerciseId || "").trim();
+  if (workoutExerciseId) {
+    return workoutExerciseId;
   }
 
   return `${String(exercise.slotNumber || "")}:${String(exercise.exerciseId || "")}`;

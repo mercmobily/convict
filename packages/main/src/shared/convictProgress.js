@@ -7,7 +7,7 @@ const CANONICAL_EXERCISE_SLUG_ORDER = Object.freeze([
   "handstand-push-ups"
 ]);
 
-const CANONICAL_PROGRESSION_TRACK_SLUG_ORDER = Object.freeze([
+const CANONICAL_PROGRESSION_SLUG_ORDER = Object.freeze([
   "convict-push-ups",
   "convict-squats",
   "convict-pull-ups",
@@ -22,10 +22,10 @@ function canonicalExerciseRank(exercise = {}) {
   return index >= 0 ? index : CANONICAL_EXERCISE_SLUG_ORDER.length;
 }
 
-function canonicalProgressionTrackRank(track = {}) {
-  const slug = String(track?.slug || track?.progressionTrackSlug || "").trim();
-  const index = CANONICAL_PROGRESSION_TRACK_SLUG_ORDER.indexOf(slug);
-  return index >= 0 ? index : CANONICAL_PROGRESSION_TRACK_SLUG_ORDER.length;
+function canonicalProgressionRank(progression = {}) {
+  const slug = String(progression?.slug || progression?.progressionSlug || "").trim();
+  const index = CANONICAL_PROGRESSION_SLUG_ORDER.indexOf(slug);
+  return index >= 0 ? index : CANONICAL_PROGRESSION_SLUG_ORDER.length;
 }
 
 function sortCanonicalExercises(exercises = []) {
@@ -41,15 +41,15 @@ function sortCanonicalExercises(exercises = []) {
   });
 }
 
-function sortCanonicalProgressionTracks(tracks = []) {
-  return [...(Array.isArray(tracks) ? tracks : [])].sort((left, right) => {
-    const rankDelta = canonicalProgressionTrackRank(left) - canonicalProgressionTrackRank(right);
+function sortCanonicalProgressions(progressions = []) {
+  return [...(Array.isArray(progressions) ? progressions : [])].sort((left, right) => {
+    const rankDelta = canonicalProgressionRank(left) - canonicalProgressionRank(right);
     if (rankDelta !== 0) {
       return rankDelta;
     }
 
-    return String(left?.name || left?.progressionTrackName || "").localeCompare(
-      String(right?.name || right?.progressionTrackName || "")
+    return String(left?.name || left?.progressionName || "").localeCompare(
+      String(right?.name || right?.progressionName || "")
     );
   });
 }
@@ -70,7 +70,7 @@ function buildProgressDisplayState(
 ) {
   const resolvedCurrentStep = currentStep || fallbackStep || null;
   const currentProgressStepId =
-    progressRow?.currentProgressionTrackStepId ||
+    progressRow?.currentInstanceProgressionEntryId ||
     progressRow?.currentStepId ||
     resolvedCurrentStep?.id ||
     base?.currentProgressStepId ||
@@ -96,7 +96,7 @@ function buildProgressDisplayState(
       base?.currentStepInstruction ||
       emptyCurrentStepInstruction,
     readyToAdvanceStepId:
-      progressRow?.readyToAdvanceProgressionTrackStepId ||
+      progressRow?.readyToAdvanceInstanceProgressionEntryId ||
       progressRow?.readyToAdvanceStepId ||
       base?.readyToAdvanceStepId ||
       null,
@@ -113,7 +113,7 @@ function buildProgressDisplayState(
 export {
   buildProgressDisplayState,
   CANONICAL_EXERCISE_SLUG_ORDER,
-  CANONICAL_PROGRESSION_TRACK_SLUG_ORDER,
+  CANONICAL_PROGRESSION_SLUG_ORDER,
   sortCanonicalExercises,
-  sortCanonicalProgressionTracks
+  sortCanonicalProgressions
 };

@@ -13,10 +13,10 @@ import {
 import { buildHistoryState } from "./service/historyState.js";
 import {
   attachSetLogsToWorkoutProjection,
-  buildNextStepIndex,
-  buildOccurrenceExerciseProjection,
-  buildOccurrenceExerciseSnapshots,
-  buildProgressIndex,
+  buildNextProgressionEntryIndex,
+  buildWorkoutExerciseProjection,
+  buildWorkoutExerciseSnapshots,
+  buildUserProgressionIndex,
   buildSetLogIndex
 } from "./service/projections.js";
 import {
@@ -136,33 +136,33 @@ function createService({ todayRepository } = {}) {
       }
 
       await todayRepository.withTransaction(async (trx) => {
-        const existingOccurrence = await todayRepository.findOccurrenceByAssignmentAndDate(
+        const existingWorkout = await todayRepository.findWorkoutByAssignmentAndDate(
           targetWorkout.programAssignmentId,
           scheduledForDate,
           { trx, context }
         );
 
-        if (existingOccurrence?.status === "completed") {
+        if (existingWorkout?.status === "completed") {
           throw new ConflictError("This workout is already completed.");
         }
-        if (existingOccurrence?.status === "definitely_missed") {
+        if (existingWorkout?.status === "definitely_missed") {
           throw new ConflictError("This workout is already marked definitely missed.");
         }
 
-        if (existingOccurrence?.id) {
-          await todayRepository.updateOccurrence(
-            existingOccurrence.id,
+        if (existingWorkout?.id) {
+          await todayRepository.updateWorkout(
+            existingWorkout.id,
             {
               status: "in_progress",
-              startedAt: existingOccurrence.startedAt || localNowDateTimeString(),
-              performedOnDate: existingOccurrence.performedOnDate || todayDate
+              startedAt: existingWorkout.startedAt || localNowDateTimeString(),
+              performedOnDate: existingWorkout.performedOnDate || todayDate
             },
             { trx, context }
           );
           return;
         }
 
-        const occurrenceId = await todayRepository.createOccurrence(
+        const workoutId = await todayRepository.createWorkout(
           {
             programAssignmentId: targetWorkout.programAssignmentId,
             programAssignmentRevisionId: targetWorkout.revisionId,
@@ -175,9 +175,9 @@ function createService({ todayRepository } = {}) {
           { trx, context }
         );
 
-        const snapshotRows = buildOccurrenceExerciseSnapshots(occurrenceId, targetWorkout);
+        const snapshotRows = buildWorkoutExerciseSnapshots(workoutId, targetWorkout);
         if (snapshotRows.length > 0) {
-          await todayRepository.createOccurrenceExercises(
+          await todayRepository.createWorkoutExercises(
             snapshotRows,
             { trx, context }
           );
@@ -213,8 +213,8 @@ function createService({ todayRepository } = {}) {
       assertSubmittableWorkout(detailState.workout, {
         scheduledForDate
       });
-      const workoutOccurrenceId = detailState.workout?.occurrenceId || null;
-      if (!workoutOccurrenceId) {
+      const workoutId = detailState.workout?.workoutId || null;
+      if (!workoutId) {
         throw new NotFoundError(`No open workout exists for ${scheduledForDate}.`);
       }
 
@@ -231,46 +231,46 @@ function createService({ todayRepository } = {}) {
           throw new ConflictError("Open this workout before finishing it.");
         }
 
-        const occurrenceExercises = await todayRepository.listOccurrenceExercisesByOccurrenceIds(
-          [workoutOccurrenceId],
+        const workoutExercises = await todayRepository.listWorkoutExercisesByWorkoutIds(
+          [workoutId],
           { trx, context }
         );
-        const occurrenceExerciseIds = occurrenceExercises.map((exercise) => exercise.id).filter(Boolean);
-        const setLogsByOccurrenceExerciseId = buildSetLogIndex(
-          occurrenceExerciseIds.length > 0
-            ? await todayRepository.listSetLogsByOccurrenceExerciseIds(occurrenceExerciseIds, { trx, context })
+        const workoutExerciseIds = workoutExercises.map((exercise) => exercise.id).filter(Boolean);
+        const setLogsByWorkoutExerciseId = buildSetLogIndex(
+          workoutExerciseIds.length > 0
+            ? await todayRepository.listSetLogsByWorkoutExerciseIds(workoutExerciseIds, { trx, context })
             : []
         );
 
         const refreshedWorkout = attachSetLogsToWorkoutProjection({
           ...detailState.workout,
-          occurrenceId: workoutOccurrenceId,
+          workoutId,
           status: detailState.workout.status,
-          exercises: occurrenceExercises.map(buildOccurrenceExerciseProjection)
-        }, setLogsByOccurrenceExerciseId);
+          exercises: workoutExercises.map(buildWorkoutExerciseProjection)
+        }, setLogsByWorkoutExerciseId);
         const refreshedExercises = Array.isArray(refreshedWorkout?.exercises) ? refreshedWorkout.exercises : [];
 
         assertSubmittableWorkout(refreshedWorkout, {
           scheduledForDate
         });
 
-        const progressionTrackIds = [
-          ...new Set(refreshedExercises.map((exercise) => exercise.progressionTrackId).filter(Boolean))
+        const instanceProgressionIds = [
+          ...new Set(refreshedExercises.map((exercise) => exercise.instanceProgressionId).filter(Boolean))
         ];
         const [progressRows, stepRows] = await Promise.all([
-          progressionTrackIds.length > 0
-            ? todayRepository.listProgressionTrackProgressByUserAndTrackIds(userId, progressionTrackIds, { trx, context })
+          instanceProgressionIds.length > 0
+            ? todayRepository.listUserProgressionsByInstanceProgressionIds(userId, instanceProgressionIds, { trx, context })
             : Promise.resolve([]),
-          progressionTrackIds.length > 0
-            ? todayRepository.listStepsByTrackIds(progressionTrackIds, { trx, context })
+          instanceProgressionIds.length > 0
+            ? todayRepository.listProgressionEntriesByInstanceProgressionIds(instanceProgressionIds, { trx, context })
             : Promise.resolve([])
         ]);
 
-        const progressByTrackId = buildProgressIndex(progressRows);
-        const nextStepByCurrentStepId = buildNextStepIndex(stepRows);
+        const progressByInstanceProgressionId = buildUserProgressionIndex(progressRows);
+        const nextEntryByCurrentEntryId = buildNextProgressionEntryIndex(stepRows);
 
-        await todayRepository.updateOccurrence(
-          workoutOccurrenceId,
+        await todayRepository.updateWorkout(
+          workoutId,
           {
             status: "completed",
             submittedAt,
@@ -279,8 +279,8 @@ function createService({ todayRepository } = {}) {
           { trx, context }
         );
 
-        for (const exercise of occurrenceExercises) {
-          await todayRepository.updateOccurrenceExercise(
+        for (const exercise of workoutExercises) {
+          await todayRepository.updateWorkoutExercise(
             exercise.id,
             {
               status: "completed"
@@ -290,18 +290,18 @@ function createService({ todayRepository } = {}) {
         }
 
         for (const exercise of refreshedExercises.filter((row) => row.isProgression)) {
-          const progressRow = progressByTrackId.get(String(exercise.progressionTrackId || "")) || null;
-          const nextStep = nextStepByCurrentStepId.get(String(exercise.currentStepId || "")) || null;
+          const progressRow = progressByInstanceProgressionId.get(String(exercise.instanceProgressionId || "")) || null;
+          const nextStep = nextEntryByCurrentEntryId.get(String(exercise.currentStepId || "")) || null;
           const earnedReadyStepId = deriveEarnedReadyStepId(exercise, nextStep);
 
           if (!progressRow?.id) {
-            await todayRepository.createProgressionTrackProgress(
+            await todayRepository.createUserProgression(
               {
-                progressionTrackId: exercise.progressionTrackId,
-                currentProgressionTrackStepId: exercise.currentStepId,
-                readyToAdvanceProgressionTrackStepId: earnedReadyStepId,
+                instanceProgressionId: exercise.instanceProgressionId,
+                currentInstanceProgressionEntryId: exercise.currentStepId,
+                readyToAdvanceInstanceProgressionEntryId: earnedReadyStepId,
                 readyToAdvanceAt: earnedReadyStepId ? submittedAt : null,
-                lastCompletedOccurrenceId: workoutOccurrenceId,
+                lastCompletedWorkoutId: workoutId,
                 lastCompletedAt: submittedAt,
                 stallCount: 0
               },
@@ -311,15 +311,15 @@ function createService({ todayRepository } = {}) {
           }
 
           const updateFields = {
-            lastCompletedOccurrenceId: workoutOccurrenceId,
+            lastCompletedWorkoutId: workoutId,
             lastCompletedAt: submittedAt
           };
 
-          if (String(progressRow.currentProgressionTrackStepId || "") === String(exercise.currentStepId || "")) {
+          if (String(progressRow.currentInstanceProgressionEntryId || "") === String(exercise.currentStepId || "")) {
             if (earnedReadyStepId) {
-              updateFields.readyToAdvanceProgressionTrackStepId = earnedReadyStepId;
+              updateFields.readyToAdvanceInstanceProgressionEntryId = earnedReadyStepId;
               if (
-                String(progressRow.readyToAdvanceProgressionTrackStepId || "") !== String(earnedReadyStepId) ||
+                String(progressRow.readyToAdvanceInstanceProgressionEntryId || "") !== String(earnedReadyStepId) ||
                 !progressRow.readyToAdvanceAt
               ) {
                 updateFields.readyToAdvanceAt = submittedAt;
@@ -327,7 +327,7 @@ function createService({ todayRepository } = {}) {
             }
           }
 
-          await todayRepository.updateProgressionTrackProgress(progressRow.id, updateFields, { trx, context });
+          await todayRepository.updateUserProgression(progressRow.id, updateFields, { trx, context });
         }
       });
 
@@ -343,49 +343,49 @@ function createService({ todayRepository } = {}) {
     async applyAdvancement(input = {}, options = {}) {
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
-      const progressionTrackId = input?.progressionTrackId || null;
+      const instanceProgressionId = input?.instanceProgressionId || null;
 
-      if (!progressionTrackId) {
-        throw new AppError(400, "progressionTrackId is required.");
+      if (!instanceProgressionId) {
+        throw new AppError(400, "instanceProgressionId is required.");
       }
 
-      const progressRows = await todayRepository.listProgressionTrackProgressByUserAndTrackIds(
+      const progressRows = await todayRepository.listUserProgressionsByInstanceProgressionIds(
         userId,
-        [progressionTrackId],
+        [instanceProgressionId],
         { context }
       );
       const progressRow = progressRows[0] || null;
       if (!progressRow?.id) {
         throw new NotFoundError("Progress state was not found for this track.");
       }
-      if (!progressRow.readyToAdvanceProgressionTrackStepId) {
-        throw new ConflictError("This track is not ready to advance.");
+      if (!progressRow.readyToAdvanceInstanceProgressionEntryId) {
+        throw new ConflictError("This progression is not ready to advance.");
       }
 
       const readyStepRows = await todayRepository.listStepsByIds(
-        [progressRow.readyToAdvanceProgressionTrackStepId],
+        [progressRow.readyToAdvanceInstanceProgressionEntryId],
         { context }
       );
       const readyStep = readyStepRows[0] || null;
       if (!readyStep?.id) {
         throw new ConflictError("The next progression step is unavailable.");
       }
-      if (String(readyStep.progressionTrackId || "") !== String(progressRow.progressionTrackId || "")) {
-        throw new ConflictError("The next step does not belong to this progression track.");
+      if (String(readyStep.instanceProgressionId || "") !== String(progressRow.instanceProgressionId || "")) {
+        throw new ConflictError("The next step does not belong to this instance progression.");
       }
 
-      await todayRepository.updateProgressionTrackProgress(
+      await todayRepository.updateUserProgression(
         progressRow.id,
         {
-          currentProgressionTrackStepId: readyStep.id,
-          readyToAdvanceProgressionTrackStepId: null,
+          currentInstanceProgressionEntryId: readyStep.id,
+          readyToAdvanceInstanceProgressionEntryId: null,
           readyToAdvanceAt: null
         },
         { context }
       );
 
       return {
-        progressionTrackId: progressRow.progressionTrackId,
+        instanceProgressionId: progressRow.instanceProgressionId,
         currentStepId: readyStep.id,
         currentStepName: readyStep.stepLabel
       };
@@ -422,22 +422,22 @@ function createService({ todayRepository } = {}) {
       });
 
       await todayRepository.withTransaction(async (trx) => {
-        const existingOccurrence = await todayRepository.findOccurrenceByAssignmentAndDate(
+        const existingWorkout = await todayRepository.findWorkoutByAssignmentAndDate(
           targetWorkout.programAssignmentId,
           scheduledForDate,
           { trx, context }
         );
 
-        if (existingOccurrence?.status === "completed") {
+        if (existingWorkout?.status === "completed") {
           throw new ConflictError("Completed workouts cannot be marked definitely missed.");
         }
-        if (existingOccurrence?.status === "definitely_missed") {
+        if (existingWorkout?.status === "definitely_missed") {
           return;
         }
 
-        if (existingOccurrence?.id) {
-          await todayRepository.updateOccurrence(
-            existingOccurrence.id,
+        if (existingWorkout?.id) {
+          await todayRepository.updateWorkout(
+            existingWorkout.id,
             {
               status: "definitely_missed",
               definitelyMissedAt: localNowDateTimeString()
@@ -447,7 +447,7 @@ function createService({ todayRepository } = {}) {
           return;
         }
 
-        const occurrenceId = await todayRepository.createOccurrence(
+        const workoutId = await todayRepository.createWorkout(
           {
             programAssignmentId: targetWorkout.programAssignmentId,
             programAssignmentRevisionId: targetWorkout.revisionId,
@@ -460,9 +460,9 @@ function createService({ todayRepository } = {}) {
           { trx, context }
         );
 
-        const snapshotRows = buildOccurrenceExerciseSnapshots(occurrenceId, targetWorkout);
+        const snapshotRows = buildWorkoutExerciseSnapshots(workoutId, targetWorkout);
         if (snapshotRows.length > 0) {
-          await todayRepository.createOccurrenceExercises(
+          await todayRepository.createWorkoutExercises(
             snapshotRows.map((row) => ({
               ...row,
               status: "definitely_missed"

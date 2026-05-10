@@ -134,8 +134,8 @@ test("progress page shows earned advancement and applies it", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
   await expect(page.getByTestId("progress-summary-ready")).toContainText("1");
 
-  const progressPushupsCard = page.getByTestId("progress-track-convict-push-ups");
-  const progressSquatsCard = page.getByTestId("progress-track-convict-squats");
+  const progressPushupsCard = page.getByTestId("progression-convict-push-ups");
+  const progressSquatsCard = page.getByTestId("progression-convict-squats");
 
   await expect(progressPushupsCard.getByRole("heading", { name: "Wall Push-ups" })).toBeVisible();
   await expect(progressPushupsCard.getByText("Step 2: Incline Push-ups")).toBeVisible();

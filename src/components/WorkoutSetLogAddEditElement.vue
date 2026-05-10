@@ -76,7 +76,7 @@ const formRuntime = useCrudAddEdit({
       isCreateMode.value ? "create" : "edit",
       String(surfaceId || ""),
       String(routeScope || ""),
-      String(props.exercise?.occurrenceExerciseId || ""),
+      String(props.exercise?.workoutExerciseId || ""),
       normalizedRecordId.value || "create"
     ],
     routeRecordId: normalizedRecordId,
@@ -98,7 +98,7 @@ const formRuntime = useCrudAddEdit({
     const performedValue = Number(String(model?.performedValue ?? "").trim() || 0);
     if (isCreateMode.value) {
       return {
-        workoutExerciseId: String(props.exercise?.occurrenceExerciseId || props.exercise?.workoutExerciseId || "").trim(),
+        workoutExerciseId: String(props.exercise?.workoutExerciseId || "").trim(),
         side: "both",
         measurementUnitSnapshot: String(props.exercise?.measurementUnit || "").trim().toLowerCase() || "reps",
         performedValue

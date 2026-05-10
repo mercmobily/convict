@@ -44,8 +44,8 @@ const createEditorDirty = ref(false);
 const editEditorDirty = ref(false);
 const editState = ref(null);
 
-const occurrenceExerciseId = computed(() => String(props.exercise?.occurrenceExerciseId || "").trim());
-const canEdit = computed(() => props.workoutStatus === "in_progress" && Boolean(occurrenceExerciseId.value));
+const workoutExerciseId = computed(() => String(props.exercise?.workoutExerciseId || "").trim());
+const canEdit = computed(() => props.workoutStatus === "in_progress" && Boolean(workoutExerciseId.value));
 const measurementUnit = computed(() => measurementLabel(props.exercise?.measurementUnit));
 
 const deleteSetLogCommand = useCommand({
@@ -65,7 +65,7 @@ const savedSetLogs = computed(() => {
 
 const currentStepTitle = computed(() => exerciseDetailLine(props.exercise) || "No step data available.");
 const exerciseEyebrow = computed(() => (
-  String(props.exercise.progressionTrackName || props.exercise.section || "").trim()
+  String(props.exercise.progressionName || props.exercise.section || "").trim()
 ));
 const exerciseMetaParts = computed(() => ([
   formatWorkSetLabel(props.exercise.plannedWorkSetsMin, props.exercise.plannedWorkSetsMax),

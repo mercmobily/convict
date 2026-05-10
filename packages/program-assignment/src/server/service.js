@@ -197,6 +197,31 @@ function buildProgramCollections(collections = [], programs = [], options = []) 
   });
 }
 
+function sourceProgramIdsFromActiveAssignments(activeAssignments = []) {
+  return new Set(
+    (Array.isArray(activeAssignments) ? activeAssignments : [])
+      .map((assignment) => (
+        assignment?.program?.sourceProgramId ||
+        assignment?.program?.sourceProgram?.id ||
+        null
+      ))
+      .map((sourceProgramId) => String(sourceProgramId || "").trim())
+      .filter(Boolean)
+  );
+}
+
+function applyProgramAvailability(options = [], activeSourceProgramIds = new Set()) {
+  return (Array.isArray(options) ? options : []).map((option) => {
+    const sourceProgramId = String(option?.programId || "").trim();
+    const alreadyActive = Boolean(sourceProgramId && activeSourceProgramIds.has(sourceProgramId));
+    return {
+      ...option,
+      alreadyActive,
+      disabledReason: alreadyActive ? "already_active" : null
+    };
+  });
+}
+
 function latestRevisionRowsByAssignmentId(revisions = []) {
   const latest = new Map();
   for (const revision of Array.isArray(revisions) ? revisions : []) {
@@ -222,18 +247,19 @@ function enrichAssignedProgram(instanceProgram = {}, scheduleEntries = []) {
   };
 }
 
-async function hydrateActiveAssignments(programAssignmentRepository, activeAssignments = [], { context = null } = {}) {
+async function hydrateActiveAssignments(programAssignmentRepository, activeAssignments = [], { trx = null, context = null } = {}) {
   if (activeAssignments.length < 1) {
     return [];
   }
+  const repositoryOptions = { trx, context };
 
   const assignmentIds = activeAssignments.map((assignment) => assignment.id).filter(Boolean);
-  const revisions = await programAssignmentRepository.listLatestRevisionsByAssignmentIds(assignmentIds, { context });
+  const revisions = await programAssignmentRepository.listLatestRevisionsByAssignmentIds(assignmentIds, repositoryOptions);
   const latestRevisionByAssignmentId = latestRevisionRowsByAssignmentId(revisions);
   const instanceProgramIds = revisions.map((revision) => revision.instanceProgramId).filter(Boolean);
   const [instancePrograms, instanceProgramEntries] = await Promise.all([
-    programAssignmentRepository.listInstanceProgramsByIds(instanceProgramIds, { context }),
-    programAssignmentRepository.listInstanceProgramEntriesByProgramIds(instanceProgramIds, { context })
+    programAssignmentRepository.listInstanceProgramsByIds(instanceProgramIds, repositoryOptions),
+    programAssignmentRepository.listInstanceProgramEntriesByProgramIds(instanceProgramIds, repositoryOptions)
   ]);
   const instanceProgramsById = buildRowsById(instancePrograms);
   const instanceEntriesByProgramId = buildRowsByGroupId(instanceProgramEntries, "instanceProgramId");
@@ -278,19 +304,23 @@ async function buildSelectionState(programAssignmentRepository, { context = null
   );
   const programsById = buildRowsById(programs);
   const scheduleEntriesByVersionId = buildRowsByGroupId(scheduleEntries, "programVersionId");
-  const programOptions = sortProgramOptions(
-    latestVersions.map((version) =>
-      enrichProgramVersionOption(
-        version,
-        programsById.get(String(version.programId || "")) || version.program || {},
-        scheduleEntriesByVersionId.get(String(version.id || "")) || []
-      )
-    )
-  );
   const hydratedActiveAssignments = await hydrateActiveAssignments(
     programAssignmentRepository,
     activeAssignments,
     { context }
+  );
+  const activeSourceProgramIds = sourceProgramIdsFromActiveAssignments(hydratedActiveAssignments);
+  const programOptions = applyProgramAvailability(
+    sortProgramOptions(
+      latestVersions.map((version) =>
+        enrichProgramVersionOption(
+          version,
+          programsById.get(String(version.programId || "")) || version.program || {},
+          scheduleEntriesByVersionId.get(String(version.id || "")) || []
+        )
+      )
+    ),
+    activeSourceProgramIds
   );
 
   return {
@@ -304,6 +334,27 @@ async function buildSelectionState(programAssignmentRepository, { context = null
       multipleActivePrograms: true
     }
   };
+}
+
+async function assertSourceProgramNotAlreadyActive(
+  programAssignmentRepository,
+  sourceProgramId,
+  { trx = null, context = null } = {}
+) {
+  const normalizedSourceProgramId = String(sourceProgramId || "").trim();
+  if (!normalizedSourceProgramId) {
+    return;
+  }
+
+  const activeAssignments = await programAssignmentRepository.listActiveAssignments({ trx, context });
+  const hydratedActiveAssignments = await hydrateActiveAssignments(
+    programAssignmentRepository,
+    activeAssignments,
+    { trx, context }
+  );
+  if (sourceProgramIdsFromActiveAssignments(hydratedActiveAssignments).has(normalizedSourceProgramId)) {
+    throw new AppError(409, "This program is already active.");
+  }
 }
 
 function sourceProgressionIdsFromProgramEntries(programEntries = []) {
@@ -603,6 +654,10 @@ function createService({ programAssignmentRepository } = {}) {
       }
 
       await programAssignmentRepository.withTransaction(async (trx) => {
+        await assertSourceProgramNotAlreadyActive(programAssignmentRepository, selectedProgram.id, {
+          trx,
+          context
+        });
         await copyProgramVersionToInstance(
           programAssignmentRepository,
           {

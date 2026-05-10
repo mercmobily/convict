@@ -47,7 +47,7 @@ export default Object.freeze({
       surfaces: [
         {
           subpath: "./server/actions",
-          summary: "Exports today projection and workout-occurrence action definitions."
+          summary: "Exports today projection and workout action definitions."
         }
       ],
       containerTokens: {

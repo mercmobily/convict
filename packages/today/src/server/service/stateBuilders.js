@@ -2,20 +2,20 @@ import { addDays } from "@local/main/shared";
 import { dayLabelFromDate, dayOfWeekFromDate } from "./dateSupport.js";
 import {
   attachSetLogsToWorkoutProjection,
-  buildFirstStepIndex,
-  buildOccurrenceExercisesIndex,
-  buildOccurrenceIndex,
+  buildFirstProgressionEntryIndex,
+  buildWorkoutExercisesIndex,
+  buildWorkoutIndex,
   buildProgramIndex,
   buildProgramRoutineEntriesIndex,
   buildProgramRoutineIndex,
-  buildProgressIndex,
+  buildUserProgressionIndex,
   buildProjectedWorkout,
   buildRevisionsByAssignmentId,
   buildScheduleIndex,
   buildSetLogIndex,
   findEffectiveRevision,
   mergeProgressStateIntoWorkoutProjection,
-  occurrenceKey
+  workoutKey
 } from "./projections.js";
 
 function uniqueValues(values = []) {
@@ -41,14 +41,14 @@ function attachExerciseById(row = {}, exercisesById = new Map()) {
 }
 
 function attachCurrentStepById(progressRow = {}, stepsById = new Map()) {
-  if (progressRow.currentProgressionTrackStep?.exercise?.id) {
+  if (progressRow.currentInstanceProgressionEntry?.exercise?.id) {
     return progressRow;
   }
 
-  const currentStepId = progressRow.currentProgressionTrackStepId || progressRow.currentProgressionTrackStep?.id || "";
+  const currentStepId = progressRow.currentInstanceProgressionEntryId || progressRow.currentInstanceProgressionEntry?.id || "";
   const currentStep = stepsById.get(String(currentStepId)) || null;
   return currentStep
-    ? { ...progressRow, currentProgressionTrackStep: currentStep }
+    ? { ...progressRow, currentInstanceProgressionEntry: currentStep }
     : progressRow;
 }
 
@@ -74,16 +74,16 @@ async function loadAssignmentsProjectionContext(
       programRoutineIndex: new Map(),
       routineEntriesByRoutineId: new Map(),
       progressRows: [],
-      progressByTrackId: new Map(),
-      firstSteps: [],
-      firstStepsByTrackId: new Map()
+      userProgressionsByInstanceProgressionId: new Map(),
+      firstProgressionEntries: [],
+      firstProgressionEntriesByInstanceProgressionId: new Map()
     };
   }
 
   const repositoryOptions = context ? { context } : {};
   const assignmentIds = activeAssignments.map((assignment) => assignment.id);
   const revisions = await todayRepository.listAssignmentRevisionsByAssignmentIds(assignmentIds, repositoryOptions);
-  const programIds = uniqueValues(revisions.map((revision) => revision.programId));
+  const programIds = uniqueValues(revisions.map((revision) => revision.instanceProgramId));
   const [programs, scheduleEntries, programRoutines] = await Promise.all([
     todayRepository.listProgramsByIds(programIds, repositoryOptions),
     todayRepository.listScheduleEntriesForProgramIds(programIds, repositoryOptions),
@@ -96,23 +96,23 @@ async function loadAssignmentsProjectionContext(
     repositoryOptions
   );
 
-  const progressionTrackIds = uniqueValues(scheduleEntries.map((entry) => entry.progressionTrackId));
-  const [progressRows, firstSteps] = await Promise.all([
-    progressionTrackIds.length > 0
-      ? todayRepository.listProgressionTrackProgressByUserAndTrackIds(userId, progressionTrackIds, repositoryOptions)
+  const instanceProgressionIds = uniqueValues(scheduleEntries.map((entry) => entry.instanceProgressionId));
+  const [progressRows, firstProgressionEntries] = await Promise.all([
+    instanceProgressionIds.length > 0
+      ? todayRepository.listUserProgressionsByInstanceProgressionIds(userId, instanceProgressionIds, repositoryOptions)
       : Promise.resolve([]),
-    progressionTrackIds.length > 0
-      ? todayRepository.listFirstStepsByTrackIds(progressionTrackIds, repositoryOptions)
+    instanceProgressionIds.length > 0
+      ? todayRepository.listFirstProgressionEntriesByInstanceProgressionIds(instanceProgressionIds, repositoryOptions)
       : Promise.resolve([])
   ]);
-  const currentStepIds = uniqueValues(progressRows.map((row) => row.currentProgressionTrackStepId));
+  const currentStepIds = uniqueValues(progressRows.map((row) => row.currentInstanceProgressionEntryId));
   const currentSteps = currentStepIds.length > 0
     ? await todayRepository.listStepsByIds(currentStepIds, repositoryOptions)
     : [];
   const exerciseIds = uniqueValues([
     ...scheduleEntries.map((entry) => entry.exerciseId),
     ...programRoutineEntries.map((entry) => entry.exerciseId),
-    ...firstSteps.map((step) => step.exerciseId),
+    ...firstProgressionEntries.map((step) => step.exerciseId),
     ...currentSteps.map((step) => step.exerciseId)
   ]);
   const exercisesById = buildIdIndex(
@@ -122,7 +122,7 @@ async function loadAssignmentsProjectionContext(
   );
   const hydratedScheduleEntries = scheduleEntries.map((entry) => attachExerciseById(entry, exercisesById));
   const hydratedProgramRoutineEntries = programRoutineEntries.map((entry) => attachExerciseById(entry, exercisesById));
-  const hydratedFirstSteps = firstSteps.map((step) => attachExerciseById(step, exercisesById));
+  const hydratedFirstProgressionEntries = firstProgressionEntries.map((step) => attachExerciseById(step, exercisesById));
   const hydratedCurrentSteps = currentSteps.map((step) => attachExerciseById(step, exercisesById));
   const currentStepsById = buildIdIndex(hydratedCurrentSteps);
   const hydratedProgressRows = progressRows.map((row) => attachCurrentStepById(row, currentStepsById));
@@ -135,9 +135,9 @@ async function loadAssignmentsProjectionContext(
     programRoutineIndex: buildProgramRoutineIndex(programRoutines),
     routineEntriesByRoutineId: buildProgramRoutineEntriesIndex(hydratedProgramRoutineEntries),
     progressRows: hydratedProgressRows,
-    progressByTrackId: buildProgressIndex(hydratedProgressRows),
-    firstSteps: hydratedFirstSteps,
-    firstStepsByTrackId: buildFirstStepIndex(hydratedFirstSteps)
+    userProgressionsByInstanceProgressionId: buildUserProgressionIndex(hydratedProgressRows),
+    firstProgressionEntries: hydratedFirstProgressionEntries,
+    firstProgressionEntriesByInstanceProgressionId: buildFirstProgressionEntryIndex(hydratedFirstProgressionEntries)
   };
 }
 
@@ -158,7 +158,7 @@ async function loadAssignmentProjectionContext(todayRepository, { assignment, us
 
 function buildAssignmentProgramSummary(assignment, revisions = [], programsById = new Map(), dateString = "") {
   const effectiveRevision = findEffectiveRevision(revisions, dateString) || revisions[revisions.length - 1] || null;
-  const program = effectiveRevision ? programsById.get(String(effectiveRevision.programId || "")) || null : null;
+  const program = effectiveRevision ? programsById.get(String(effectiveRevision.instanceProgramId || "")) || null : null;
 
   return {
     ...assignment,
@@ -178,9 +178,9 @@ function buildNotStartedYetProjection(dateString, assignment = {}, assignmentPro
     scheduledForDate: dateString,
     performedOnDate: null,
     status: "not_started_yet",
-    occurrenceId: null,
+    workoutId: null,
     revisionId: null,
-    programId: assignmentProgram?.id || null,
+    instanceProgramId: assignmentProgram?.id || null,
     programName: assignmentProgram?.name || "",
     dayOfWeek: dayOfWeekFromDate(dateString),
     dayLabel: dayLabelFromDate(dateString),
@@ -194,7 +194,7 @@ function mergeWorkoutProgress(workoutProjection, projectionContext = {}) {
   return mergeProgressStateIntoWorkoutProjection(workoutProjection, {
     progressRows: projectionContext.progressRows,
     readyStepRows: [],
-    currentStepRows: projectionContext.firstSteps
+    currentStepRows: projectionContext.firstProgressionEntries
   });
 }
 
@@ -203,8 +203,8 @@ function buildWorkoutForAssignmentDate({
   date,
   todayDate,
   projectionContext,
-  occurrenceIndex,
-  occurrenceExercisesByOccurrenceId
+  workoutIndex,
+  workoutExercisesByWorkoutId
 }) {
   const assignmentRevisions = projectionContext.revisionsByAssignmentId.get(String(assignment.id || "")) || [];
   const assignmentSummary = buildAssignmentProgramSummary(
@@ -218,7 +218,7 @@ function buildWorkoutForAssignmentDate({
     return buildNotStartedYetProjection(date, assignmentSummary, assignmentSummary.program);
   }
 
-  const occurrence = occurrenceIndex.get(occurrenceKey(assignment.id, date)) || null;
+  const workout = workoutIndex.get(workoutKey(assignment.id, date)) || null;
   return buildProjectedWorkout(date, {
     assignment,
     todayDate,
@@ -227,11 +227,11 @@ function buildWorkoutForAssignmentDate({
     scheduleIndex: projectionContext.scheduleIndex,
     programRoutineIndex: projectionContext.programRoutineIndex,
     routineEntriesByRoutineId: projectionContext.routineEntriesByRoutineId,
-    progressByTrackId: projectionContext.progressByTrackId,
-    firstStepsByTrackId: projectionContext.firstStepsByTrackId,
-    occurrence,
-    occurrenceExercises: occurrence?.id
-      ? occurrenceExercisesByOccurrenceId.get(String(occurrence.id || "")) || []
+    userProgressionsByInstanceProgressionId: projectionContext.userProgressionsByInstanceProgressionId,
+    firstProgressionEntriesByInstanceProgressionId: projectionContext.firstProgressionEntriesByInstanceProgressionId,
+    workout,
+    workoutExercises: workout?.id
+      ? workoutExercisesByWorkoutId.get(String(workout.id || "")) || []
       : []
   });
 }
@@ -268,23 +268,23 @@ async function buildTodayState(
     userId,
     context
   });
-  const occurrenceRangeStart = minimumDate(assignments.map((assignment) => assignment.startsOn)) || todayDate;
-  const occurrences = occurrenceRangeStart <= todayDate
-    ? await todayRepository.listOccurrencesByAssignmentsBetweenDates(
+  const workoutRangeStart = minimumDate(assignments.map((assignment) => assignment.startsOn)) || todayDate;
+  const workouts = workoutRangeStart <= todayDate
+    ? await todayRepository.listWorkoutsByAssignmentsBetweenDates(
         assignments.map((assignment) => assignment.id),
-        occurrenceRangeStart,
+        workoutRangeStart,
         todayDate,
         repositoryOptions
       )
     : [];
-  const occurrenceIndex = buildOccurrenceIndex(occurrences);
-  const occurrenceExercises = occurrences.length > 0
-    ? await todayRepository.listOccurrenceExercisesByOccurrenceIds(
-        occurrences.map((occurrence) => occurrence.id),
+  const workoutIndex = buildWorkoutIndex(workouts);
+  const workoutExercises = workouts.length > 0
+    ? await todayRepository.listWorkoutExercisesByWorkoutIds(
+        workouts.map((workout) => workout.id),
         repositoryOptions
       )
     : [];
-  const occurrenceExercisesByOccurrenceId = buildOccurrenceExercisesIndex(occurrenceExercises);
+  const workoutExercisesByWorkoutId = buildWorkoutExercisesIndex(workoutExercises);
 
   const todayWorkouts = assignments
     .map((assignment) =>
@@ -293,8 +293,8 @@ async function buildTodayState(
         date: todayDate,
         todayDate,
         projectionContext,
-        occurrenceIndex,
-        occurrenceExercisesByOccurrenceId
+        workoutIndex,
+        workoutExercisesByWorkoutId
       })
     )
     .filter(Boolean)
@@ -307,8 +307,8 @@ async function buildTodayState(
     }
 
     for (let date = assignment.startsOn; date < todayDate; date = addDays(date, 1)) {
-      const occurrence = occurrenceIndex.get(occurrenceKey(assignment.id, date)) || null;
-      if (occurrence?.status === "completed" || occurrence?.status === "definitely_missed") {
+      const workout = workoutIndex.get(workoutKey(assignment.id, date)) || null;
+      if (workout?.status === "completed" || workout?.status === "definitely_missed") {
         continue;
       }
 
@@ -317,8 +317,8 @@ async function buildTodayState(
         date,
         todayDate,
         projectionContext,
-        occurrenceIndex,
-        occurrenceExercisesByOccurrenceId
+        workoutIndex,
+        workoutExercisesByWorkoutId
       });
 
       if (!workoutProjection || workoutProjection.isRestDay === true) {
@@ -375,17 +375,17 @@ async function buildWorkoutProjectionByScheduledDate(
   }
 
   const repositoryOptions = context ? { context } : {};
-  const [projectionContext, occurrence] = await Promise.all([
+  const [projectionContext, workout] = await Promise.all([
     loadAssignmentProjectionContext(todayRepository, {
       assignment,
       userId,
       context
     }),
-    todayRepository.findOccurrenceByAssignmentAndDate(assignment.id, scheduledForDate, repositoryOptions)
+    todayRepository.findWorkoutByAssignmentAndDate(assignment.id, scheduledForDate, repositoryOptions)
   ]);
 
-  const occurrenceExercises = occurrence?.id
-    ? await todayRepository.listOccurrenceExercisesByOccurrenceIds([occurrence.id], repositoryOptions)
+  const workoutExercises = workout?.id
+    ? await todayRepository.listWorkoutExercisesByWorkoutIds([workout.id], repositoryOptions)
     : [];
 
   return buildProjectedWorkout(scheduledForDate, {
@@ -396,10 +396,10 @@ async function buildWorkoutProjectionByScheduledDate(
     scheduleIndex: projectionContext.scheduleIndex,
     programRoutineIndex: projectionContext.programRoutineIndex,
     routineEntriesByRoutineId: projectionContext.routineEntriesByRoutineId,
-    progressByTrackId: projectionContext.progressByTrackId,
-    firstStepsByTrackId: projectionContext.firstStepsByTrackId,
-    occurrence,
-    occurrenceExercises
+    userProgressionsByInstanceProgressionId: projectionContext.userProgressionsByInstanceProgressionId,
+    firstProgressionEntriesByInstanceProgressionId: projectionContext.firstProgressionEntriesByInstanceProgressionId,
+    workout,
+    workoutExercises
   });
 }
 
@@ -485,21 +485,21 @@ async function buildWorkoutDetailState(
     };
   }
 
-  const occurrenceExerciseIds = Array.isArray(workoutProjection.exercises)
-    ? workoutProjection.exercises.map((exercise) => exercise.occurrenceExerciseId).filter(Boolean)
+  const workoutExerciseIds = Array.isArray(workoutProjection.exercises)
+    ? workoutProjection.exercises.map((exercise) => exercise.workoutExerciseId).filter(Boolean)
     : [];
   const repositoryOptions = context ? { context } : {};
-  const setLogs = occurrenceExerciseIds.length > 0
-    ? await todayRepository.listSetLogsByOccurrenceExerciseIds(occurrenceExerciseIds, repositoryOptions)
+  const setLogs = workoutExerciseIds.length > 0
+    ? await todayRepository.listSetLogsByWorkoutExerciseIds(workoutExerciseIds, repositoryOptions)
     : [];
   const workoutWithSetLogs = attachSetLogsToWorkoutProjection(workoutProjection, buildSetLogIndex(setLogs));
-  const progressionTrackIds = Array.isArray(workoutWithSetLogs?.exercises)
-    ? uniqueValues(workoutWithSetLogs.exercises.map((exercise) => exercise.progressionTrackId))
+  const instanceProgressionIds = Array.isArray(workoutWithSetLogs?.exercises)
+    ? uniqueValues(workoutWithSetLogs.exercises.map((exercise) => exercise.instanceProgressionId))
     : [];
-  const progressRows = progressionTrackIds.length > 0
-    ? await todayRepository.listProgressionTrackProgressByUserAndTrackIds(userId, progressionTrackIds, repositoryOptions)
+  const progressRows = instanceProgressionIds.length > 0
+    ? await todayRepository.listUserProgressionsByInstanceProgressionIds(userId, instanceProgressionIds, repositoryOptions)
     : [];
-  const readyStepIds = uniqueValues(progressRows.map((row) => row.readyToAdvanceProgressionTrackStepId));
+  const readyStepIds = uniqueValues(progressRows.map((row) => row.readyToAdvanceInstanceProgressionEntryId));
   const currentStepIds = Array.isArray(workoutWithSetLogs?.exercises)
     ? uniqueValues(workoutWithSetLogs.exercises.map((exercise) => exercise.currentStepId))
     : [];

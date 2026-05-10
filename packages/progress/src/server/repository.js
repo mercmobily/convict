@@ -41,11 +41,7 @@ function normalizeStepRow(row = null) {
     return null;
   }
 
-  return {
-    ...normalized,
-    progressionTrackId: normalized.instanceProgressionId,
-    progressionTrack: normalized.instanceProgression || null
-  };
+  return normalized;
 }
 
 function normalizeProgressRow(row = null) {
@@ -65,14 +61,7 @@ function normalizeProgressRow(row = null) {
 
   return {
     ...normalized,
-    progressionTrackId: normalized.instanceProgressionId,
-    progressionTrack: normalized.instanceProgression || null,
-    currentProgressionTrackStepId: normalized.currentInstanceProgressionEntryId,
-    currentProgressionTrackStep: normalized.currentInstanceProgressionEntry || null,
-    readyToAdvanceProgressionTrackStepId: normalized.readyToAdvanceInstanceProgressionEntryId,
-    readyToAdvanceProgressionTrackStep: normalized.readyToAdvanceInstanceProgressionEntry || null,
-    lastCompletedOccurrenceId: normalized.lastCompletedWorkoutId,
-    lastCompletedOccurrence: normalizeSimplifiedRow(row.lastCompletedWorkout, {
+    lastCompletedWorkout: normalizeSimplifiedRow(row.lastCompletedWorkout, {
       relationIds: {
         programAssignmentId: "programAssignment",
         programAssignmentRevisionId: "programAssignmentRevision"
@@ -88,7 +77,7 @@ function createRepository({ api } = {}) {
   }
 
   return Object.freeze({
-    async listProgressionTrackProgressByUserId(userId, options = {}) {
+    async listUserProgressionsByUserId(userId, options = {}) {
       if (!userId) {
         return [];
       }

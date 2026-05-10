@@ -97,26 +97,26 @@ function buildProgramRoutineEntriesIndex(programRoutineEntries = []) {
   return index;
 }
 
-function occurrenceKey(programAssignmentId, scheduledForDate) {
+function workoutKey(programAssignmentId, scheduledForDate) {
   return `${String(programAssignmentId || "")}:${String(scheduledForDate || "")}`;
 }
 
-function buildOccurrenceIndex(occurrences = []) {
+function buildWorkoutIndex(workouts = []) {
   const index = new Map();
-  for (const occurrence of occurrences) {
-    index.set(occurrenceKey(occurrence.programAssignmentId, occurrence.scheduledForDate), occurrence);
+  for (const workout of workouts) {
+    index.set(workoutKey(workout.programAssignmentId, workout.scheduledForDate), workout);
   }
   return index;
 }
 
-function buildOccurrenceExercisesIndex(rows = []) {
+function buildWorkoutExercisesIndex(rows = []) {
   const index = new Map();
   for (const row of rows) {
-    const occurrenceId = String(row.workoutOccurrenceId || "");
-    if (!index.has(occurrenceId)) {
-      index.set(occurrenceId, []);
+    const workoutId = String(row.workoutId || "");
+    if (!index.has(workoutId)) {
+      index.set(workoutId, []);
     }
-    index.get(occurrenceId).push(row);
+    index.get(workoutId).push(row);
   }
 
   for (const entries of index.values()) {
@@ -129,11 +129,11 @@ function buildOccurrenceExercisesIndex(rows = []) {
 function buildSetLogIndex(rows = []) {
   const index = new Map();
   for (const row of rows) {
-    const occurrenceExerciseId = String(row.workoutOccurrenceExerciseId || "");
-    if (!index.has(occurrenceExerciseId)) {
-      index.set(occurrenceExerciseId, []);
+    const workoutExerciseId = String(row.workoutExerciseId || "");
+    if (!index.has(workoutExerciseId)) {
+      index.set(workoutExerciseId, []);
     }
-    index.get(occurrenceExerciseId).push(row);
+    index.get(workoutExerciseId).push(row);
   }
 
   for (const entries of index.values()) {
@@ -148,18 +148,18 @@ function buildSetLogIndex(rows = []) {
   return index;
 }
 
-function buildProgressIndex(progressRows = []) {
+function buildUserProgressionIndex(progressRows = []) {
   const index = new Map();
   for (const row of progressRows) {
-    index.set(String(row.progressionTrackId || ""), row);
+    index.set(String(row.instanceProgressionId || ""), row);
   }
   return index;
 }
 
-function buildFirstStepIndex(stepRows = []) {
+function buildFirstProgressionEntryIndex(stepRows = []) {
   const index = new Map();
   for (const row of stepRows) {
-    index.set(String(row.progressionTrackId || ""), row);
+    index.set(String(row.instanceProgressionId || ""), row);
   }
   return index;
 }
@@ -172,16 +172,16 @@ function buildStepIndex(stepRows = []) {
   return index;
 }
 
-function buildNextStepIndex(stepRows = []) {
+function buildNextProgressionEntryIndex(stepRows = []) {
   const groupedRows = new Map();
   const nextStepIndex = new Map();
 
   for (const row of stepRows) {
-    const progressionTrackId = String(row.progressionTrackId || "");
-    if (!groupedRows.has(progressionTrackId)) {
-      groupedRows.set(progressionTrackId, []);
+    const instanceProgressionId = String(row.instanceProgressionId || "");
+    if (!groupedRows.has(instanceProgressionId)) {
+      groupedRows.set(instanceProgressionId, []);
     }
-    groupedRows.get(progressionTrackId).push(row);
+    groupedRows.get(instanceProgressionId).push(row);
   }
 
   for (const rows of groupedRows.values()) {
@@ -217,9 +217,9 @@ function selectMeasurementUnit(...values) {
 }
 
 function buildProgressionExerciseProjection(scheduleEntry, progressRow = null, firstStep = null, slotNumber = 0) {
-  const currentStep = progressRow?.currentProgressionTrackStep || firstStep || null;
+  const currentStep = progressRow?.currentInstanceProgressionEntry || firstStep || null;
   if (!currentStep?.id) {
-    throw new AppError(500, `Missing progression step data for track ${scheduleEntry.progressionTrackId}.`);
+    throw new AppError(500, `Missing progression entry data for instance progression ${scheduleEntry.instanceProgressionId}.`);
   }
 
   const exercise = currentStep.exercise || null;
@@ -228,17 +228,17 @@ function buildProgressionExerciseProjection(scheduleEntry, progressRow = null, f
   }
 
   return {
-    occurrenceExerciseId: null,
+    workoutExerciseId: null,
     slotNumber,
     section: "main",
-    sourceKind: "program_schedule_entry",
-    programScheduleEntryId: scheduleEntry.id,
-    programRoutineEntryId: null,
-    entryKind: "progression_track",
+    sourceKind: "instance_program_entry",
+    instanceProgramEntryId: scheduleEntry.id,
+    instanceRoutineEntryId: null,
+    entryKind: "progression",
     isProgression: true,
-    progressionTrackId: scheduleEntry.progressionTrackId,
-    progressionTrackName: withoutConvictPrefix(scheduleEntry.progressionTrack?.name || ""),
-    progressionTrackStepId: currentStep.id,
+    instanceProgressionId: scheduleEntry.instanceProgressionId,
+    progressionName: withoutConvictPrefix(scheduleEntry.instanceProgression?.name || ""),
+    instanceProgressionEntryId: currentStep.id,
     exerciseId: exercise.id,
     exerciseName: exercise.name,
     plannedWorkSetsMin: Number(scheduleEntry.workSetsMin || 0),
@@ -248,7 +248,7 @@ function buildProgressionExerciseProjection(scheduleEntry, progressRow = null, f
     currentStepName: currentStep.stepLabel,
     currentStepInstruction: currentStep.instructionText || "",
     measurementUnit: selectMeasurementUnit(currentStep.measurementUnit, exercise.defaultMeasurementUnit),
-    readyToAdvanceStepId: progressRow?.readyToAdvanceProgressionTrackStepId || null,
+    readyToAdvanceStepId: progressRow?.readyToAdvanceInstanceProgressionEntryId || null,
     progressionSets: currentStep.progressionSets,
     progressionRepsMin: currentStep.progressionRepsMin,
     progressionRepsMax: currentStep.progressionRepsMax,
@@ -268,17 +268,17 @@ function buildDirectScheduleExerciseProjection(scheduleEntry, slotNumber = 0) {
   }
 
   return {
-    occurrenceExerciseId: null,
+    workoutExerciseId: null,
     slotNumber,
     section: "main",
-    sourceKind: "program_schedule_entry",
-    programScheduleEntryId: scheduleEntry.id,
-    programRoutineEntryId: null,
+    sourceKind: "instance_program_entry",
+    instanceProgramEntryId: scheduleEntry.id,
+    instanceRoutineEntryId: null,
     entryKind: "direct_exercise",
     isProgression: false,
-    progressionTrackId: null,
-    progressionTrackName: "",
-    progressionTrackStepId: null,
+    instanceProgressionId: null,
+    progressionName: "",
+    instanceProgressionEntryId: null,
     exerciseId: exercise.id,
     exerciseName: exercise.name,
     plannedWorkSetsMin: Number(scheduleEntry.workSetsMin || 0),
@@ -303,17 +303,17 @@ function buildDirectScheduleExerciseProjection(scheduleEntry, slotNumber = 0) {
 
 function buildRoutineExerciseProjection(programRoutine, routineEntry, section, slotNumber = 0) {
   return {
-    occurrenceExerciseId: null,
+    workoutExerciseId: null,
     slotNumber,
     section,
-    sourceKind: "program_routine_entry",
-    programScheduleEntryId: null,
-    programRoutineEntryId: routineEntry.id,
+    sourceKind: "instance_routine_entry",
+    instanceProgramEntryId: null,
+    instanceRoutineEntryId: routineEntry.id,
     entryKind: "direct_exercise",
     isProgression: false,
-    progressionTrackId: null,
-    progressionTrackName: "",
-    progressionTrackStepId: null,
+    instanceProgressionId: null,
+    progressionName: "",
+    instanceProgressionEntryId: null,
     exerciseId: routineEntry.exerciseId,
     exerciseName: routineEntry.exerciseNameSnapshot || routineEntry.exercise?.name || "",
     routineName: programRoutine.nameSnapshot || "",
@@ -368,8 +368,8 @@ function buildPlannedExerciseProjections(
     scheduleEntries = [],
     programRoutines = [],
     routineEntriesByRoutineId = new Map(),
-    progressByTrackId = new Map(),
-    firstStepsByTrackId = new Map(),
+    userProgressionsByInstanceProgressionId = new Map(),
+    firstProgressionEntriesByInstanceProgressionId = new Map(),
     dayOfWeek = 0
   } = {}
 ) {
@@ -385,8 +385,8 @@ function buildPlannedExerciseProjections(
       main.push(
         buildProgressionExerciseProjection(
           entry,
-          progressByTrackId.get(String(entry.progressionTrackId || "")) || null,
-          firstStepsByTrackId.get(String(entry.progressionTrackId || "")) || null,
+          userProgressionsByInstanceProgressionId.get(String(entry.instanceProgressionId || "")) || null,
+          firstProgressionEntriesByInstanceProgressionId.get(String(entry.instanceProgressionId || "")) || null,
           slotNumber
         )
       );
@@ -399,27 +399,27 @@ function buildPlannedExerciseProjections(
   return [...warmup.rows, ...main, ...cooldown.rows];
 }
 
-function buildOccurrenceExerciseProjection(row = {}) {
+function buildWorkoutExerciseProjection(row = {}) {
   return {
-    occurrenceExerciseId: row.id,
+    workoutExerciseId: row.id,
     slotNumber: Number(row.slotNumber || 0),
     section: String(row.section || "main").trim(),
     sourceKind: String(row.sourceKind || "").trim(),
-    programScheduleEntryId: row.programScheduleEntryId || null,
-    programRoutineEntryId: row.programRoutineEntryId || null,
-    entryKind: row.progressionTrackId ? "progression_track" : "direct_exercise",
-    isProgression: Boolean(row.progressionTrackId && row.progressionTrackStepId),
-    progressionTrackId: row.progressionTrackId || null,
-    progressionTrackName: row.progressionTrackNameSnapshot || withoutConvictPrefix(row.progressionTrack?.name || ""),
-    progressionTrackStepId: row.progressionTrackStepId || null,
+    instanceProgramEntryId: row.instanceProgramEntryId || null,
+    instanceRoutineEntryId: row.instanceRoutineEntryId || null,
+    entryKind: row.instanceProgressionId ? "progression" : "direct_exercise",
+    isProgression: Boolean(row.instanceProgressionId && row.instanceProgressionEntryId),
+    instanceProgressionId: row.instanceProgressionId || null,
+    progressionName: row.progressionNameSnapshot || withoutConvictPrefix(row.instanceProgression?.name || ""),
+    instanceProgressionEntryId: row.instanceProgressionEntryId || null,
     exerciseId: row.exerciseId,
     exerciseName: row.exerciseNameSnapshot,
     plannedWorkSetsMin: Number(row.plannedSetsMin || 0),
     plannedWorkSetsMax: Number(row.plannedSetsMax || 0),
-    currentStepId: row.progressionTrackStepId || null,
-    currentStepNumber: row.progressionTrackStep?.stepNumber ?? null,
+    currentStepId: row.instanceProgressionEntryId || null,
+    currentStepNumber: row.instanceProgressionEntry?.stepNumber ?? null,
     currentStepName: row.progressionStepLabelSnapshot || row.exerciseNameSnapshot,
-    currentStepInstruction: row.progressionTrackStep?.instructionText || row.exercise?.instructionText || "",
+    currentStepInstruction: row.instanceProgressionEntry?.instructionText || row.exercise?.instructionText || "",
     measurementUnit: row.measurementUnitSnapshot,
     readyToAdvanceStepId: null,
     progressionSets: row.progressionSetsSnapshot,
@@ -458,7 +458,7 @@ function decorateSetLogForExercise(exercise = {}, setLog = {}) {
   };
 }
 
-function deriveOccurrenceExerciseStatus(exercise = {}, setLogs = []) {
+function deriveWorkoutExerciseStatus(exercise = {}, setLogs = []) {
   if (!Array.isArray(setLogs) || setLogs.length < 1) {
     return "pending";
   }
@@ -471,7 +471,7 @@ function deriveOccurrenceExerciseStatus(exercise = {}, setLogs = []) {
   return "logged";
 }
 
-function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByOccurrenceExerciseId = new Map()) {
+function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByWorkoutExerciseId = new Map()) {
   if (!workoutProjection) {
     return null;
   }
@@ -482,12 +482,12 @@ function attachSetLogsToWorkoutProjection(workoutProjection = null, setLogsByOcc
     canLog: workoutProjection.status === "in_progress",
     exercises: Array.isArray(workoutProjection.exercises)
       ? workoutProjection.exercises.map((exercise) => {
-          const setLogs = (setLogsByOccurrenceExerciseId.get(String(exercise.occurrenceExerciseId || "")) || [])
+          const setLogs = (setLogsByWorkoutExerciseId.get(String(exercise.workoutExerciseId || "")) || [])
             .map((setLog) => decorateSetLogForExercise(exercise, setLog));
 
           return {
             ...exercise,
-            exerciseStatus: deriveOccurrenceExerciseStatus(exercise, setLogs),
+            exerciseStatus: deriveWorkoutExerciseStatus(exercise, setLogs),
             setLogs
           };
         })
@@ -507,7 +507,7 @@ function mergeProgressStateIntoWorkoutProjection(
     return null;
   }
 
-  const progressByTrackId = buildProgressIndex(progressRows);
+  const userProgressionsByInstanceProgressionId = buildUserProgressionIndex(progressRows);
   const readyStepsById = buildStepIndex(readyStepRows);
   const currentStepsById = buildStepIndex(currentStepRows);
 
@@ -519,13 +519,13 @@ function mergeProgressStateIntoWorkoutProjection(
             return exercise;
           }
 
-          const progressRow = progressByTrackId.get(String(exercise.progressionTrackId || "")) || null;
-          const readyStep = readyStepsById.get(String(progressRow?.readyToAdvanceProgressionTrackStepId || "")) || null;
+          const progressRow = userProgressionsByInstanceProgressionId.get(String(exercise.instanceProgressionId || "")) || null;
+          const readyStep = readyStepsById.get(String(progressRow?.readyToAdvanceInstanceProgressionEntryId || "")) || null;
           const currentSnapshotStep = currentStepsById.get(String(exercise.currentStepId || "")) || null;
           const progressDisplayState = buildProgressDisplayState(
             {
               progressRow,
-              currentStep: progressRow?.currentProgressionTrackStep || null,
+              currentStep: progressRow?.currentInstanceProgressionEntry || null,
               fallbackStep: currentSnapshotStep,
               readyStep,
               base: exercise
@@ -539,7 +539,7 @@ function mergeProgressStateIntoWorkoutProjection(
             ...exercise,
             ...progressDisplayState,
             canApplyAdvancement: Boolean(
-              progressRow?.readyToAdvanceProgressionTrackStepId &&
+              progressRow?.readyToAdvanceInstanceProgressionEntryId &&
               progressDisplayState.currentProgressStepId &&
               exercise.currentStepId &&
               String(progressDisplayState.currentProgressStepId) === String(exercise.currentStepId)
@@ -565,10 +565,10 @@ function buildProjectedWorkout(
     scheduleIndex,
     programRoutineIndex,
     routineEntriesByRoutineId,
-    progressByTrackId,
-    firstStepsByTrackId,
-    occurrence = null,
-    occurrenceExercises = []
+    userProgressionsByInstanceProgressionId,
+    firstProgressionEntriesByInstanceProgressionId,
+    workout = null,
+    workoutExercises = []
   } = {}
 ) {
   const dayOfWeek = dayOfWeekFromDate(dateString);
@@ -582,20 +582,20 @@ function buildProjectedWorkout(
   const scheduleEntries = (scheduleIndex.get(String(revision.programId || ""))?.get(dayOfWeek) || []).slice();
   const programRoutines = programRoutineIndex.get(String(revision.programId || "")) || [];
 
-  if (occurrence?.id) {
+  if (workout?.id) {
     return {
-      programAssignmentId: assignment?.id || occurrence.programAssignmentId || null,
+      programAssignmentId: assignment?.id || workout.programAssignmentId || null,
       scheduledForDate: dateString,
-      performedOnDate: occurrence.performedOnDate,
-      status: occurrence.status,
-      occurrenceId: occurrence.id,
-      revisionId: occurrence.programAssignmentRevisionId || revision.id,
-      programId: revision.programId,
+      performedOnDate: workout.performedOnDate,
+      status: workout.status,
+      workoutId: workout.id,
+      revisionId: workout.programAssignmentRevisionId || revision.id,
+      instanceProgramId: revision.instanceProgramId,
       programName: program?.name || "",
       dayOfWeek,
       dayLabel,
       isRestDay: false,
-      exercises: occurrenceExercises.map(buildOccurrenceExerciseProjection)
+      exercises: workoutExercises.map(buildWorkoutExerciseProjection)
     };
   }
 
@@ -603,8 +603,8 @@ function buildProjectedWorkout(
     scheduleEntries,
     programRoutines,
     routineEntriesByRoutineId,
-    progressByTrackId,
-    firstStepsByTrackId,
+    userProgressionsByInstanceProgressionId,
+    firstProgressionEntriesByInstanceProgressionId,
     dayOfWeek
   });
 
@@ -614,9 +614,9 @@ function buildProjectedWorkout(
       scheduledForDate: dateString,
       performedOnDate: null,
       status: "rest_day",
-      occurrenceId: null,
+      workoutId: null,
       revisionId: revision.id,
-      programId: revision.programId,
+      instanceProgramId: revision.instanceProgramId,
       programName: program?.name || "",
       dayOfWeek,
       dayLabel,
@@ -630,9 +630,9 @@ function buildProjectedWorkout(
     scheduledForDate: dateString,
     performedOnDate: null,
     status: dateString < todayDate ? "overdue" : "scheduled",
-    occurrenceId: null,
+    workoutId: null,
     revisionId: revision.id,
-    programId: revision.programId,
+    instanceProgramId: revision.instanceProgramId,
     programName: program?.name || "",
     dayOfWeek,
     dayLabel,
@@ -641,20 +641,20 @@ function buildProjectedWorkout(
   };
 }
 
-function buildOccurrenceExerciseSnapshots(workoutOccurrenceId, workoutProjection = {}) {
+function buildWorkoutExerciseSnapshots(workoutId, workoutProjection = {}) {
   const exercises = Array.isArray(workoutProjection.exercises) ? workoutProjection.exercises : [];
   return exercises.map((exercise) => ({
-    workoutOccurrenceId,
+    workoutId,
     slotNumber: Number(exercise.slotNumber || 0),
     section: exercise.section || "main",
-    sourceKind: exercise.sourceKind || "program_schedule_entry",
-    programScheduleEntryId: exercise.programScheduleEntryId || null,
-    programRoutineEntryId: exercise.programRoutineEntryId || null,
-    progressionTrackId: exercise.progressionTrackId || null,
-    progressionTrackStepId: exercise.progressionTrackStepId || exercise.currentStepId || null,
+    sourceKind: exercise.sourceKind || "instance_program_entry",
+    instanceProgramEntryId: exercise.instanceProgramEntryId || null,
+    instanceRoutineEntryId: exercise.instanceRoutineEntryId || null,
+    instanceProgressionId: exercise.instanceProgressionId || null,
+    instanceProgressionEntryId: exercise.instanceProgressionEntryId || exercise.currentStepId || null,
     exerciseId: exercise.exerciseId,
     exerciseNameSnapshot: exercise.exerciseName,
-    progressionTrackNameSnapshot: exercise.progressionTrackName || null,
+    progressionNameSnapshot: exercise.progressionName || null,
     progressionStepLabelSnapshot: exercise.currentStepName || null,
     measurementUnitSnapshot: exercise.measurementUnit,
     plannedSetsMin: Number(exercise.plannedWorkSetsMin || 0),
@@ -675,16 +675,16 @@ function buildOccurrenceExerciseSnapshots(workoutOccurrenceId, workoutProjection
 
 export {
   attachSetLogsToWorkoutProjection,
-  buildFirstStepIndex,
-  buildNextStepIndex,
-  buildOccurrenceExerciseProjection,
-  buildOccurrenceExerciseSnapshots,
-  buildOccurrenceExercisesIndex,
-  buildOccurrenceIndex,
+  buildFirstProgressionEntryIndex,
+  buildNextProgressionEntryIndex,
+  buildWorkoutExerciseProjection,
+  buildWorkoutExerciseSnapshots,
+  buildWorkoutExercisesIndex,
+  buildWorkoutIndex,
   buildProgramIndex,
   buildProgramRoutineEntriesIndex,
   buildProgramRoutineIndex,
-  buildProgressIndex,
+  buildUserProgressionIndex,
   buildProjectedWorkout,
   buildRevisionsByAssignmentId,
   buildScheduleIndex,
@@ -692,6 +692,6 @@ export {
   buildStepIndex,
   findEffectiveRevision,
   mergeProgressStateIntoWorkoutProjection,
-  occurrenceKey,
+  workoutKey,
   qualifiesSetForProgression
 };

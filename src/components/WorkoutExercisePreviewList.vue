@@ -49,7 +49,7 @@ function exerciseMetaLine(exercise = {}) {
 }
 
 function exerciseEyebrow(exercise = {}) {
-  return String(exercise.progressionTrackName || exercise.section || "").trim();
+  return String(exercise.progressionName || exercise.section || "").trim();
 }
 </script>
 

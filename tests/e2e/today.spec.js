@@ -71,7 +71,7 @@ async function ensureTodayFixture({
   );
 }
 
-async function fetchOccurrence(userId, scheduledForDate) {
+async function fetchWorkout(userId, scheduledForDate) {
   const connection = await createDbConnection();
 
   try {
@@ -100,7 +100,7 @@ async function fetchOccurrence(userId, scheduledForDate) {
   }
 }
 
-async function fetchOccurrenceExerciseCount(occurrenceId) {
+async function fetchWorkoutExerciseCount(workoutId) {
   const connection = await createDbConnection();
 
   try {
@@ -110,7 +110,7 @@ async function fetchOccurrenceExerciseCount(occurrenceId) {
         "FROM workout_exercises",
         "WHERE workout_id = ?"
       ].join(" "),
-      [occurrenceId]
+      [workoutId]
     );
 
     return Number(rows?.[0]?.count || 0);
@@ -163,11 +163,11 @@ test("active assignment shows today's projection and resolves overdue workouts",
     await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.todayDate}(\\?.*)?$`));
     await expect(page.getByRole("button", { name: "Back to today" })).toBeVisible();
 
-    const todayOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.todayDate);
-    expect(todayOccurrence?.status).toBe("in_progress");
-    expect(String(todayOccurrence?.performedOnDate || "")).toContain(fixturePlan.todayDate);
+    const todayWorkout = await fetchWorkout(fixtureState.userId, fixturePlan.todayDate);
+    expect(todayWorkout?.status).toBe("in_progress");
+    expect(String(todayWorkout?.performedOnDate || "")).toContain(fixturePlan.todayDate);
 
-    const todayExerciseCount = await fetchOccurrenceExerciseCount(todayOccurrence.id);
+    const todayExerciseCount = await fetchWorkoutExerciseCount(todayWorkout.id);
     expect(todayExerciseCount).toBe(fixturePlan.todayExercises.length);
 
     await page.getByRole("button", { name: "Back to today" }).click();
@@ -182,11 +182,11 @@ test("active assignment shows today's projection and resolves overdue workouts",
   await expect(page).toHaveURL(new RegExp(`/app/workouts/${fixturePlan.primaryOverdueDate}(\\?.*)?$`));
   await expect(page.getByRole("button", { name: "Back to today" })).toBeVisible();
 
-  const overdueOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.primaryOverdueDate);
-  expect(overdueOccurrence?.status).toBe("in_progress");
-  expect(String(overdueOccurrence?.performedOnDate || "")).toContain(fixturePlan.todayDate);
+  const overdueWorkout = await fetchWorkout(fixtureState.userId, fixturePlan.primaryOverdueDate);
+  expect(overdueWorkout?.status).toBe("in_progress");
+  expect(String(overdueWorkout?.performedOnDate || "")).toContain(fixturePlan.todayDate);
 
-  const overdueExerciseCount = await fetchOccurrenceExerciseCount(overdueOccurrence.id);
+  const overdueExerciseCount = await fetchWorkoutExerciseCount(overdueWorkout.id);
   expect(overdueExerciseCount).toBe(2);
 
   await page.getByRole("button", { name: "Back to today" }).click();
@@ -199,7 +199,7 @@ test("active assignment shows today's projection and resolves overdue workouts",
   await expect(page.getByRole("status").getByText("Workout marked definitely missed.")).toBeVisible();
   await expect(page.locator(`.overdue-workout-card[data-scheduled-for-date="${fixturePlan.secondaryOverdueDate}"]`)).toHaveCount(0);
 
-  const missedOccurrence = await fetchOccurrence(fixtureState.userId, fixturePlan.secondaryOverdueDate);
-  expect(missedOccurrence?.status).toBe("definitely_missed");
-  expect(missedOccurrence?.performedOnDate).toBeNull();
+  const missedWorkout = await fetchWorkout(fixtureState.userId, fixturePlan.secondaryOverdueDate);
+  expect(missedWorkout?.status).toBe("definitely_missed");
+  expect(missedWorkout?.performedOnDate).toBeNull();
 });

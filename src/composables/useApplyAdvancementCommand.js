@@ -2,14 +2,14 @@ import { ref } from "vue";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 
 function useApplyAdvancementCommand({ onSuccess } = {}) {
-  const activeAdvancingProgressionTrackId = ref("");
+  const activeAdvancingInstanceProgressionId = ref("");
 
   const applyAdvancementCommand = useCommand({
     apiSuffix: "/today/progress/apply-advancement",
     writeMethod: "POST",
     fallbackRunError: "Unable to apply this advancement.",
     buildRawPayload: () => ({
-      progressionTrackId: String(activeAdvancingProgressionTrackId.value || "").trim()
+      instanceProgressionId: String(activeAdvancingInstanceProgressionId.value || "").trim()
     }),
     messages: {
       success: "Advancement applied.",
@@ -25,21 +25,21 @@ function useApplyAdvancementCommand({ onSuccess } = {}) {
   function isApplyingAdvancement(exercise = {}) {
     return Boolean(
       applyAdvancementCommand.isRunning &&
-      activeAdvancingProgressionTrackId.value === String(exercise.progressionTrackId || "").trim()
+      activeAdvancingInstanceProgressionId.value === String(exercise.instanceProgressionId || "").trim()
     );
   }
 
   async function applyAdvancement(exercise = {}) {
-    const progressionTrackId = String(exercise.progressionTrackId || "").trim();
-    if (!progressionTrackId) {
+    const instanceProgressionId = String(exercise.instanceProgressionId || "").trim();
+    if (!instanceProgressionId) {
       return;
     }
 
-    activeAdvancingProgressionTrackId.value = progressionTrackId;
+    activeAdvancingInstanceProgressionId.value = instanceProgressionId;
     try {
       await applyAdvancementCommand.run();
     } finally {
-      activeAdvancingProgressionTrackId.value = "";
+      activeAdvancingInstanceProgressionId.value = "";
     }
   }
 

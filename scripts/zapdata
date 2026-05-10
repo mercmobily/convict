@@ -15,8 +15,23 @@ const envPath = path.join(repoRoot, ".env");
 function printUsage() {
   console.error("Usage: ./scripts/zapdata [--yes] <user-email|ALL>");
   console.error("");
-  console.error("Deletes only user training data while keeping login rows and non-training app data.");
+  console.error("Deletes only user-owned instance/runtime training data while keeping login rows, console settings, and source catalog data.");
 }
+
+const USER_TRAINING_DELETE_STEPS = Object.freeze([
+  { key: "workoutSets", tableName: "workout_sets" },
+  { key: "workoutExercises", tableName: "workout_exercises" },
+  { key: "userProgressions", tableName: "user_progressions" },
+  { key: "workouts", tableName: "workouts" },
+  { key: "programAssignmentRevisions", tableName: "program_assignment_revisions" },
+  { key: "programAssignments", tableName: "program_assignments" },
+  { key: "instanceRoutineEntries", tableName: "instance_routine_entries" },
+  { key: "instanceProgramRoutines", tableName: "instance_program_routines" },
+  { key: "instanceProgramEntries", tableName: "instance_program_entries" },
+  { key: "instanceProgressionEntries", tableName: "instance_progression_entries" },
+  { key: "instanceProgressions", tableName: "instance_progressions" },
+  { key: "instancePrograms", tableName: "instance_programs" }
+]);
 
 function parseArgs(argv = []) {
   const args = [...argv];
@@ -69,69 +84,43 @@ async function confirmDestructiveAction(targetLabel) {
   }
 }
 
+function createDeletedCounts() {
+  return Object.fromEntries(
+    USER_TRAINING_DELETE_STEPS.map((step) => [step.key, 0])
+  );
+}
+
+async function assertExpectedTrainingTablesExist(connection) {
+  const expectedTableNames = USER_TRAINING_DELETE_STEPS.map((step) => step.tableName);
+  const [tableRows] = await connection.query(
+    [
+      "SELECT TABLE_NAME AS tableName",
+      "FROM INFORMATION_SCHEMA.TABLES",
+      "WHERE TABLE_SCHEMA = DATABASE()",
+      "AND TABLE_NAME IN (?)"
+    ].join(" "),
+    [expectedTableNames]
+  );
+  const existingTableNames = new Set(
+    (Array.isArray(tableRows) ? tableRows : [])
+      .map((row) => String(row?.tableName || "").trim())
+      .filter(Boolean)
+  );
+  const missingTableNames = expectedTableNames.filter((tableName) => !existingTableNames.has(tableName));
+
+  if (missingTableNames.length > 0) {
+    throw new Error(`zapdata schema mismatch. Missing expected table(s): ${missingTableNames.join(", ")}`);
+  }
+}
+
 async function deleteTrainingDataForUser(connection, { userId }, deletedCounts) {
-  deletedCounts.workoutSetLogs += (
-    await connection.query(
-      "DELETE FROM workout_set_logs WHERE user_id = ?",
+  for (const step of USER_TRAINING_DELETE_STEPS) {
+    const [result] = await connection.query(
+      `DELETE FROM \`${step.tableName}\` WHERE user_id = ?`,
       [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.workoutOccurrenceExercises += (
-    await connection.query(
-      "DELETE FROM workout_occurrence_exercises WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.userExerciseProgress += (
-    await connection.query(
-      "DELETE FROM user_exercise_progress WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.workoutOccurrences += (
-    await connection.query(
-      "DELETE FROM workout_occurrences WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.personalStepVariations += (
-    await connection.query(
-      "DELETE FROM personal_step_variations WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.userProgramAssignmentRevisions += (
-    await connection.query(
-      "DELETE FROM user_program_assignment_revisions WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.userProgramAssignments += (
-    await connection.query(
-      "DELETE FROM user_program_assignments WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.programScheduleEntries += (
-    await connection.query(
-      "DELETE FROM program_schedule_entries WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
-
-  deletedCounts.programs += (
-    await connection.query(
-      "DELETE FROM programs WHERE user_id = ?",
-      [userId]
-    )
-  )[0].affectedRows;
+    );
+    deletedCounts[step.key] += result.affectedRows;
+  }
 }
 
 async function main() {
@@ -156,20 +145,11 @@ async function main() {
     password: process.env.DB_PASSWORD
   });
 
-  const deletedCounts = {
-    workoutSetLogs: 0,
-    workoutOccurrenceExercises: 0,
-    workoutOccurrences: 0,
-    userExerciseProgress: 0,
-    personalStepVariations: 0,
-    userProgramAssignmentRevisions: 0,
-    userProgramAssignments: 0,
-    programScheduleEntries: 0,
-    programs: 0
-  };
+  const deletedCounts = createDeletedCounts();
 
   try {
     await connection.beginTransaction();
+    await assertExpectedTrainingTablesExist(connection);
 
     const [userRows] = await connection.query(
       deleteAllUsers
@@ -213,7 +193,7 @@ async function main() {
       : `zapdata complete for ${target}`
   );
   console.log(JSON.stringify(deletedCounts, null, 2));
-  console.log("Login rows and non-training app data were left intact.");
+  console.log("Login rows, console settings, and source catalog data were left intact.");
 }
 
 main().catch((error) => {

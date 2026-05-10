@@ -60,8 +60,7 @@ function normalizeAssignmentRevisionRow(row = null) {
 
   return {
     ...normalized,
-    programId: normalized.instanceProgramId,
-    program: normalized.instanceProgram || null
+    instanceProgram: normalized.instanceProgram || null
   };
 }
 
@@ -97,9 +96,7 @@ function normalizeScheduleEntryRow(row = null) {
 
   return {
     ...normalized,
-    programId: normalized.instanceProgramId,
-    progressionTrackId: normalized.instanceProgressionId,
-    progressionTrack: normalized.instanceProgression || null
+    instanceProgression: normalized.instanceProgression || null
   };
 }
 
@@ -116,7 +113,7 @@ function normalizeProgramRoutineRow(row = null) {
 
   return {
     ...normalized,
-    programId: normalized.instanceProgramId
+    instanceProgram: normalized.instanceProgram || null
   };
 }
 
@@ -131,10 +128,7 @@ function normalizeProgramRoutineEntryRow(row = null) {
     return null;
   }
 
-  return {
-    ...normalized,
-    programRoutineId: normalized.instanceProgramRoutineId
-  };
+  return normalized;
 }
 
 function normalizeWorkoutRow(row = null) {
@@ -169,18 +163,7 @@ function normalizeWorkoutExerciseRow(row = null) {
     return null;
   }
 
-  return {
-    ...normalized,
-    workoutOccurrenceId: normalized.workoutId,
-    programScheduleEntryId: normalized.instanceProgramEntryId,
-    programRoutineEntryId: normalized.instanceRoutineEntryId,
-    progressionTrackId: normalized.instanceProgressionId,
-    progressionTrack: normalized.instanceProgression || null,
-    progressionTrackStepId: normalized.instanceProgressionEntryId,
-    progressionTrackStep: normalized.instanceProgressionEntry || null,
-    progressionTrackNameSnapshot: normalized.progressionNameSnapshot || null,
-    occurrenceExerciseId: normalized.id
-  };
+  return normalized;
 }
 
 function normalizeSetLogRow(row = null) {
@@ -193,11 +176,7 @@ function normalizeSetLogRow(row = null) {
     return null;
   }
 
-  return {
-    ...normalized,
-    workoutOccurrenceExerciseId: normalized.workoutExerciseId,
-    occurrenceExerciseId: normalized.workoutExerciseId
-  };
+  return normalized;
 }
 
 function normalizeProgressionRow(row = null) {
@@ -214,17 +193,7 @@ function normalizeProgressionRow(row = null) {
     return null;
   }
 
-  return {
-    ...normalized,
-    progressionTrackId: normalized.instanceProgressionId,
-    progressionTrack: normalized.instanceProgression || null,
-    currentProgressionTrackStepId: normalized.currentInstanceProgressionEntryId,
-    currentProgressionTrackStep: normalized.currentInstanceProgressionEntry || null,
-    readyToAdvanceProgressionTrackStepId: normalized.readyToAdvanceInstanceProgressionEntryId,
-    readyToAdvanceProgressionTrackStep: normalized.readyToAdvanceInstanceProgressionEntry || null,
-    lastCompletedOccurrenceId: normalized.lastCompletedWorkoutId,
-    lastCompletedOccurrence: normalized.lastCompletedWorkout || null
-  };
+  return normalized;
 }
 
 function normalizeStepRow(row = null) {
@@ -239,11 +208,7 @@ function normalizeStepRow(row = null) {
     return null;
   }
 
-  return {
-    ...normalized,
-    progressionTrackId: normalized.instanceProgressionId,
-    progressionTrack: normalized.instanceProgression || null
-  };
+  return normalized;
 }
 
 function translateWorkoutCreate(record = {}) {
@@ -262,17 +227,17 @@ function translateWorkoutCreate(record = {}) {
 
 function translateWorkoutExerciseCreate(record = {}) {
   return {
-    workoutId: record.workoutOccurrenceId || record.workoutId,
+    workoutId: record.workoutId,
     slotNumber: Number(record.slotNumber || 0),
     section: record.section || "main",
     sourceKind: record.sourceKind || "instance_program_entry",
-    instanceProgramEntryId: record.programScheduleEntryId || record.instanceProgramEntryId || null,
-    instanceRoutineEntryId: record.programRoutineEntryId || record.instanceRoutineEntryId || null,
-    instanceProgressionId: record.progressionTrackId || record.instanceProgressionId || null,
-    instanceProgressionEntryId: record.progressionTrackStepId || record.instanceProgressionEntryId || null,
+    instanceProgramEntryId: record.instanceProgramEntryId || null,
+    instanceRoutineEntryId: record.instanceRoutineEntryId || null,
+    instanceProgressionId: record.instanceProgressionId || null,
+    instanceProgressionEntryId: record.instanceProgressionEntryId || null,
     exerciseId: record.exerciseId,
     exerciseNameSnapshot: record.exerciseNameSnapshot,
-    progressionNameSnapshot: record.progressionTrackNameSnapshot || record.progressionNameSnapshot || null,
+    progressionNameSnapshot: record.progressionNameSnapshot || null,
     progressionStepLabelSnapshot: record.progressionStepLabelSnapshot || null,
     measurementUnitSnapshot: record.measurementUnitSnapshot,
     plannedSetsMin: Number(record.plannedSetsMin || 0),
@@ -292,20 +257,7 @@ function translateWorkoutExerciseCreate(record = {}) {
 }
 
 function translateProgressPatch(fields = {}) {
-  const translated = { ...fields };
-  if ("currentProgressionTrackStepId" in translated) {
-    translated.currentInstanceProgressionEntryId = translated.currentProgressionTrackStepId;
-    delete translated.currentProgressionTrackStepId;
-  }
-  if ("readyToAdvanceProgressionTrackStepId" in translated) {
-    translated.readyToAdvanceInstanceProgressionEntryId = translated.readyToAdvanceProgressionTrackStepId;
-    delete translated.readyToAdvanceProgressionTrackStepId;
-  }
-  if ("lastCompletedOccurrenceId" in translated) {
-    translated.lastCompletedWorkoutId = translated.lastCompletedOccurrenceId;
-    delete translated.lastCompletedOccurrenceId;
-  }
-  return translated;
+  return { ...fields };
 }
 
 function createRepository({
@@ -483,7 +435,7 @@ function createRepository({
       );
     },
 
-    async listOccurrencesByAssignmentsBetweenDates(programAssignmentIds = [], startDate, endDate, options = {}) {
+    async listWorkoutsByAssignmentsBetweenDates(programAssignmentIds = [], startDate, endDate, options = {}) {
       const ids = compactIds(programAssignmentIds);
       if (ids.length < 1 || !startDate || !endDate || startDate > endDate) {
         return [];
@@ -508,7 +460,7 @@ function createRepository({
       );
     },
 
-    async findOccurrenceByAssignmentAndDate(programAssignmentId, scheduledForDate, options = {}) {
+    async findWorkoutByAssignmentAndDate(programAssignmentId, scheduledForDate, options = {}) {
       if (!programAssignmentId || !scheduledForDate) {
         return null;
       }
@@ -534,8 +486,8 @@ function createRepository({
       return rows[0] || null;
     },
 
-    async listOccurrenceExercisesByOccurrenceIds(occurrenceIds = [], options = {}) {
-      const ids = compactIds(occurrenceIds);
+    async listWorkoutExercisesByWorkoutIds(workoutIds = [], options = {}) {
+      const ids = compactIds(workoutIds);
       if (ids.length < 1) {
         return [];
       }
@@ -565,8 +517,8 @@ function createRepository({
       );
     },
 
-    async listSetLogsByOccurrenceExerciseIds(occurrenceExerciseIds = [], options = {}) {
-      const ids = compactIds(occurrenceExerciseIds);
+    async listSetLogsByWorkoutExerciseIds(workoutExerciseIds = [], options = {}) {
+      const ids = compactIds(workoutExerciseIds);
       if (ids.length < 1) {
         return [];
       }
@@ -589,8 +541,8 @@ function createRepository({
       );
     },
 
-    async listProgressionTrackProgressByUserAndTrackIds(userId, progressionTrackIds = [], options = {}) {
-      const ids = compactIds(progressionTrackIds);
+    async listUserProgressionsByInstanceProgressionIds(userId, instanceProgressionIds = [], options = {}) {
+      const ids = compactIds(instanceProgressionIds);
       if (!userId || ids.length < 1) {
         return [];
       }
@@ -617,8 +569,8 @@ function createRepository({
       );
     },
 
-    async listFirstStepsByTrackIds(progressionTrackIds = [], options = {}) {
-      const ids = compactIds(progressionTrackIds);
+    async listFirstProgressionEntriesByInstanceProgressionIds(instanceProgressionIds = [], options = {}) {
+      const ids = compactIds(instanceProgressionIds);
       if (ids.length < 1) {
         return [];
       }
@@ -666,8 +618,8 @@ function createRepository({
       );
     },
 
-    async listStepsByTrackIds(progressionTrackIds = [], options = {}) {
-      const ids = compactIds(progressionTrackIds);
+    async listProgressionEntriesByInstanceProgressionIds(instanceProgressionIds = [], options = {}) {
+      const ids = compactIds(instanceProgressionIds);
       if (ids.length < 1) {
         return [];
       }
@@ -690,10 +642,10 @@ function createRepository({
       );
     },
 
-    async createOccurrence(record = {}, options = {}) {
+    async createWorkout(record = {}, options = {}) {
       const payload = translateWorkoutCreate(record);
       if (!payload.programAssignmentId || !payload.programAssignmentRevisionId || !payload.scheduledForDate) {
-        throw new TypeError("createOccurrence requires assignment, revision, and scheduled date.");
+        throw new TypeError("createWorkout requires assignment, revision, and scheduled date.");
       }
 
       return documentId(await workoutsRepository.createDocument(payload, {
@@ -702,17 +654,17 @@ function createRepository({
       }));
     },
 
-    async updateOccurrence(occurrenceId, fields = {}, options = {}) {
-      if (!occurrenceId) {
-        throw new TypeError("updateOccurrence requires occurrence id.");
+    async updateWorkout(workoutId, fields = {}, options = {}) {
+      if (!workoutId) {
+        throw new TypeError("updateWorkout requires workout id.");
       }
-      return workoutsRepository.patchDocumentById(occurrenceId, fields, {
+      return workoutsRepository.patchDocumentById(workoutId, fields, {
         trx: transaction(options),
         context: options?.context || null
       });
     },
 
-    async createOccurrenceExercises(records = [], options = {}) {
+    async createWorkoutExercises(records = [], options = {}) {
       const normalizedRecords = Array.isArray(records) ? records : [];
       for (const record of normalizedRecords) {
         await workoutExercisesRepository.createDocument(translateWorkoutExerciseCreate(record), {
@@ -723,29 +675,29 @@ function createRepository({
       return normalizedRecords.length;
     },
 
-    async updateOccurrenceExercise(occurrenceExerciseId, fields = {}, options = {}) {
-      if (!occurrenceExerciseId) {
-        throw new TypeError("updateOccurrenceExercise requires occurrence exercise id.");
+    async updateWorkoutExercise(workoutExerciseId, fields = {}, options = {}) {
+      if (!workoutExerciseId) {
+        throw new TypeError("updateWorkoutExercise requires workout exercise id.");
       }
-      return workoutExercisesRepository.patchDocumentById(occurrenceExerciseId, fields, {
+      return workoutExercisesRepository.patchDocumentById(workoutExerciseId, fields, {
         trx: transaction(options),
         context: options?.context || null
       });
     },
 
-    async createProgressionTrackProgress(record = {}, options = {}) {
+    async createUserProgression(record = {}, options = {}) {
       if (!record.programAssignmentId) {
-        throw new TypeError("createProgressionTrackProgress requires programAssignmentId.");
+        throw new TypeError("createUserProgression requires programAssignmentId.");
       }
 
       return documentId(await userProgressionsRepository.createDocument(
         {
           programAssignmentId: record.programAssignmentId,
-          instanceProgressionId: record.progressionTrackId,
-          currentInstanceProgressionEntryId: record.currentProgressionTrackStepId,
-          readyToAdvanceInstanceProgressionEntryId: record.readyToAdvanceProgressionTrackStepId || null,
+          instanceProgressionId: record.instanceProgressionId,
+          currentInstanceProgressionEntryId: record.currentInstanceProgressionEntryId,
+          readyToAdvanceInstanceProgressionEntryId: record.readyToAdvanceInstanceProgressionEntryId || null,
           readyToAdvanceAt: record.readyToAdvanceAt || null,
-          lastCompletedWorkoutId: record.lastCompletedOccurrenceId || null,
+          lastCompletedWorkoutId: record.lastCompletedWorkoutId || null,
           lastCompletedAt: record.lastCompletedAt || null,
           stallCount: record.stallCount ?? 0,
           startedAt: record.startedAt || null
@@ -757,9 +709,9 @@ function createRepository({
       ));
     },
 
-    async updateProgressionTrackProgress(progressId, fields = {}, options = {}) {
+    async updateUserProgression(progressId, fields = {}, options = {}) {
       if (!progressId) {
-        throw new TypeError("updateProgressionTrackProgress requires progress id.");
+        throw new TypeError("updateUserProgression requires progress id.");
       }
       return userProgressionsRepository.patchDocumentById(progressId, translateProgressPatch(fields), {
         trx: transaction(options),

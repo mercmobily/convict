@@ -7,10 +7,10 @@ import {
   lastDateOfMonth
 } from "@local/main/shared";
 import {
-  buildOccurrenceExercisesIndex,
-  buildOccurrenceIndex,
+  buildWorkoutExercisesIndex,
+  buildWorkoutIndex,
   buildProjectedWorkout,
-  occurrenceKey
+  workoutKey
 } from "./projections.js";
 import {
   buildAssignmentProgramSummary,
@@ -112,9 +112,9 @@ function aggregateDayProjection(date, workouts = []) {
     programAssignmentId: statusSource.programAssignmentId || null,
     performedOnDate: statusSource.performedOnDate || null,
     status: statusSource.status,
-    occurrenceId: statusSource.occurrenceId || null,
+    workoutId: statusSource.workoutId || null,
     revisionId: statusSource.revisionId || null,
-    programId: statusSource.programId || null,
+    instanceProgramId: statusSource.instanceProgramId || null,
     programName: statusSource.programName || "",
     dayOfWeek: statusSource.dayOfWeek,
     dayLabel: statusSource.dayLabel,
@@ -165,26 +165,26 @@ async function buildHistoryState(
     userId,
     context
   });
-  const occurrenceQueryStart = assignments
+  const workoutQueryStart = assignments
     .map((assignment) => assignment.startsOn)
     .filter(Boolean)
     .sort()[0] || gridStart;
-  const occurrences = occurrenceQueryStart <= gridEnd
-    ? await todayRepository.listOccurrencesByAssignmentsBetweenDates(
+  const workouts = workoutQueryStart <= gridEnd
+    ? await todayRepository.listWorkoutsByAssignmentsBetweenDates(
         assignments.map((assignment) => assignment.id),
-        occurrenceQueryStart,
+        workoutQueryStart,
         gridEnd,
         repositoryOptions
       )
     : [];
-  const occurrenceIndex = buildOccurrenceIndex(occurrences);
-  const occurrenceExercises = occurrences.length > 0
-    ? await todayRepository.listOccurrenceExercisesByOccurrenceIds(
-        occurrences.map((occurrence) => occurrence.id),
+  const workoutIndex = buildWorkoutIndex(workouts);
+  const workoutExercises = workouts.length > 0
+    ? await todayRepository.listWorkoutExercisesByWorkoutIds(
+        workouts.map((workout) => workout.id),
         repositoryOptions
       )
     : [];
-  const occurrenceExercisesByOccurrenceId = buildOccurrenceExercisesIndex(occurrenceExercises);
+  const workoutExercisesByWorkoutId = buildWorkoutExercisesIndex(workoutExercises);
   const assignmentSummaries = assignments.map((assignment) => {
     const revisions = projectionContext.revisionsByAssignmentId.get(String(assignment.id || "")) || [];
     return buildAssignmentProgramSummary(assignment, revisions, projectionContext.programsById, todayDate);
@@ -205,7 +205,7 @@ async function buildHistoryState(
         return buildNotStartedYetProjection(date, assignmentSummary, assignmentSummary.program);
       }
 
-      const occurrence = occurrenceIndex.get(occurrenceKey(assignment.id, date)) || null;
+      const workout = workoutIndex.get(workoutKey(assignment.id, date)) || null;
       return buildProjectedWorkout(date, {
         assignment,
         todayDate,
@@ -214,11 +214,11 @@ async function buildHistoryState(
         scheduleIndex: projectionContext.scheduleIndex,
         programRoutineIndex: projectionContext.programRoutineIndex,
         routineEntriesByRoutineId: projectionContext.routineEntriesByRoutineId,
-        progressByTrackId: projectionContext.progressByTrackId,
-        firstStepsByTrackId: projectionContext.firstStepsByTrackId,
-        occurrence,
-        occurrenceExercises: occurrence?.id
-          ? occurrenceExercisesByOccurrenceId.get(String(occurrence.id || "")) || []
+        userProgressionsByInstanceProgressionId: projectionContext.userProgressionsByInstanceProgressionId,
+        firstProgressionEntriesByInstanceProgressionId: projectionContext.firstProgressionEntriesByInstanceProgressionId,
+        workout,
+        workoutExercises: workout?.id
+          ? workoutExercisesByWorkoutId.get(String(workout.id || "")) || []
           : []
       });
     });

@@ -13,14 +13,12 @@ function withoutConvictPrefix(value = "") {
 
 function resolveScheduleEntryName(entry = {}) {
   const entryKind = String(entry?.entryKind || "").trim().toLowerCase();
-  if (entryKind === "progression" || entryKind === "progression_track") {
+  if (entryKind === "progression") {
     return withoutConvictPrefix(
       entry?.instanceProgression?.name ||
         entry?.progression?.name ||
         entry?.instanceProgressionName ||
         entry?.progressionName ||
-        entry?.progressionTrack?.name ||
-        entry?.progressionTrackName ||
         ""
     );
   }

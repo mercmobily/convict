@@ -73,7 +73,7 @@ const markWorkoutDefinitelyMissedBodyInputValidator = deepFreeze({
 
 const applyAdvancementBodyInputValidator = deepFreeze({
   schema: createSchema({
-    progressionTrackId: {
+    instanceProgressionId: {
       type: "id",
       required: true
     }

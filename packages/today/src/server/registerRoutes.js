@@ -118,7 +118,7 @@ function registerRoutes(
       visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
-        summary: "Create or resume an in-progress workout occurrence for today or an overdue date."
+        summary: "Create or resume an in-progress workout for today or an overdue date."
       },
       body: startWorkoutBodyInputValidator
     },
@@ -141,7 +141,7 @@ function registerRoutes(
       visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
-        summary: "Finish an in-progress workout occurrence and evaluate earned advancement."
+        summary: "Finish an in-progress workout and evaluate earned advancement."
       },
       params: workoutDetailQueryInputValidator,
       query: assignmentQueryRouteValidator

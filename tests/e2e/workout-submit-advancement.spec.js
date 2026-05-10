@@ -44,7 +44,7 @@ async function ensureWorkoutSubmitFixture({
   );
 }
 
-async function fetchWorkoutOccurrenceStatus(userId, scheduledForDate) {
+async function fetchWorkoutStatus(userId, scheduledForDate) {
   const connection = await createDbConnection();
 
   try {
@@ -167,14 +167,14 @@ test("user can finish a workout and manually apply earned advancement", async ({
   await expect(pushupsCard.getByText("Ready to advance to Incline Push-ups")).toBeVisible();
   await expect(legRaisesCard.getByRole("button", { name: "Advance now" })).toHaveCount(0);
 
-  const occurrenceStateAfterSubmit = await fetchWorkoutOccurrenceStatus(
+  const workoutStateAfterSubmit = await fetchWorkoutStatus(
     fixtureState.userId,
     fixturePlan.targetWorkoutDate
   );
-  expect(occurrenceStateAfterSubmit).toMatchObject({
+  expect(workoutStateAfterSubmit).toMatchObject({
     status: "completed"
   });
-  expect(occurrenceStateAfterSubmit?.submittedAt).toBeTruthy();
+  expect(workoutStateAfterSubmit?.submittedAt).toBeTruthy();
 
   const progressRowsAfterSubmit = await fetchExerciseProgressRows(fixtureState.userId);
   expect(progressRowsAfterSubmit).toEqual([
@@ -268,11 +268,11 @@ test("user can finish a workout below the programmed minimum volume", async ({ p
   await expect(pushupsCard.getByRole("button", { name: "Advance now" })).toHaveCount(0);
   await expect(legRaisesCard.getByRole("button", { name: "Advance now" })).toHaveCount(0);
 
-  const occurrenceStateAfterSubmit = await fetchWorkoutOccurrenceStatus(
+  const workoutStateAfterSubmit = await fetchWorkoutStatus(
     fixtureState.userId,
     fixturePlan.targetWorkoutDate
   );
-  expect(occurrenceStateAfterSubmit).toMatchObject({
+  expect(workoutStateAfterSubmit).toMatchObject({
     status: "completed"
   });
 

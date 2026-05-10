@@ -180,9 +180,9 @@ function exerciseMetaParts(exercise = {}) {
       >
         <article
           v-for="exercise in progressCards"
-          :key="exercise.progressionTrackId"
+          :key="exercise.instanceProgressionId"
           class="progress-exercise-card"
-          :data-testid="`progress-track-${exercise.progressionTrackSlug}`"
+          :data-testid="`progression-${exercise.progressionSlug}`"
         >
           <header class="progress-exercise-card__header">
             <div class="progress-exercise-card__identity">
@@ -195,7 +195,7 @@ function exerciseMetaParts(exercise = {}) {
                 <v-icon :icon="mdiChartTimelineVariant" />
               </v-avatar>
               <div class="progress-exercise-card__title-block">
-                <div class="progress-exercise-card__family">{{ exercise.progressionTrackName }}</div>
+                <div class="progress-exercise-card__family">{{ exercise.progressionName }}</div>
                 <h2 class="progress-exercise-card__step">{{ currentStepTitle(exercise) }}</h2>
               </div>
             </div>
