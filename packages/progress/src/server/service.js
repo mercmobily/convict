@@ -1,7 +1,6 @@
 import {
   buildProgressDisplayState,
   localTodayDateString,
-  sortCanonicalProgressionTracks,
   withoutConvictPrefix
 } from "@local/main/shared";
 import { resolveCurrentUserId } from "@local/main/shared/requestContext";
@@ -11,7 +10,7 @@ function progressStatus(progressRow = null) {
     return "ready_to_advance";
   }
 
-  if (progressRow?.id || progressRow?.lastCompletedOccurrenceId || progressRow?.lastCompletedAt) {
+  if (progressRow?.lastCompletedOccurrenceId || progressRow?.lastCompletedAt) {
     return "in_progress";
   }
 
@@ -30,6 +29,29 @@ function buildSummary(trackProgress = []) {
   };
 }
 
+function buildRowsById(rows = []) {
+  const index = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const id = String(row?.id || "").trim();
+    if (id) {
+      index.set(id, row);
+    }
+  }
+  return index;
+}
+
+function sortProgressRows(rows = []) {
+  return [...(Array.isArray(rows) ? rows : [])].sort((left, right) => {
+    const leftProgression = left?.progressionTrack || {};
+    const rightProgression = right?.progressionTrack || {};
+    const sortDelta = Number(leftProgression.sortOrder || 0) - Number(rightProgression.sortOrder || 0);
+    if (sortDelta !== 0) {
+      return sortDelta;
+    }
+    return String(leftProgression.name || "").localeCompare(String(rightProgression.name || ""));
+  });
+}
+
 function createService({ progressRepository } = {}) {
   if (!progressRepository) {
     throw new TypeError("createService requires feature.progress.repository.");
@@ -40,36 +62,31 @@ function createService({ progressRepository } = {}) {
       void input;
       const context = options?.context || null;
       const userId = resolveCurrentUserId(context);
+      const progressRows = await progressRepository.listProgressionTrackProgressByUserId(userId, { context });
+      const stepIds = [
+        ...new Set(
+          progressRows
+            .flatMap((row) => [
+              row.currentProgressionTrackStepId,
+              row.readyToAdvanceProgressionTrackStepId
+            ])
+            .filter(Boolean)
+        )
+      ];
+      const stepsById = buildRowsById(await progressRepository.listStepsByIds(stepIds, { context }));
 
-      const [trackRows, progressRows] = await Promise.all([
-        progressRepository.listProgressionTracks({ context }),
-        progressRepository.listProgressionTrackProgressByUserId(userId, { context })
-      ]);
-
-      const progressByTrackId = new Map(
-        progressRows
-          .filter((row) => row?.progressionTrackId)
-          .map((row) => [String(row.progressionTrackId), row])
-      );
-
-      const missingTrackIds = trackRows
-        .map((track) => String(track.id || "").trim())
-        .filter(Boolean)
-        .filter((trackId) => !progressByTrackId.has(trackId));
-
-      const firstStepRows = await progressRepository.listFirstStepsByTrackIds(missingTrackIds, { context });
-      const firstStepByTrackId = new Map(
-        firstStepRows
-          .filter((row) => row?.progressionTrackId)
-          .map((row) => [String(row.progressionTrackId), row])
-      );
-
-      const trackProgress = sortCanonicalProgressionTracks(trackRows).map((track) => {
-        const progressionTrackId = String(track.id || "").trim();
-        const progressRow = progressByTrackId.get(progressionTrackId) || null;
-        const currentStep = progressRow?.currentProgressionTrackStep || firstStepByTrackId.get(progressionTrackId) || null;
-        const readyStep = progressRow?.readyToAdvanceProgressionTrackStep || null;
-        const lastCompletedOccurrence = progressRow?.lastCompletedOccurrence || null;
+      const trackProgress = sortProgressRows(progressRows).map((progressRow) => {
+        const track = progressRow.progressionTrack || {};
+        const progressionTrackId = String(track.id || progressRow.progressionTrackId || "").trim();
+        const currentStep =
+          stepsById.get(String(progressRow.currentProgressionTrackStepId || "")) ||
+          progressRow.currentProgressionTrackStep ||
+          null;
+        const readyStep =
+          stepsById.get(String(progressRow.readyToAdvanceProgressionTrackStepId || "")) ||
+          progressRow.readyToAdvanceProgressionTrackStep ||
+          null;
+        const lastCompletedOccurrence = progressRow.lastCompletedOccurrence || null;
         const status = progressStatus(progressRow);
         const progressDisplayState = buildProgressDisplayState({
           progressRow,

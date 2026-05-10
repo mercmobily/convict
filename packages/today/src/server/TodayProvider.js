@@ -12,19 +12,19 @@ class TodayProvider {
     "runtime.actions",
     "json-rest-api.core",
     "auth.policy.fastify",
-    "crud.programs",
-    "crud.program_schedule_entries",
-    "crud.program_routines",
-    "crud.program_routine_entries",
+    "crud.instance_programs",
+    "crud.instance_program_entries",
+    "crud.instance_program_routines",
+    "crud.instance_routine_entries",
     "crud.exercises",
-    "crud.progression_tracks",
-    "crud.progression_track_steps",
-    "crud.user_program_assignments",
-    "crud.user_program_assignment_revisions",
-    "crud.user_progression_track_progress",
-    "crud.workout_occurrences",
-    "crud.workout_occurrence_exercises",
-    "crud.workout_set_logs"
+    "crud.instance_progressions",
+    "crud.instance_progression_entries",
+    "crud.program_assignments",
+    "crud.program_assignment_revisions",
+    "crud.user_progressions",
+    "crud.workouts",
+    "crud.workout_exercises",
+    "crud.workout_sets"
   ];
 
   register(app) {
@@ -40,9 +40,9 @@ class TodayProvider {
     app.singleton("feature.today.repository", (scope) => {
       return createRepository({
         api: scope.make(INTERNAL_JSON_REST_API),
-        userProgressionTrackProgressRepository: scope.make("repository.user_progression_track_progress"),
-        workoutOccurrencesRepository: scope.make("repository.workout_occurrences"),
-        workoutOccurrenceExercisesRepository: scope.make("repository.workout_occurrence_exercises")
+        userProgressionsRepository: scope.make("repository.user_progressions"),
+        workoutsRepository: scope.make("repository.workouts"),
+        workoutExercisesRepository: scope.make("repository.workout_exercises")
       });
     });
 

@@ -8,10 +8,10 @@ export default Object.freeze({
     "@jskit-ai/kernel",
     "@jskit-ai/json-rest-api-core",
     "@local/exercises",
-    "@local/progression-tracks",
-    "@local/progression-track-steps",
-    "@local/user-progression-track-progress",
-    "@local/workout-occurrences"
+    "@local/instance-progressions",
+    "@local/instance-progression-entries",
+    "@local/user-progressions",
+    "@local/workouts"
   ],
   capabilities: {
     provides: [

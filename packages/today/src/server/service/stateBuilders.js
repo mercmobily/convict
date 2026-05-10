@@ -174,7 +174,7 @@ function buildAssignmentProgramSummary(assignment, revisions = [], programsById 
 
 function buildNotStartedYetProjection(dateString, assignment = {}, assignmentProgram = null) {
   return {
-    userProgramAssignmentId: assignment.id || null,
+    programAssignmentId: assignment.id || null,
     scheduledForDate: dateString,
     performedOnDate: null,
     status: "not_started_yet",
@@ -403,15 +403,15 @@ async function buildWorkoutProjectionByScheduledDate(
   });
 }
 
-function findWorkoutByScheduledDate(state = {}, scheduledForDate = "", userProgramAssignmentId = "") {
+function findWorkoutByScheduledDate(state = {}, scheduledForDate = "", programAssignmentId = "") {
   const workouts = [
     ...(Array.isArray(state?.todayWorkouts) ? state.todayWorkouts : []),
     ...(Array.isArray(state?.overdue) ? state.overdue : [])
   ];
   return workouts.find((entry) => {
     const dateMatches = String(entry.scheduledForDate || "") === scheduledForDate;
-    const assignmentMatches = !userProgramAssignmentId ||
-      String(entry.userProgramAssignmentId || "") === String(userProgramAssignmentId || "");
+    const assignmentMatches = !programAssignmentId ||
+      String(entry.programAssignmentId || "") === String(programAssignmentId || "");
     return dateMatches && assignmentMatches;
   }) || null;
 }
@@ -422,7 +422,7 @@ async function buildWorkoutDetailState(
     userId,
     todayDate,
     scheduledForDate,
-    userProgramAssignmentId = "",
+    programAssignmentId = "",
     context = null
   } = {}
 ) {
@@ -445,8 +445,8 @@ async function buildWorkoutDetailState(
     };
   }
 
-  const assignment = userProgramAssignmentId
-    ? state.assignments.find((candidate) => String(candidate.id || "") === String(userProgramAssignmentId || "")) || null
+  const assignment = programAssignmentId
+    ? state.assignments.find((candidate) => String(candidate.id || "") === String(programAssignmentId || "")) || null
     : state.assignments[0] || null;
   if (!assignment?.id) {
     return {

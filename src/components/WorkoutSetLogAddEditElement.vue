@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from "vue";
 import { useCrudAddEdit } from "@jskit-ai/users-web/client/composables/useCrudAddEdit";
-import { resource as workoutSetLogResource } from "@local/workout-set-logs/shared";
+import { resource as workoutSetResource } from "@local/workout-sets/shared";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 
 const props = defineProps({
@@ -50,7 +50,7 @@ watch(
 );
 
 const formRuntime = useCrudAddEdit({
-  resource: workoutSetLogResource,
+  resource: workoutSetResource,
   operationName: isCreateMode.value ? "create" : "patch",
   formFields: [
     {
@@ -69,10 +69,10 @@ const formRuntime = useCrudAddEdit({
   ],
   addEditOptions: {
     model: formState,
-    apiUrlTemplate: isCreateMode.value ? "/workout-set-logs" : "/workout-set-logs/:recordId",
+    apiUrlTemplate: isCreateMode.value ? "/workout-sets" : "/workout-sets/:recordId",
     queryKeyFactory: (surfaceId = "", routeScope = "") => [
       "convict",
-      "workout-set-logs",
+      "workout-sets",
       isCreateMode.value ? "create" : "edit",
       String(surfaceId || ""),
       String(routeScope || ""),
@@ -98,7 +98,7 @@ const formRuntime = useCrudAddEdit({
     const performedValue = Number(String(model?.performedValue ?? "").trim() || 0);
     if (isCreateMode.value) {
       return {
-        workoutOccurrenceExerciseId: String(props.exercise?.occurrenceExerciseId || "").trim(),
+        workoutExerciseId: String(props.exercise?.occurrenceExerciseId || props.exercise?.workoutExerciseId || "").trim(),
         side: "both",
         measurementUnitSnapshot: String(props.exercise?.measurementUnit || "").trim().toLowerCase() || "reps",
         performedValue

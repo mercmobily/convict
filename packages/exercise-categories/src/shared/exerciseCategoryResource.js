@@ -4,32 +4,37 @@ const resource = defineCrudResource({
   namespace: "exercise_categories",
   tableName: "exercise_categories",
   schema: {
-  slug: {
-    type: "string",
-    maxLength: 120,
+  exerciseId: {
+    type: "id",
     required: true,
     search: true,
+    relation: { kind: "lookup", namespace: "exercises", valueKey: "id" },
+    belongsTo: "exercises",
+    as: "exercise",
+    ui: { formControl: "autocomplete" },
     operations: {
       output: { required: true },
       create: { required: true },
       patch: { required: false }
     }
   },
-  name: {
-    type: "string",
-    maxLength: 160,
+  categoryId: {
+    type: "id",
     required: true,
     search: true,
+    relation: { kind: "lookup", namespace: "categories", valueKey: "id" },
+    belongsTo: "categories",
+    as: "category",
+    ui: { formControl: "autocomplete" },
     operations: {
       output: { required: true },
       create: { required: true },
       patch: { required: false }
     }
   },
-  description: {
+  role: {
     type: "string",
-    maxLength: 65535,
-    nullable: true,
+    maxLength: 32,
     search: true,
     operations: {
       output: { required: true },
@@ -40,16 +45,6 @@ const resource = defineCrudResource({
   sortOrder: {
     type: "integer",
     min: 0,
-    search: true,
-    operations: {
-      output: { required: true },
-      create: { required: false },
-      patch: { required: false }
-    }
-  },
-  status: {
-    type: "string",
-    maxLength: 32,
     search: true,
     operations: {
       output: { required: true },
@@ -76,7 +71,9 @@ const resource = defineCrudResource({
   },
   searchSchema: {
     id: { type: "id", actualField: "id" },
-    q: { type: "string", oneOf: ["slug","name","description","status"], filterOperator: "like", splitBy: " ", matchAll: true },
+    exerciseId: { type: "id", actualField: "exercise_id", filterOperator: "=" },
+    categoryId: { type: "id", actualField: "category_id", filterOperator: "=" },
+    q: { type: "string", oneOf: ["role"], filterOperator: "like", splitBy: " ", matchAll: true },
   },
   defaultSort: ["-createdAt"],
   autofilter: "public",

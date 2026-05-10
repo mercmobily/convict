@@ -4,6 +4,10 @@ import {
 } from "@jskit-ai/json-rest-api-core/server/jsonRestApiHost";
 import { normalizeSimplifiedRow } from "@local/main/shared";
 
+function compactIds(values = []) {
+  return [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || "").trim()).filter(Boolean))];
+}
+
 function jsonRestContext(options = {}) {
   return createJsonRestContext(options?.context || null);
 }
@@ -12,32 +16,67 @@ function transaction(options = {}) {
   return options?.trx || null;
 }
 
+async function queryRows(api, resourceName, queryParams = {}, options = {}, normalize = (row) => row) {
+  return extractJsonRestCollectionRows(
+    await api.resources[resourceName].query(
+      {
+        queryParams,
+        transaction: transaction(options),
+        simplified: true
+      },
+      jsonRestContext(options)
+    )
+  ).map((row) => normalize(row)).filter(Boolean);
+}
+
 function normalizeStepRow(row = null) {
-  return normalizeSimplifiedRow(row, {
+  const normalized = normalizeSimplifiedRow(row, {
     relationIds: {
-      progressionTrackId: "progressionTrack",
+      instanceProgressionId: "instanceProgression",
+      sourceProgressionEntryId: "sourceProgressionEntry",
       exerciseId: "exercise"
     }
   });
-}
-
-function normalizeProgressRow(row = null) {
-  const normalizedRow = normalizeSimplifiedRow(row, {
-    relationIds: {
-      progressionTrackId: "progressionTrack",
-      currentProgressionTrackStepId: "currentProgressionTrackStep",
-      readyToAdvanceProgressionTrackStepId: "readyToAdvanceProgressionTrackStep",
-      lastCompletedOccurrenceId: "lastCompletedOccurrence"
-    }
-  });
-
-  if (!normalizedRow) {
+  if (!normalized) {
     return null;
   }
 
   return {
-    ...normalizedRow,
-    lastCompletedOccurrence: normalizeSimplifiedRow(row.lastCompletedOccurrence, {
+    ...normalized,
+    progressionTrackId: normalized.instanceProgressionId,
+    progressionTrack: normalized.instanceProgression || null
+  };
+}
+
+function normalizeProgressRow(row = null) {
+  const normalized = normalizeSimplifiedRow(row, {
+    relationIds: {
+      programAssignmentId: "programAssignment",
+      instanceProgressionId: "instanceProgression",
+      currentInstanceProgressionEntryId: "currentInstanceProgressionEntry",
+      readyToAdvanceInstanceProgressionEntryId: "readyToAdvanceInstanceProgressionEntry",
+      lastCompletedWorkoutId: "lastCompletedWorkout"
+    }
+  });
+
+  if (!normalized) {
+    return null;
+  }
+
+  return {
+    ...normalized,
+    progressionTrackId: normalized.instanceProgressionId,
+    progressionTrack: normalized.instanceProgression || null,
+    currentProgressionTrackStepId: normalized.currentInstanceProgressionEntryId,
+    currentProgressionTrackStep: normalized.currentInstanceProgressionEntry || null,
+    readyToAdvanceProgressionTrackStepId: normalized.readyToAdvanceInstanceProgressionEntryId,
+    readyToAdvanceProgressionTrackStep: normalized.readyToAdvanceInstanceProgressionEntry || null,
+    lastCompletedOccurrenceId: normalized.lastCompletedWorkoutId,
+    lastCompletedOccurrence: normalizeSimplifiedRow(row.lastCompletedWorkout, {
+      relationIds: {
+        programAssignmentId: "programAssignment",
+        programAssignmentRevisionId: "programAssignmentRevision"
+      },
       dateOnlyFields: ["scheduledForDate", "performedOnDate"]
     })
   };
@@ -49,82 +88,54 @@ function createRepository({ api } = {}) {
   }
 
   return Object.freeze({
-    async listProgressionTracks(options = {}) {
-      return extractJsonRestCollectionRows(
-        await api.resources.progressionTracks.query(
-          {
-            queryParams: {
-              include: ["defaultExerciseCategory"],
-              sort: ["sortOrder", "slug"],
-              page: {
-                size: 128
-              }
-            },
-            transaction: transaction(options),
-            simplified: true
-          },
-          jsonRestContext(options)
-        )
-      );
-    },
-
     async listProgressionTrackProgressByUserId(userId, options = {}) {
       if (!userId) {
         return [];
       }
 
-      return extractJsonRestCollectionRows(
-        await api.resources.userProgressionTrackProgress.query(
-          {
-            queryParams: {
-              filters: {
-                userId
-              },
-              include: [
-                "progressionTrack",
-                "currentProgressionTrackStep",
-                "readyToAdvanceProgressionTrackStep",
-                "lastCompletedOccurrence"
-              ],
-              sort: ["createdAt"],
-              page: {
-                size: 128
-              }
-            },
-            transaction: transaction(options),
-            simplified: true
-          },
-          jsonRestContext(options)
-        )
-      ).map((row) => normalizeProgressRow(row)).filter(Boolean);
+      return queryRows(
+        api,
+        "userProgressions",
+        {
+          include: [
+            "programAssignment",
+            "instanceProgression",
+            "currentInstanceProgressionEntry",
+            "readyToAdvanceInstanceProgressionEntry",
+            "lastCompletedWorkout"
+          ],
+          sort: ["createdAt"],
+          page: {
+            size: 512
+          }
+        },
+        options,
+        normalizeProgressRow
+      );
     },
 
-    async listFirstStepsByTrackIds(progressionTrackIds = [], options = {}) {
-      const ids = Array.isArray(progressionTrackIds) ? progressionTrackIds.filter(Boolean) : [];
+    async listStepsByIds(stepIds = [], options = {}) {
+      const ids = compactIds(stepIds);
       if (ids.length < 1) {
         return [];
       }
 
-      return extractJsonRestCollectionRows(
-        await api.resources.progressionTrackSteps.query(
-          {
-            queryParams: {
-              filters: {
-                progressionTrackIds: ids,
-                stepNumber: 1
-              },
-              include: ["progressionTrack", "exercise"],
-              sort: ["progressionTrackId", "stepNumber"],
-              page: {
-                size: 128
-              }
-            },
-            transaction: transaction(options),
-            simplified: true
+      return queryRows(
+        api,
+        "instanceProgressionEntries",
+        {
+          filters: {
+            ids
           },
-          jsonRestContext(options)
-        )
-      ).map((row) => normalizeStepRow(row)).filter(Boolean);
+          include: ["instanceProgression", "exercise"],
+          sort: ["instanceProgressionId", "stepNumber"],
+          page: {
+            size: 512
+          }
+        },
+        options,
+        normalizeStepRow
+      );
     }
   });
 }

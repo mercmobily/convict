@@ -16,7 +16,7 @@ import { resource } from "../shared/programResource.js";
 const CRUD_MODULE_CONFIG = Object.freeze({
   namespace: "programs",
   surface: "app",
-  ownershipFilter: "user",
+  ownershipFilter: "public",
   relativePath: "/programs"
 });
 const baseServiceEvents = createCrudJsonApiServiceEvents(CRUD_MODULE_CONFIG.namespace);
@@ -89,6 +89,7 @@ class ProgramsProvider {
     registerRoutes(app, {
       routeOwnershipFilter: crudPolicy.ownershipFilter,
       routeSurface: crudPolicy.surfaceId,
+      routeSurfaceRequiresWorkspace: crudPolicy.surfaceDefinition.requiresWorkspace === true,
       routeRelativePath: crudPolicy.relativePath
     });
   }

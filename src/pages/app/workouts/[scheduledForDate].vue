@@ -21,7 +21,7 @@ import WorkoutExerciseSetLogCard from "@/components/WorkoutExerciseSetLogCard.vu
 import { useApplyAdvancementCommand } from "@/composables/useApplyAdvancementCommand";
 import { useConvictWorkoutPresentation } from "@/composables/useConvictWorkoutPresentation";
 import { normalizeDateOnly, parseDateOnly } from "@local/main/shared";
-import { resource as workoutSetLogResource } from "@local/workout-set-logs/shared";
+import { resource as workoutSetResource } from "@local/workout-sets/shared";
 import { usePaths } from "@jskit-ai/users-web/client/composables/usePaths";
 import { useCommand } from "@jskit-ai/users-web/client/composables/useCommand";
 import { useEndpointResource } from "@jskit-ai/users-web/client/composables/useEndpointResource";
@@ -38,16 +38,16 @@ const dirtyExerciseByKey = reactive({});
 const syncingExerciseByKey = reactive({});
 
 const scheduledForDate = computed(() => String(route.params.scheduledForDate || "").trim());
-const userProgramAssignmentId = computed(() => String(route.query.userProgramAssignmentId || "").trim());
+const programAssignmentId = computed(() => String(route.query.programAssignmentId || "").trim());
 const homePagePath = computed(() => paths.page("/"));
 const detailApiPath = computed(() => {
-  const query = userProgramAssignmentId.value
-    ? `?userProgramAssignmentId=${encodeURIComponent(userProgramAssignmentId.value)}`
+  const query = programAssignmentId.value
+    ? `?programAssignmentId=${encodeURIComponent(programAssignmentId.value)}`
     : "";
   return paths.api(`/today/workouts/${scheduledForDate.value}${query}`);
 });
 const workoutDetailRealtime = Object.freeze({
-  events: workoutSetLogResource.operations?.list?.realtime?.events || []
+  events: workoutSetResource.operations?.list?.realtime?.events || []
 });
 
 const workoutDetailResource = useEndpointResource({
@@ -65,7 +65,7 @@ const startWorkoutCommand = useCommand({
   fallbackRunError: "Unable to open this workout.",
   buildRawPayload: () => ({
     scheduledForDate: scheduledForDate.value,
-    userProgramAssignmentId: userProgramAssignmentId.value
+    programAssignmentId: programAssignmentId.value
   }),
   messages: {
     success: "Workout occurrence opened.",
@@ -78,8 +78,8 @@ const startWorkoutCommand = useCommand({
 
 const submitWorkoutCommand = useCommand({
   apiSuffix: () => {
-    const query = userProgramAssignmentId.value
-      ? `?userProgramAssignmentId=${encodeURIComponent(userProgramAssignmentId.value)}`
+    const query = programAssignmentId.value
+      ? `?programAssignmentId=${encodeURIComponent(programAssignmentId.value)}`
       : "";
     return `/today/workouts/${scheduledForDate.value}/submit${query}`;
   },

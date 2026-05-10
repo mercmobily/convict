@@ -78,7 +78,7 @@ async function fetchOccurrence(userId, scheduledForDate) {
     const [rows] = await connection.query(
       [
         "SELECT id, status, scheduled_for_date AS scheduledForDate, performed_on_date AS performedOnDate",
-        "FROM workout_occurrences",
+        "FROM workouts",
         "WHERE user_id = ? AND scheduled_for_date = ?",
         "LIMIT 1"
       ].join(" "),
@@ -107,8 +107,8 @@ async function fetchOccurrenceExerciseCount(occurrenceId) {
     const [rows] = await connection.query(
       [
         "SELECT COUNT(*) AS count",
-        "FROM workout_occurrence_exercises",
-        "WHERE workout_occurrence_id = ?"
+        "FROM workout_exercises",
+        "WHERE workout_id = ?"
       ].join(" "),
       [occurrenceId]
     );

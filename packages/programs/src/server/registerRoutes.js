@@ -4,6 +4,7 @@ import { checkRouteVisibility } from "@jskit-ai/kernel/shared/support/visibility
 import { resolveScopedApiBasePath } from "@jskit-ai/kernel/shared/surface";
 import { resource } from "../shared/programResource.js";
 
+
 const {
   listRouteContract,
   viewRouteContract,
@@ -37,12 +38,14 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
+      internal: true,
       visibility: checkRouteVisibility(routeOwnershipFilter),
       meta: {
         tags: ["crud"],
         summary: "List records."
       },
       ...listRouteContract,
+
     },
     async function (request, reply) {
       const listInput = {
@@ -62,6 +65,7 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
+      internal: true,
       visibility: checkRouteVisibility(routeOwnershipFilter),
       meta: {
         tags: ["crud"],
@@ -88,12 +92,14 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
+      internal: true,
       visibility: checkRouteVisibility(routeOwnershipFilter),
       meta: {
         tags: ["crud"],
         summary: "Create a record."
       },
       ...createRouteContract,
+
     },
     async function (request, reply) {
       const response = await request.executeAction({
@@ -112,6 +118,7 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
+      internal: true,
       visibility: checkRouteVisibility(routeOwnershipFilter),
       meta: {
         tags: ["crud"],
@@ -138,6 +145,7 @@ function registerRoutes(
     {
       auth: "required",
       surface: normalizedRouteSurface,
+      internal: true,
       visibility: checkRouteVisibility(routeOwnershipFilter),
       meta: {
         tags: ["crud"],

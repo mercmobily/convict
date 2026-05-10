@@ -67,7 +67,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
+      const programAssignmentId = input?.programAssignmentId || input?.assignmentId || "";
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts are not available yet.");
@@ -77,7 +77,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        userProgramAssignmentId,
+        programAssignmentId,
         context
       });
 
@@ -97,7 +97,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
+      const programAssignmentId = input?.programAssignmentId || input?.assignmentId || "";
 
       if (scheduledForDate > todayDate) {
         throw new ConflictError("Future workouts cannot be started yet.");
@@ -118,8 +118,8 @@ function createService({ todayRepository } = {}) {
         ...(Array.isArray(state.overdue) ? state.overdue : [])
       ].filter((entry) => String(entry.scheduledForDate || "") === scheduledForDate);
       const targetWorkout = (
-        userProgramAssignmentId
-          ? candidateWorkouts.find((entry) => String(entry.userProgramAssignmentId || "") === String(userProgramAssignmentId)) || null
+        programAssignmentId
+          ? candidateWorkouts.find((entry) => String(entry.programAssignmentId || "") === String(programAssignmentId)) || null
           : candidateWorkouts.length === 1 ? candidateWorkouts[0] : null
       );
 
@@ -137,7 +137,7 @@ function createService({ todayRepository } = {}) {
 
       await todayRepository.withTransaction(async (trx) => {
         const existingOccurrence = await todayRepository.findOccurrenceByAssignmentAndDate(
-          targetWorkout.userProgramAssignmentId,
+          targetWorkout.programAssignmentId,
           scheduledForDate,
           { trx, context }
         );
@@ -164,8 +164,8 @@ function createService({ todayRepository } = {}) {
 
         const occurrenceId = await todayRepository.createOccurrence(
           {
-            userProgramAssignmentId: targetWorkout.userProgramAssignmentId,
-            userProgramAssignmentRevisionId: targetWorkout.revisionId,
+            programAssignmentId: targetWorkout.programAssignmentId,
+            programAssignmentRevisionId: targetWorkout.revisionId,
             scheduledForDate,
             performedOnDate: todayDate,
             status: "in_progress",
@@ -196,13 +196,13 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
+      const programAssignmentId = input?.programAssignmentId || input?.assignmentId || "";
 
       const detailState = await buildWorkoutDetailState(todayRepository, {
         userId,
         todayDate,
         scheduledForDate,
-        userProgramAssignmentId,
+        programAssignmentId,
         context
       });
 
@@ -335,7 +335,7 @@ function createService({ todayRepository } = {}) {
         userId,
         todayDate,
         scheduledForDate,
-        userProgramAssignmentId,
+        programAssignmentId,
         context
       });
     },
@@ -396,7 +396,7 @@ function createService({ todayRepository } = {}) {
       const userId = resolveCurrentUserId(context);
       const todayDate = localTodayDateString();
       const scheduledForDate = normalizeScheduledForDate(input?.scheduledForDate);
-      const userProgramAssignmentId = input?.userProgramAssignmentId || input?.assignmentId || "";
+      const programAssignmentId = input?.programAssignmentId || input?.assignmentId || "";
 
       if (scheduledForDate >= todayDate) {
         throw new ConflictError("Only overdue workouts can be marked definitely missed.");
@@ -413,8 +413,8 @@ function createService({ todayRepository } = {}) {
       }
 
       const overdueCandidates = state.overdue.filter((entry) => String(entry.scheduledForDate || "") === scheduledForDate);
-      const targetWorkout = userProgramAssignmentId
-        ? overdueCandidates.find((entry) => String(entry.userProgramAssignmentId || "") === String(userProgramAssignmentId)) || null
+      const targetWorkout = programAssignmentId
+        ? overdueCandidates.find((entry) => String(entry.programAssignmentId || "") === String(programAssignmentId)) || null
         : overdueCandidates.length === 1 ? overdueCandidates[0] : null;
       assertSchedulableWorkout(targetWorkout, {
         scheduledForDate,
@@ -423,7 +423,7 @@ function createService({ todayRepository } = {}) {
 
       await todayRepository.withTransaction(async (trx) => {
         const existingOccurrence = await todayRepository.findOccurrenceByAssignmentAndDate(
-          targetWorkout.userProgramAssignmentId,
+          targetWorkout.programAssignmentId,
           scheduledForDate,
           { trx, context }
         );
@@ -449,8 +449,8 @@ function createService({ todayRepository } = {}) {
 
         const occurrenceId = await todayRepository.createOccurrence(
           {
-            userProgramAssignmentId: targetWorkout.userProgramAssignmentId,
-            userProgramAssignmentRevisionId: targetWorkout.revisionId,
+            programAssignmentId: targetWorkout.programAssignmentId,
+            programAssignmentRevisionId: targetWorkout.revisionId,
             scheduledForDate,
             performedOnDate: null,
             status: "definitely_missed",

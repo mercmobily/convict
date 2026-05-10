@@ -16,7 +16,7 @@ import { resource } from "../shared/programRoutineResource.js";
 const CRUD_MODULE_CONFIG = Object.freeze({
   namespace: "program_routines",
   surface: "app",
-  ownershipFilter: "user",
+  ownershipFilter: "public",
   relativePath: "/program-routines"
 });
 const baseServiceEvents = createCrudJsonApiServiceEvents(CRUD_MODULE_CONFIG.namespace);

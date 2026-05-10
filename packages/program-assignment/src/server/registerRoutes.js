@@ -57,7 +57,7 @@ function registerRoutes(
       visibility: ROUTE_VISIBILITY_USER,
       meta: {
         tags: ["feature"],
-        summary: "Start the first active program assignment for the current user."
+        summary: "Start a copied program assignment for the current user."
       },
       body: startProgramBodyInputValidator
     },

@@ -17,7 +17,7 @@ function buildProgramIndex(programs = []) {
 function buildRevisionsByAssignmentId(revisions = []) {
   const index = new Map();
   for (const revision of revisions) {
-    const assignmentId = String(revision.userProgramAssignmentId || "");
+    const assignmentId = String(revision.programAssignmentId || "");
     if (!index.has(assignmentId)) {
       index.set(assignmentId, []);
     }
@@ -97,14 +97,14 @@ function buildProgramRoutineEntriesIndex(programRoutineEntries = []) {
   return index;
 }
 
-function occurrenceKey(userProgramAssignmentId, scheduledForDate) {
-  return `${String(userProgramAssignmentId || "")}:${String(scheduledForDate || "")}`;
+function occurrenceKey(programAssignmentId, scheduledForDate) {
+  return `${String(programAssignmentId || "")}:${String(scheduledForDate || "")}`;
 }
 
 function buildOccurrenceIndex(occurrences = []) {
   const index = new Map();
   for (const occurrence of occurrences) {
-    index.set(occurrenceKey(occurrence.userProgramAssignmentId, occurrence.scheduledForDate), occurrence);
+    index.set(occurrenceKey(occurrence.programAssignmentId, occurrence.scheduledForDate), occurrence);
   }
   return index;
 }
@@ -584,12 +584,12 @@ function buildProjectedWorkout(
 
   if (occurrence?.id) {
     return {
-      userProgramAssignmentId: assignment?.id || occurrence.userProgramAssignmentId || null,
+      programAssignmentId: assignment?.id || occurrence.programAssignmentId || null,
       scheduledForDate: dateString,
       performedOnDate: occurrence.performedOnDate,
       status: occurrence.status,
       occurrenceId: occurrence.id,
-      revisionId: occurrence.userProgramAssignmentRevisionId || revision.id,
+      revisionId: occurrence.programAssignmentRevisionId || revision.id,
       programId: revision.programId,
       programName: program?.name || "",
       dayOfWeek,
@@ -610,7 +610,7 @@ function buildProjectedWorkout(
 
   if (exercises.length < 1) {
     return {
-      userProgramAssignmentId: assignment?.id || null,
+      programAssignmentId: assignment?.id || null,
       scheduledForDate: dateString,
       performedOnDate: null,
       status: "rest_day",
@@ -626,7 +626,7 @@ function buildProjectedWorkout(
   }
 
   return {
-    userProgramAssignmentId: assignment?.id || null,
+    programAssignmentId: assignment?.id || null,
     scheduledForDate: dateString,
     performedOnDate: null,
     status: dateString < todayDate ? "overdue" : "scheduled",

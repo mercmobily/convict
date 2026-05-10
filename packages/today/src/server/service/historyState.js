@@ -109,7 +109,7 @@ function aggregateDayProjection(date, workouts = []) {
 
   return {
     scheduledForDate: date,
-    userProgramAssignmentId: statusSource.userProgramAssignmentId || null,
+    programAssignmentId: statusSource.programAssignmentId || null,
     performedOnDate: statusSource.performedOnDate || null,
     status: statusSource.status,
     occurrenceId: statusSource.occurrenceId || null,

@@ -7,19 +7,19 @@ export default Object.freeze({
   dependsOn: [
     "@jskit-ai/kernel",
     "@jskit-ai/json-rest-api-core",
-    "@local/programs",
-    "@local/program-schedule-entries",
-    "@local/program-routines",
-    "@local/program-routine-entries",
+    "@local/instance-programs",
+    "@local/instance-program-entries",
+    "@local/instance-program-routines",
+    "@local/instance-routine-entries",
     "@local/exercises",
-    "@local/progression-tracks",
-    "@local/progression-track-steps",
-    "@local/user-program-assignments",
-    "@local/user-program-assignment-revisions",
-    "@local/user-progression-track-progress",
-    "@local/workout-occurrences",
-    "@local/workout-occurrence-exercises",
-    "@local/workout-set-logs"
+    "@local/instance-progressions",
+    "@local/instance-progression-entries",
+    "@local/program-assignments",
+    "@local/program-assignment-revisions",
+    "@local/user-progressions",
+    "@local/workouts",
+    "@local/workout-exercises",
+    "@local/workout-sets"
   ],
   capabilities: {
     provides: [

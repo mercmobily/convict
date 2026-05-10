@@ -19,7 +19,7 @@ const scheduledForDateRouteParamsValidator = deepFreeze({
 
 const assignmentQueryRouteValidator = deepFreeze({
   schema: createSchema({
-    userProgramAssignmentId: {
+    programAssignmentId: {
       type: "id",
       required: false
     }
@@ -52,7 +52,7 @@ const historyProjectionQueryInputValidator = composeSchemaDefinitions([
 const startWorkoutBodyInputValidator = deepFreeze({
   schema: createSchema({
     scheduledForDate: scheduledForDateSchema,
-    userProgramAssignmentId: {
+    programAssignmentId: {
       type: "id",
       required: false
     }
@@ -63,7 +63,7 @@ const startWorkoutBodyInputValidator = deepFreeze({
 const markWorkoutDefinitelyMissedBodyInputValidator = deepFreeze({
   schema: createSchema({
     scheduledForDate: scheduledForDateSchema,
-    userProgramAssignmentId: {
+    programAssignmentId: {
       type: "id",
       required: false
     }

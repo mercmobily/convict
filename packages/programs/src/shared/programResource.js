@@ -4,24 +4,28 @@ const resource = defineCrudResource({
   namespace: "programs",
   tableName: "programs",
   schema: {
-  userId: {
+  programCollectionId: {
     type: "id",
     required: true,
     search: true,
-    hidden: true,
-    operations: {}
-  },
-  programTemplateId: {
-    type: "id",
-    nullable: true,
-    search: true,
-    relation: { kind: "lookup", namespace: "program-templates", valueKey: "id" },
-    belongsTo: "programTemplates",
-    as: "programTemplate",
+    relation: { kind: "lookup", namespace: "program-collections", valueKey: "id" },
+    belongsTo: "programCollections",
+    as: "programCollection",
     ui: { formControl: "autocomplete" },
     operations: {
       output: { required: true },
-      create: { required: false },
+      create: { required: true },
+      patch: { required: false }
+    }
+  },
+  slug: {
+    type: "string",
+    maxLength: 120,
+    required: true,
+    search: true,
+    operations: {
+      output: { required: true },
+      create: { required: true },
       patch: { required: false }
     }
   },
@@ -40,6 +44,26 @@ const resource = defineCrudResource({
     type: "string",
     maxLength: 65535,
     nullable: true,
+    search: true,
+    operations: {
+      output: { required: true },
+      create: { required: false },
+      patch: { required: false }
+    }
+  },
+  status: {
+    type: "string",
+    maxLength: 32,
+    search: true,
+    operations: {
+      output: { required: true },
+      create: { required: false },
+      patch: { required: false }
+    }
+  },
+  sortOrder: {
+    type: "integer",
+    min: 0,
     search: true,
     operations: {
       output: { required: true },
@@ -67,10 +91,12 @@ const resource = defineCrudResource({
   searchSchema: {
     id: { type: "id", actualField: "id" },
     ids: { type: "array", actualField: "id", filterOperator: "in" },
-    q: { type: "string", oneOf: ["name","description"], filterOperator: "like", splitBy: " ", matchAll: true },
+    programCollectionId: { type: "id", actualField: "program_collection_id", filterOperator: "=" },
+    programCollectionIds: { type: "array", actualField: "program_collection_id", filterOperator: "in" },
+    q: { type: "string", oneOf: ["slug","name","description","status"], filterOperator: "like", splitBy: " ", matchAll: true },
   },
   defaultSort: ["-createdAt"],
-  autofilter: "user",
+  autofilter: "public",
   messages: {
     validation: "Fix invalid values and try again.",
     saveSuccess: "Record saved.",

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import {
   mdiBookOpenPageVariantOutline,
   mdiCalendarClock,
@@ -32,10 +32,11 @@ const router = useRouter();
 const { smAndDown } = useDisplay();
 
 const selectionModel = reactive({
-  programTemplateId: "",
+  programVersionId: "",
   startsOn: localTodayDateString()
 });
-const selectedProgramTemplateId = ref("");
+const selectedProgramCollectionId = ref("");
+const selectedProgramVersionId = ref("");
 const activeProgramExpanded = ref(false);
 const activeStartScheduledForDate = ref("");
 const activeMissedScheduledForDate = ref("");
@@ -53,7 +54,7 @@ const startProgramCommand = useCommand({
   writeMethod: "POST",
   fallbackRunError: "Unable to start this program.",
   buildRawPayload: () => ({
-    programTemplateId: selectionModel.programTemplateId,
+    programVersionId: selectionModel.programVersionId,
     startsOn: selectionModel.startsOn
   }),
   messages: {
@@ -69,25 +70,57 @@ const selectionState = computed(() => {
   const payload = selectionResource.data.value;
   return payload && typeof payload === "object" ? payload : {};
 });
-const programTemplates = computed(() => (Array.isArray(selectionState.value.programTemplates) ? selectionState.value.programTemplates : []));
+const programCollections = computed(() => (
+  Array.isArray(selectionState.value.programCollections) ? selectionState.value.programCollections : []
+));
+const selectedProgramCollection = computed(() => {
+  const currentId = String(selectedProgramCollectionId.value || "").trim() || String(programCollections.value[0]?.id || "");
+  return programCollections.value.find((collection) => String(collection.id) === currentId) || null;
+});
+const programVersions = computed(() => (
+  Array.isArray(selectedProgramCollection.value?.programs) ? selectedProgramCollection.value.programs : []
+));
+watch(
+  programCollections,
+  (collections) => {
+    if (!String(selectedProgramCollectionId.value || "").trim() && collections[0]?.id) {
+      selectedProgramCollectionId.value = String(collections[0].id);
+    }
+  },
+  { immediate: true }
+);
+watch(
+  programVersions,
+  (versions) => {
+    const currentProgramVersionId = String(selectionModel.programVersionId || "").trim();
+    if (
+      currentProgramVersionId &&
+      !versions.some((programVersion) => String(programVersion.id || "") === currentProgramVersionId)
+    ) {
+      selectedProgramVersionId.value = "";
+      selectionModel.programVersionId = "";
+    }
+  },
+  { immediate: true }
+);
 const activeAssignments = computed(() => (Array.isArray(selectionState.value.activeAssignments) ? selectionState.value.activeAssignments : []));
 const activeAssignment = computed(() => selectionState.value.activeAssignment || null);
 const hasActiveAssignment = computed(() => activeAssignments.value.length > 0);
 const canStartProgram = computed(() => selectionState.value?.rules?.canStartProgram === true);
-const selectedProgramTemplate = computed(() => {
-  const currentId = String(selectedProgramTemplateId.value || "").trim();
-  return programTemplates.value.find((programTemplate) => String(programTemplate.id) === currentId) || null;
+const selectedProgramVersion = computed(() => {
+  const currentId = String(selectedProgramVersionId.value || "").trim();
+  return programVersions.value.find((programVersion) => String(programVersion.id) === currentId) || null;
 });
-const selectedProgramTemplateSummary = computed(() => cleanProgramSummary(selectedProgramTemplate.value));
-const selectedProgramTemplateSchedule = computed(() => (
-  Array.isArray(selectedProgramTemplate.value?.schedulePreview)
-    ? selectedProgramTemplate.value.schedulePreview
+const selectedProgramVersionSummary = computed(() => cleanProgramSummary(selectedProgramVersion.value));
+const selectedProgramVersionSchedule = computed(() => (
+  Array.isArray(selectedProgramVersion.value?.schedulePreview)
+    ? selectedProgramVersion.value.schedulePreview
     : []
 ));
 const startProgramDisabled = computed(() => {
   return (
     !canStartProgram.value ||
-    !String(selectionModel.programTemplateId || "").trim() ||
+    !String(selectionModel.programVersionId || "").trim() ||
     !String(selectionModel.startsOn || "").trim() ||
     startProgramCommand.isRunning
   );
@@ -110,7 +143,7 @@ const startWorkoutCommand = useCommand({
   fallbackRunError: "Unable to open this workout.",
   buildRawPayload: (_model, { context }) => ({
     scheduledForDate: String(context?.scheduledForDate || "").trim(),
-    userProgramAssignmentId: String(context?.userProgramAssignmentId || "").trim()
+    programAssignmentId: String(context?.programAssignmentId || "").trim()
   }),
   messages: {
     success: "Workout occurrence opened.",
@@ -124,7 +157,7 @@ const startWorkoutCommand = useCommand({
     }
     await router.push(workoutDetailPagePath({
       scheduledForDate,
-      userProgramAssignmentId: rawPayload?.userProgramAssignmentId || ""
+      programAssignmentId: rawPayload?.programAssignmentId || ""
     }));
   }
 });
@@ -135,7 +168,7 @@ const markWorkoutDefinitelyMissedCommand = useCommand({
   fallbackRunError: "Unable to mark this workout definitely missed.",
   buildRawPayload: (_model, { context }) => ({
     scheduledForDate: String(context?.scheduledForDate || "").trim(),
-    userProgramAssignmentId: String(context?.userProgramAssignmentId || "").trim()
+    programAssignmentId: String(context?.programAssignmentId || "").trim()
   }),
   messages: {
     success: "Workout marked definitely missed.",
@@ -169,14 +202,26 @@ const activeProgramSchedule = computed(() => (
     : []
 ));
 
-function selectProgramTemplate(programTemplateId) {
-  const normalizedProgramTemplateId = String(programTemplateId || "").trim();
-  selectedProgramTemplateId.value = normalizedProgramTemplateId;
-  selectionModel.programTemplateId = normalizedProgramTemplateId;
+function selectProgramCollection(programCollectionId) {
+  const normalizedProgramCollectionId = String(programCollectionId || "").trim();
+  selectedProgramCollectionId.value = normalizedProgramCollectionId;
+  selectedProgramVersionId.value = "";
+  selectionModel.programVersionId = "";
 }
 
-function isSelectedProgramTemplate(programTemplateId) {
-  return String(selectedProgramTemplateId.value || "").trim() === String(programTemplateId || "").trim();
+function isSelectedProgramCollection(programCollectionId) {
+  const currentId = String(selectedProgramCollection.value?.id || "").trim();
+  return currentId === String(programCollectionId || "").trim();
+}
+
+function selectProgramVersion(programVersionId) {
+  const normalizedProgramVersionId = String(programVersionId || "").trim();
+  selectedProgramVersionId.value = normalizedProgramVersionId;
+  selectionModel.programVersionId = normalizedProgramVersionId;
+}
+
+function isSelectedProgramVersion(programVersionId) {
+  return String(selectedProgramVersionId.value || "").trim() === String(programVersionId || "").trim();
 }
 
 function cleanProgramSummary(program = {}) {
@@ -298,20 +343,20 @@ function workoutActionContext(workoutOrDate = {}) {
   if (typeof workoutOrDate === "string") {
     return {
       scheduledForDate: workoutOrDate,
-      userProgramAssignmentId: ""
+      programAssignmentId: ""
     };
   }
 
   return {
     scheduledForDate: String(workoutOrDate?.scheduledForDate || "").trim(),
-    userProgramAssignmentId: String(workoutOrDate?.userProgramAssignmentId || "").trim()
+    programAssignmentId: String(workoutOrDate?.programAssignmentId || "").trim()
   };
 }
 
 function workoutDetailPagePath(workoutOrDate = {}) {
   const context = workoutActionContext(workoutOrDate);
-  const query = context.userProgramAssignmentId
-    ? `?userProgramAssignmentId=${encodeURIComponent(context.userProgramAssignmentId)}`
+  const query = context.programAssignmentId
+    ? `?programAssignmentId=${encodeURIComponent(context.programAssignmentId)}`
     : "";
   return paths.page(`/workouts/${context.scheduledForDate}${query}`);
 }
@@ -498,21 +543,34 @@ function toggleActiveProgramExpanded() {
               <div>
                 <h3 class="start-program-card__title">Add another program</h3>
                 <p class="start-program-card__copy mb-0">
-                  Start another template without closing your current training.
+                  Start another program without closing your current training.
                 </p>
               </div>
             </header>
 
             <div class="start-program-card__controls">
               <v-select
-                v-model="selectionModel.programTemplateId"
-                :items="programTemplates"
+                v-model="selectedProgramCollectionId"
+                :items="programCollections"
+                item-title="name"
+                item-value="id"
+                label="Collection"
+                variant="outlined"
+                density="comfortable"
+                hide-details="auto"
+                @update:model-value="selectProgramCollection"
+              />
+
+              <v-select
+                v-model="selectionModel.programVersionId"
+                :items="programVersions"
                 item-title="name"
                 item-value="id"
                 label="Program"
                 variant="outlined"
                 density="comfortable"
                 hide-details="auto"
+                @update:model-value="selectProgramVersion"
               />
 
               <div class="start-program-card__date">
@@ -550,7 +608,7 @@ function toggleActiveProgramExpanded() {
           <template v-else>
             <v-sheet
               v-for="todayWorkout in todayWorkouts"
-              :key="`today-${todayWorkout.userProgramAssignmentId || 'none'}-${todayWorkout.scheduledForDate}`"
+              :key="`today-${todayWorkout.programAssignmentId || 'none'}-${todayWorkout.scheduledForDate}`"
               rounded="xl"
               border
               class="training-panel today-card"
@@ -589,7 +647,7 @@ function toggleActiveProgramExpanded() {
                 <WorkoutExercisePreviewList
                   v-if="Array.isArray(todayWorkout.exercises) && todayWorkout.exercises.length > 0"
                   :exercises="todayWorkout.exercises"
-                  :key-prefix="`today-${todayWorkout.userProgramAssignmentId}-${todayWorkout.scheduledForDate}`"
+                  :key-prefix="`today-${todayWorkout.programAssignmentId}-${todayWorkout.scheduledForDate}`"
                   :stacked="smAndDown"
                   class="training-panel__exercise-list"
                 />
@@ -669,7 +727,7 @@ function toggleActiveProgramExpanded() {
               <div class="missed-panel__list">
                 <article
                   v-for="workout in overdueWorkouts"
-                  :key="`overdue-${workout.userProgramAssignmentId || 'none'}-${workout.scheduledForDate}`"
+                  :key="`overdue-${workout.programAssignmentId || 'none'}-${workout.scheduledForDate}`"
                   class="missed-workout-row overdue-workout-card"
                   :data-scheduled-for-date="workout.scheduledForDate"
                 >
@@ -756,7 +814,7 @@ function toggleActiveProgramExpanded() {
               <div>
                 <h3 class="start-program-card__title">Start your first program</h3>
                 <p class="start-program-card__copy mb-0">
-                  Pick a template and choose the first training day.
+                  Pick a collection, choose a program, and set the first training day.
                 </p>
               </div>
             </header>
@@ -789,45 +847,64 @@ function toggleActiveProgramExpanded() {
           </v-sheet>
 
           <div class="program-selection-layout">
-            <div class="program-picker" aria-label="Program templates">
+            <div class="program-picker" aria-label="Program collections">
               <button
-                v-for="programTemplate in programTemplates"
-                :key="programTemplate.id"
+                v-for="programCollection in programCollections"
+                :key="programCollection.id"
                 type="button"
                 class="program-option"
-                :class="{ 'program-option--selected': isSelectedProgramTemplate(programTemplate.id) }"
-                @click="selectProgramTemplate(programTemplate.id)"
+                :class="{ 'program-option--selected': isSelectedProgramCollection(programCollection.id) }"
+                @click="selectProgramCollection(programCollection.id)"
               >
                 <span class="program-option__icon" aria-hidden="true">
-                  <v-icon :icon="isSelectedProgramTemplate(programTemplate.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
+                  <v-icon :icon="isSelectedProgramCollection(programCollection.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
                 </span>
                 <span class="program-option__body">
-                  <span class="program-option__name">{{ programTemplate.name }}</span>
-                  <span class="program-option__meta">{{ programTemplate.difficultyLabel || "Program" }}</span>
+                  <span class="program-option__name">{{ programCollection.name }}</span>
+                  <span class="program-option__meta">{{ programCollection.programs?.length || 0 }} programs</span>
+                </span>
+              </button>
+            </div>
+
+            <div class="program-picker" aria-label="Programs">
+              <button
+                v-for="programVersion in programVersions"
+                :key="programVersion.id"
+                type="button"
+                class="program-option"
+                :class="{ 'program-option--selected': isSelectedProgramVersion(programVersion.id) }"
+                @click="selectProgramVersion(programVersion.id)"
+              >
+                <span class="program-option__icon" aria-hidden="true">
+                  <v-icon :icon="isSelectedProgramVersion(programVersion.id) ? mdiCheckBold : mdiBookOpenPageVariantOutline" />
+                </span>
+                <span class="program-option__body">
+                  <span class="program-option__name">{{ programVersion.name }}</span>
+                  <span class="program-option__meta">{{ programVersion.difficultyLabel || `Version ${programVersion.versionLabel}` }}</span>
                 </span>
               </button>
             </div>
 
             <v-sheet rounded="xl" border class="program-detail-panel">
-              <template v-if="selectedProgramTemplate">
+              <template v-if="selectedProgramVersion">
                 <header class="program-detail-panel__header">
                   <div>
                     <p class="program-detail-panel__eyebrow mb-0">Selected program</p>
-                    <h3 class="program-detail-panel__title">{{ selectedProgramTemplate.name }}</h3>
+                    <h3 class="program-detail-panel__title">{{ selectedProgramVersion.name }}</h3>
                   </div>
                   <v-chip color="primary" variant="tonal" label>
-                    {{ selectedProgramTemplate.difficultyLabel || "Program" }}
+                    {{ selectedProgramVersion.difficultyLabel || `Version ${selectedProgramVersion.versionLabel}` }}
                   </v-chip>
                 </header>
 
-                <p v-if="selectedProgramTemplateSummary" class="program-detail-panel__summary mb-0">
-                  {{ selectedProgramTemplateSummary }}
+                <p v-if="selectedProgramVersionSummary" class="program-detail-panel__summary mb-0">
+                  {{ selectedProgramVersionSummary }}
                 </p>
 
                 <div class="program-detail-panel__schedule">
                   <article
-                    v-for="day in selectedProgramTemplateSchedule"
-                    :key="`template-${selectedProgramTemplate.id}-${day.dayOfWeek}`"
+                    v-for="day in selectedProgramVersionSchedule"
+                    :key="`program-version-${selectedProgramVersion.id}-${day.dayOfWeek}`"
                     class="program-detail-day"
                     :class="{ 'program-detail-day--rest': day.isRestDay }"
                   >
@@ -836,7 +913,7 @@ function toggleActiveProgramExpanded() {
                     <div v-else class="program-detail-day__items">
                       <div
                         v-for="item in day.items"
-                        :key="`template-${selectedProgramTemplate.id}-${day.dayOfWeek}-${item.slotNumber}`"
+                        :key="`program-version-${selectedProgramVersion.id}-${day.dayOfWeek}-${item.slotNumber}`"
                         class="program-detail-day__item"
                       >
                         <span>{{ item.exerciseName }}</span>
@@ -848,7 +925,7 @@ function toggleActiveProgramExpanded() {
               </template>
 
               <div v-else class="program-detail-panel__empty">
-                Choose a program to see its weekly rhythm.
+                Choose a collection and a program to see its weekly rhythm.
               </div>
             </v-sheet>
           </div>
@@ -1002,7 +1079,7 @@ function toggleActiveProgramExpanded() {
   align-items: end;
   display: grid;
   gap: 0.9rem;
-  grid-template-columns: minmax(12rem, 18rem) auto;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
 .start-program-card__date {
@@ -1017,7 +1094,7 @@ function toggleActiveProgramExpanded() {
 .program-selection-layout {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr);
+  grid-template-columns: minmax(12rem, 16rem) minmax(13rem, 18rem) minmax(0, 1fr);
 }
 
 .program-picker {

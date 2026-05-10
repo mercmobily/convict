@@ -1,0 +1,9 @@
+{
+  "name": "@local/instance-program-routines",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./shared": "./src/shared/index.js"
+  }
+}

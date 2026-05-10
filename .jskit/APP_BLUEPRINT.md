@@ -42,26 +42,30 @@
 
 | Entity | Purpose | Ownership | Notes |
 | --- | --- | --- | --- |
-| exercise_categories | Canonical grouping/search taxonomy | system | Includes the Convict movement families as categories |
 | exercises | Canonical concrete movements | system | One row per actual exercise movement |
-| exercise_category_memberships | Exercise-to-category taxonomy links | system | Supports primary and secondary category metadata |
-| progression_tracks | Canonical ordered progression paths | system | Convict families are progression tracks, not exercises |
-| progression_track_steps | Canonical progression track steps and thresholds | system | Points each step at a concrete exercise |
+| categories | Canonical grouping/search taxonomy | system | Includes the Convict movement families as categories |
+| exercise_categories | Exercise-to-category taxonomy links | system | Supports primary and secondary category metadata |
+| progressions | Canonical ordered progression paths | system | Convict families are progression paths, not exercises |
+| progression_entries | Canonical progression entries and thresholds | system | Points each entry at a concrete exercise |
 | routines | Canonical reusable direct-exercise routine definitions | system | Used for warmups/cooldowns, not main progression work |
 | routine_entries | Ordered direct exercises inside canonical routines | system | Direct exercises only |
-| program_templates | Canonical Convict Conditioning templates | system | Built-in schedules shown during program selection |
-| program_template_schedule_entries | Day-by-day canonical template main-work prescriptions | system | Schedules a progression track or a direct exercise |
-| program_template_routine_assignments | Canonical template warmup/cooldown routine attachments | system | Copied into user-owned program routine rows |
-| programs | User-owned copies of templates | user | A full copy is created when the user selects a template |
-| program_schedule_entries | Day-by-day main-work prescriptions for a copied program | user | Schedules a progression track or a direct exercise |
-| program_routines | Copied warmup/cooldown routine headers for a user program | user | Direct `user_id` owner and snapshot fields |
-| program_routine_entries | Copied warmup/cooldown routine rows for a user program | user | Direct `user_id` owner and exercise snapshots |
-| user_program_assignments | User's active training timeline | user | Owns program lifecycle, start/end dates, and active status |
-| user_program_assignment_revisions | Effective-dated schedule revisions for an assignment | user | Source of truth for derived future workouts |
-| user_progression_track_progress | Current step and state per user per progression track | user | Global across programs; separates earned advancement from current active step |
-| workout_occurrences | Persisted actualized or explicitly resolved workouts | user | Stores `scheduled_for_date`, `performed_on_date`, and resolution state |
-| workout_occurrence_exercises | Exercise rows within a workout occurrence | user | Snapshots warmup/main/cooldown, direct exercise, optional track step, and planned set range |
-| workout_set_logs | Actual logged sets within an occurrence exercise row | user | Stores reps or seconds per set |
+| program_collections | Source program families/catalog groupings | system | Example: Convict Conditioning |
+| programs | Stable source program identity | system | Example: New Blood |
+| program_versions | Immutable published source program version | system | Program selection copies a version |
+| program_entries | Source main-work prescriptions | system | Belongs to a program version and schedules a progression or direct exercise |
+| program_routines | Source warmup/cooldown routine assignments | system | Belongs to a program version |
+| instance_programs | User-owned copied program version | user | A frozen copy is created when the user selects a version |
+| instance_program_entries | User-owned copied main work rows | user | Points to copied instance progressions for progression work |
+| instance_progressions | User-owned copied progressions | user | Prevents source progression edits from changing active training |
+| instance_progression_entries | User-owned copied progression entries | user | Snapshot of ordered standards and exercise links |
+| instance_program_routines | User-owned copied routine assignments | user | Snapshot routine headers for the copied program |
+| instance_routine_entries | User-owned copied routine entries | user | Snapshot routine exercise rows |
+| program_assignments | User's active training timelines | user | Multiple active assignments per user are allowed |
+| program_assignment_revisions | Effective-dated assignment revisions | user | Points assignment history to current instance program |
+| user_progressions | Assignment-scoped progression state | user | Unique per assignment and instance progression |
+| workouts | Persisted actualized or explicitly resolved workouts | user | Unique per assignment/date, not user/date |
+| workout_exercises | Exercise rows within a workout | user | Snapshots copied program/progression/routine data |
+| workout_sets | Actual logged sets within a workout exercise row | user | Stores reps or seconds per set |
 
 ## Route And Screen Plan
 
@@ -90,7 +94,7 @@
 ## Implementation Notes
 
 - CRUDs to scaffold:
-  `exercise_categories`, `exercises`, `exercise_category_memberships`, `progression_tracks`, `progression_track_steps`, `routines`, `routine_entries`, `program_templates`, `program_template_schedule_entries`, `program_template_routine_assignments`, `programs`, `program_schedule_entries`, `program_routines`, `program_routine_entries`, `user_program_assignments`, `user_program_assignment_revisions`, `user_progression_track_progress`, `workout_occurrences`, `workout_occurrence_exercises`, and `workout_set_logs`
+  `exercises`, `categories`, `exercise_categories`, `progressions`, `progression_entries`, `routines`, `routine_entries`, `program_collections`, `programs`, `program_versions`, `program_entries`, `program_routines`, `instance_programs`, `instance_program_entries`, `instance_program_routines`, `instance_routine_entries`, `instance_progressions`, `instance_progression_entries`, `program_assignments`, `program_assignment_revisions`, `user_progressions`, `workouts`, `workout_exercises`, and `workout_sets`
 - Non-CRUD pages to scaffold:
   Today, Choose Program, Progress, History, Missed Workouts
 - Custom code areas:
@@ -98,7 +102,9 @@
 - CRUD-first rule:
   Persisted app-owned entities must be scaffolded through `crud-server-generator` before custom workflow code is added. Generated resources own the canonical CRUD contract and migration scaffold. Custom services may orchestrate those entities later, but data reads and writes should go through JSKIT/internal `json-rest-api` seams rather than direct Knex unless there is a clear explicit exception.
 - Program-copy rule:
-  Program selection never points an assignment directly at a canonical template. The user sees `program_templates`, picks one, and the app clones that template plus its schedule rows and routine attachments into a new user-owned `program`, `program_schedule_entries`, `program_routines`, and `program_routine_entries` set before the first assignment revision is written.
+  Program selection never points an assignment directly at source rows. The user first picks a `program_collection`, then picks the latest published `program_version`. The app clones that version plus entries, routines, routine entries, progressions, and progression entries into `instance_*` tables before the assignment revision is written.
+- Multi-program rule:
+  A user may have multiple active `program_assignments`. `user_progressions` are scoped to `program_assignment_id`, and `workouts` are unique by `(program_assignment_id, scheduled_for_date)` so two active programs can schedule work on the same date.
 - Delivery strategy:
   Use very vertical slices.
   Every new service, query, or mutation must ship with the smallest usable UI that exercises it in the same chunk.
@@ -112,192 +118,25 @@
 
 ## Concrete Table Proposal
 
-### `user_program_assignments`
+- Source/catalog tables:
+  `exercises`, `categories`, `exercise_categories`, `progressions`, `progression_entries`, `routines`, `routine_entries`, `program_collections`, `programs`, `program_versions`, `program_entries`, and `program_routines`.
+- Copied/user-owned structure tables:
+  `instance_programs`, `instance_program_entries`, `instance_program_routines`, `instance_routine_entries`, `instance_progressions`, and `instance_progression_entries`.
+- Runtime/user state tables:
+  `program_assignments`, `program_assignment_revisions`, `user_progressions`, `workouts`, `workout_exercises`, and `workout_sets`.
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `user_id` | `bigint unsigned` | FK to `users.id`, `ON DELETE CASCADE` |
-| `starts_on` | `date` | First date this assignment can produce scheduled workouts |
-| `ends_on` | `date nullable` | Null while active |
-| `status` | `varchar(32)` | `active` or `archived` |
-| `created_at` | `timestamp` | Standard created timestamp |
-| `updated_at` | `timestamp` | Standard updated timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Index on `user_id`
-- Index on `(user_id, status)`
-
-Notes:
-- V1 should enforce one active assignment per user in application logic.
-- V1 supports one active assignment per user. Multi-program concurrency is deferred.
-- This table does not own schedule details directly. Revisions do.
-
-### `user_program_assignment_revisions`
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `user_program_assignment_id` | `bigint unsigned` | FK to `user_program_assignments.id`, `ON DELETE CASCADE` |
-| `program_id` | `bigint unsigned` | FK to `programs.id`; the schedule source for dates from `effective_from_date` onward |
-| `effective_from_date` | `date` | First date this revision governs |
-| `change_reason` | `varchar(64)` | Examples: `initial`, `program_switch`, `schedule_edit`, `fork_update` |
-| `notes` | `text nullable` | Optional explanation of the change |
-| `created_at` | `timestamp` | Standard created timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Unique key on `(user_program_assignment_id, effective_from_date)`
-- Index on `(user_program_assignment_id, effective_from_date)`
-- Index on `program_id`
-
-Notes:
-- Future schedule projection reads from the latest revision effective on the requested date.
-- Programs should be treated as immutable once referenced by a revision.
-- Editing a user-owned fork after it has been used should create a new program row and a new revision, not mutate the historical source row in place.
-
-### `personal_step_variations`
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `user_id` | `bigint unsigned` | FK to `users.id`, `ON DELETE CASCADE` |
-| `canonical_step_id` | `bigint unsigned` | FK to `exercise_steps.id`, `ON DELETE CASCADE` |
-| `name` | `varchar(160)` | User-visible variation name |
-| `measurement_unit` | `varchar(16)` | Defaults to canonical step unit; allows `reps` or `seconds` override when needed |
-| `reason` | `varchar(160) nullable` | Short reason such as injury or equipment limitation |
-| `notes` | `text nullable` | Longer explanation |
-| `status` | `varchar(32)` | `active` or `archived` |
-| `created_at` | `timestamp` | Standard created timestamp |
-| `updated_at` | `timestamp` | Standard updated timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Index on `user_id`
-- Index on `canonical_step_id`
-- Index on `(user_id, canonical_step_id, status)`
-
-Notes:
-- Variations do not replace canonical steps.
-- When a variation is active, progression guidance is advisory.
-
-### `user_exercise_progress`
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `user_id` | `bigint unsigned` | FK to `users.id`, `ON DELETE CASCADE` |
-| `exercise_id` | `bigint unsigned` | FK to `exercises.id`, `ON DELETE CASCADE` |
-| `current_step_id` | `bigint unsigned` | FK to `exercise_steps.id`; what the user is actually doing now |
-| `ready_to_advance_step_id` | `bigint unsigned nullable` | FK to `exercise_steps.id`; next earned step, not yet applied |
-| `active_variation_id` | `bigint unsigned nullable` | FK to `personal_step_variations.id`, `ON DELETE SET NULL` |
-| `ready_to_advance_at` | `timestamp nullable` | When the user earned advancement |
-| `last_completed_occurrence_id` | `bigint unsigned nullable` | Optional FK to the last completed `workout_occurrences.id` |
-| `last_completed_at` | `timestamp nullable` | Last completed workout touching this exercise |
-| `stall_count` | `smallint unsigned` | Default `0` |
-| `created_at` | `timestamp` | Standard created timestamp |
-| `updated_at` | `timestamp` | Standard updated timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Unique key on `(user_id, exercise_id)`
-- Index on `current_step_id`
-- Index on `ready_to_advance_step_id`
-
-Notes:
-- `current_step_id` and `ready_to_advance_step_id` must belong to the same exercise family in application logic.
-- This table intentionally separates earned advancement from applied advancement.
-
-### `workout_occurrences`
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `user_id` | `bigint unsigned` | FK to `users.id`, `ON DELETE CASCADE` |
-| `user_program_assignment_id` | `bigint unsigned` | FK to `user_program_assignments.id`; protect history with `RESTRICT` / default no-action |
-| `user_program_assignment_revision_id` | `bigint unsigned` | FK to `user_program_assignment_revisions.id`; protects the source revision used |
-| `scheduled_for_date` | `date` | When this workout should have happened |
-| `performed_on_date` | `date nullable` | When it actually happened |
-| `status` | `varchar(32)` | `in_progress`, `completed`, or `definitely_missed` |
-| `started_at` | `timestamp nullable` | First interaction time |
-| `submitted_at` | `timestamp nullable` | Final submission time for completed workouts |
-| `definitely_missed_at` | `timestamp nullable` | Explicit abandonment time |
-| `notes` | `text nullable` | User notes about the workout |
-| `created_at` | `timestamp` | Standard created timestamp |
-| `updated_at` | `timestamp` | Standard updated timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Unique key on `(user_program_assignment_id, scheduled_for_date)`
-- Index on `user_id`
-- Index on `(user_id, scheduled_for_date)`
-- Index on `(user_id, performed_on_date)`
-- Index on `(user_program_assignment_revision_id, scheduled_for_date)`
-
-Notes:
-- Only actualized or explicitly resolved workouts get rows here.
-- `scheduled` and `overdue` remain derived states and are not persisted as occurrence rows in v1.
-
-### `workout_occurrence_exercises`
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `workout_occurrence_id` | `bigint unsigned` | FK to `workout_occurrences.id`, `ON DELETE CASCADE` |
-| `slot_number` | `smallint unsigned` | Preserves workout ordering |
-| `exercise_id` | `bigint unsigned` | FK to `exercises.id` |
-| `exercise_name_snapshot` | `varchar(160)` | Historical display snapshot |
-| `canonical_step_id` | `bigint unsigned` | FK to `exercise_steps.id` |
-| `canonical_step_name_snapshot` | `varchar(160)` | Historical display snapshot |
-| `personal_step_variation_id` | `bigint unsigned nullable` | FK to `personal_step_variations.id`, `ON DELETE SET NULL` |
-| `variation_name_snapshot` | `varchar(160) nullable` | Historical display snapshot |
-| `measurement_unit_snapshot` | `varchar(16)` | Effective input unit at log time |
-| `planned_work_sets_min` | `smallint unsigned` | Snapshot from the schedule source |
-| `planned_work_sets_max` | `smallint unsigned` | Snapshot from the schedule source |
-| `progression_sets_snapshot` | `smallint unsigned nullable` | Snapshot from the canonical step at log time |
-| `progression_reps_min_snapshot` | `smallint unsigned nullable` | Snapshot from the canonical step at log time |
-| `progression_reps_max_snapshot` | `smallint unsigned nullable` | Snapshot from the canonical step at log time |
-| `progression_seconds_snapshot` | `smallint unsigned nullable` | Snapshot from the canonical step at log time |
-| `status` | `varchar(32)` | `pending`, `completed`, or `skipped` |
-| `notes` | `text nullable` | Exercise-level notes |
-| `created_at` | `timestamp` | Standard created timestamp |
-| `updated_at` | `timestamp` | Standard updated timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Unique key on `(workout_occurrence_id, slot_number)`
-- Unique key on `(workout_occurrence_id, exercise_id)`
-- Index on `exercise_id`
-- Index on `canonical_step_id`
-
-Notes:
-- Snapshotting names and benchmark fields keeps history stable even if later edits correct source data.
-- `status` is intentionally per exercise row so incomplete workout attempts can be represented cleanly.
-
-### `workout_set_logs`
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `id` | `bigint unsigned` | Primary key |
-| `workout_occurrence_exercise_id` | `bigint unsigned` | FK to `workout_occurrence_exercises.id`, `ON DELETE CASCADE` |
-| `set_number` | `smallint unsigned` | Display/order within the exercise |
-| `side` | `varchar(16)` | `both`, `left`, or `right` |
-| `measurement_unit_snapshot` | `varchar(16)` | The unit used for this set |
-| `performed_value` | `smallint unsigned` | Reps or seconds |
-| `qualifies_for_progression` | `boolean` | Derived when the set is evaluated against the occurrence exercise snapshot |
-| `logged_at` | `timestamp` | Exact time the set was logged |
-| `created_at` | `timestamp` | Standard created timestamp |
-| `updated_at` | `timestamp` | Standard updated timestamp |
-
-Keys and constraints:
-- Primary key on `id`
-- Unique key on `(workout_occurrence_exercise_id, set_number, side)`
-- Index on `logged_at`
-
-Notes:
-- V1 logs only work sets. Warmup-specific tracking can be added later if needed.
-- `performed_value` is unit-agnostic because the unit is captured in the snapshot column.
+Key constraints:
+- `program_versions` belong to `programs`; `programs` belong to `program_collections`.
+- `program_entries` and `program_routines` belong to `program_versions`, not directly to source `programs`.
+- `instance_programs` copy a `program_version` and retain `source_program_id` plus `source_program_version_id`.
+- `instance_program_entries` point to `instance_progressions` for progression work.
+- `instance_progressions` and `instance_progression_entries` copy the source progression data used by the selected program.
+- `program_assignments` allow multiple active rows per user.
+- `program_assignment_revisions` point to `instance_programs`.
+- `user_progressions` include `program_assignment_id` and are unique by `(program_assignment_id, instance_progression_id)`.
+- `workouts` are unique by `(program_assignment_id, scheduled_for_date)`.
+- `workouts` must not have a unique key on `(user_id, scheduled_for_date)`.
+- `workout_exercises` snapshot copied instance program/progression/routine data.
 
 ## Product Rules
 
@@ -331,20 +170,18 @@ Notes:
   Program or schedule changes create a new assignment revision with an effective start date.
   Calendar and future schedule views are recomputed from assignment revisions on read.
   Past completed workouts, definitely-missed workouts, and historical logs remain unchanged.
-  Personal exercise progress carries forward.
-  The product should feel flexible enough that users can adjust schedule or program structure without feeling locked in.
-  Editing a user-owned fork that has already been used by a revision should create a new program source row rather than mutating the historical source in place.
+  Progress is assignment-scoped, so two active programs can advance independently even when they copy the same source progression.
+  Source edits never alter an existing user's copied instance rows.
 - Calendar generation:
   The calendar is a projection, not a store of pre-generated future rows.
-  Future training days are derived from program schedule entries and assignment revisions for the requested date range.
-  Persisted workout occurrences overlay that derived schedule to show completed, in-progress, and definitely-missed workouts.
+  Future training days are derived from instance program entries and assignment revisions for the requested date range.
+  Persisted workouts overlay that derived schedule to show completed, in-progress, and definitely-missed workouts.
 - Progress scope:
-  Progress is tracked globally per user per exercise family, not separately per program.
-- Canonical steps and personal variations:
-  Canonical Convict Conditioning steps remain the core progression anchor.
-  Users may attach a personal variation to a canonical step for injury, rehab, or practical substitution reasons.
-  Logs store both the canonical step and the optional active variation.
-  When a personal variation is active, progression prompts remain advisory and the user keeps explicit control over whether to stay or advance.
+  Progress is tracked per program assignment and copied instance progression.
+- Source and instance separation:
+  Source rows are reusable catalog/publishing rows.
+  Instance rows are frozen user-owned copies used for training.
+  Runtime rows track mutable state and logs.
 - Sharing visibility in v1:
   Personal training data stays in the unscoped authenticated app surface and is owned by the current user.
   Shared adherence, milestone, or leaderboard views are deferred until a specific collaboration slice exists.
@@ -357,35 +194,29 @@ Notes:
 
 | CRUD | Operations | List Fields | View Form Shape | Edit/New Form Shape | Notes |
 | --- | --- | --- | --- | --- | --- |
-| User program assignments | list, view, new, edit | program, status, start date | Lightweight summary and history | Choose program and start date | One active assignment expected in v1 |
-| User program assignment revisions | list, view, new | effective date, source program, notes | Revision timeline | Edit schedule from a given date forward | Drives derived calendar behavior |
-| User exercise progress | list, view | exercise, current step, earned advancement, status | Exercise-centric detail | N/A | Derived mostly from logging |
-| Personal step variations | list, view, new, edit | canonical step, variation name, reason, status | Variation detail with history | Create variation name and notes | Optional flexibility layer |
-| Workout occurrences | list, view, new, edit | scheduled date, performed date, status, lateness | Workout summary with exercise rows | Fast logging flow with submit or definitely missed | Stores only actualized or explicitly resolved workouts |
-| Program forks | list, view, new, edit | name, source program, status | Weekly schedule detail | Clone and adjust schedule | System programs are read-only |
+| Source catalog CRUDs | generated server CRUD | id, name/slug/status where present | JSON REST only for now | No app UI in this slice | Public/system data |
+| Instance structure CRUDs | generated server CRUD | id, user, source ids | JSON REST only for now | Created by workflow copy service | User-owned frozen copies |
+| Runtime state CRUDs | generated server CRUD | id, user, assignment/status/date | JSON REST plus custom workflow UI | Mutated by Today/workout/progress flows | User-owned mutable state |
 
 ## Delivery Plan
 
 | Chunk | Goal | Type | Depends on | Done when |
 | --- | --- | --- | --- | --- |
-| 1 | Lock product and rules | custom local code/docs | none | Blueprint, workboard, and TODO reflect final product decisions |
-| 2 | Add user progress and occurrence schema | custom local code | 1 | Tables and ownership model are implemented |
-| 3 | Program Selection slice | custom local code + UI | 2 | User can choose a program, pick a start date, and create an active assignment with its first revision |
-| 4 | Today slice | custom local code + UI | 2, 3 | User can open the app and see today's derived workout plus overdue workouts |
-| 5 | Workout Logging slice | custom local code + UI | 2, 4 | User can start a workout occurrence and log reps or seconds against the prescribed exercises |
-| 6 | Submit And Advancement slice | custom local code + UI | 2, 5 | User can submit a workout, earn `ready to advance`, and choose whether to apply advancement |
-| 7 | Progress And History slice | custom local code + UI | 2, 6 | User can inspect current progress, earned advancement, and calendar/history detail |
-| 8 | Optional Sharing slice | custom local code + UI | 4, 7 | If enabled later, selected viewers can see adherence and milestone summaries without private set logs |
+| 1 | Rebuild live DB model | direct DB | current source data | New tables exist with source data preserved and user runtime rows reset |
+| 2 | Regenerate server CRUD packages | generator | 1 | Every app-owned table has generated server CRUD ownership |
+| 3 | Rewire workflow services | custom server code | 2 | Program selection, Today, Progress, History, and workout flows use new JSON REST resources |
+| 4 | Rewire app UI | custom UI code | 3 | Program picker is collection-first and supports multiple active programs |
+| 5 | Verify end to end | tests/browser | 4 | Full suite, real smoke, and DB invariant checks pass |
 
 ## Verification
 
 - Commands to run:
-  Verify planning docs by readback; implementation verification added in later chunks
+  `npm install`, `npm run devlinks`, `npm run lint`, `npm test`, `npm run build:all`, targeted and full Playwright, `npx jskit app verify-ui ...`, `npx jskit doctor`, and DB invariant queries.
 - Playwright coverage plan:
-  Start with the `Choose Program` flow in Slice 3, then extend coverage slice-by-slice as each user-facing screen is added
+  Cover collection-first program selection, two active programs, Today grouping, set logging, workout finish, Progress, History, and app route smoke.
 - Test auth strategy:
-  Use JSKIT dev auth bypass once authenticated UI work starts
+  Use JSKIT dev auth bypass for automated browser tests and `tonymobily@gmail.com` / `2.ccns.2` for the final real smoke when needed.
 - UI review expectations:
   Mobile-first day logging flow with explicit step/unit/target visibility
 - Known open questions:
-  Collaboration/visibility in a future slice, exact future scoring formula, and how much automatic guidance to show for personal variations remain deferred
+  Collaboration/visibility, custom program authoring UI, and exercise/program creation UI remain deferred.

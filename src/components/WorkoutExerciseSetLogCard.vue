@@ -49,7 +49,7 @@ const canEdit = computed(() => props.workoutStatus === "in_progress" && Boolean(
 const measurementUnit = computed(() => measurementLabel(props.exercise?.measurementUnit));
 
 const deleteSetLogCommand = useCommand({
-  apiSuffix: () => `/workout-set-logs/${activeDeleteRecordId.value}`,
+  apiSuffix: () => `/workout-sets/${activeDeleteRecordId.value}`,
   writeMethod: "DELETE",
   suppressSuccessMessage: true,
   fallbackRunError: "Unable to delete this set.",

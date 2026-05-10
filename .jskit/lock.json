@@ -1238,190 +1238,6 @@
       "installedAt": "2026-05-06T08:13:31.568Z",
       "migrationSyncVersion": "0.1.0"
     },
-    "@local/program-schedule-entries": {
-      "packageId": "@local/program-schedule-entries",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/program-schedule-entries",
-        "descriptorPath": "packages/program-schedule-entries/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T08:13:32.337Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/user-program-assignments": {
-      "packageId": "@local/user-program-assignments",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/user-program-assignments",
-        "descriptorPath": "packages/user-program-assignments/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T08:13:33.150Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/user-program-assignment-revisions": {
-      "packageId": "@local/user-program-assignment-revisions",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/user-program-assignment-revisions",
-        "descriptorPath": "packages/user-program-assignment-revisions/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T08:13:34.058Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/workout-occurrences": {
-      "packageId": "@local/workout-occurrences",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/workout-occurrences",
-        "descriptorPath": "packages/workout-occurrences/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T08:13:36.882Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/workout-occurrence-exercises": {
-      "packageId": "@local/workout-occurrence-exercises",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/workout-occurrence-exercises",
-        "descriptorPath": "packages/workout-occurrence-exercises/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T08:13:37.744Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/workout-set-logs": {
-      "packageId": "@local/workout-set-logs",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/workout-set-logs",
-        "descriptorPath": "packages/workout-set-logs/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T08:13:38.695Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/program-templates": {
-      "packageId": "@local/program-templates",
-      "version": "0.1.0",
-      "source": {
-        "type": "npm-installed-package",
-        "packagePath": "node_modules/@local/program-templates",
-        "descriptorPath": "node_modules/@local/program-templates/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T12:05:38.876Z",
-      "migrationSyncVersion": "0.1.0"
-    },
-    "@local/program-template-schedule-entries": {
-      "packageId": "@local/program-template-schedule-entries",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/program-template-schedule-entries",
-        "descriptorPath": "packages/program-template-schedule-entries/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-06T12:05:38.895Z",
-      "migrationSyncVersion": "0.1.0"
-    },
     "@local/progress": {
       "packageId": "@local/progress",
       "version": "0.1.0",
@@ -1511,72 +1327,6 @@
       "options": {},
       "installedAt": "2026-05-09T15:51:17.632Z"
     },
-    "@local/exercise-category-memberships": {
-      "packageId": "@local/exercise-category-memberships",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/exercise-category-memberships",
-        "descriptorPath": "packages/exercise-category-memberships/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-09T15:51:18.944Z"
-    },
-    "@local/progression-tracks": {
-      "packageId": "@local/progression-tracks",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/progression-tracks",
-        "descriptorPath": "packages/progression-tracks/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-09T15:51:20.608Z"
-    },
-    "@local/progression-track-steps": {
-      "packageId": "@local/progression-track-steps",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/progression-track-steps",
-        "descriptorPath": "packages/progression-track-steps/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-09T15:51:22.064Z"
-    },
     "@local/routines": {
       "packageId": "@local/routines",
       "version": "0.1.0",
@@ -1621,28 +1371,6 @@
       "options": {},
       "installedAt": "2026-05-09T15:51:25.364Z"
     },
-    "@local/program-template-routine-assignments": {
-      "packageId": "@local/program-template-routine-assignments",
-      "version": "0.1.0",
-      "source": {
-        "type": "app-local-package",
-        "packagePath": "packages/program-template-routine-assignments",
-        "descriptorPath": "packages/program-template-routine-assignments/package.descriptor.mjs"
-      },
-      "managed": {
-        "packageJson": {
-          "dependencies": {},
-          "devDependencies": {},
-          "scripts": {}
-        },
-        "text": {},
-        "vite": {},
-        "files": [],
-        "migrations": []
-      },
-      "options": {},
-      "installedAt": "2026-05-09T15:51:27.011Z"
-    },
     "@local/program-routines": {
       "packageId": "@local/program-routines",
       "version": "0.1.0",
@@ -1665,13 +1393,13 @@
       "options": {},
       "installedAt": "2026-05-09T15:51:28.495Z"
     },
-    "@local/program-routine-entries": {
-      "packageId": "@local/program-routine-entries",
+    "@local/categories": {
+      "packageId": "@local/categories",
       "version": "0.1.0",
       "source": {
         "type": "app-local-package",
-        "packagePath": "packages/program-routine-entries",
-        "descriptorPath": "packages/program-routine-entries/package.descriptor.mjs"
+        "packagePath": "packages/categories",
+        "descriptorPath": "packages/categories/package.descriptor.mjs"
       },
       "managed": {
         "packageJson": {
@@ -1685,15 +1413,15 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-09T15:51:29.885Z"
+      "installedAt": "2026-05-10T01:14:48.189Z"
     },
-    "@local/user-progression-track-progress": {
-      "packageId": "@local/user-progression-track-progress",
+    "@local/progressions": {
+      "packageId": "@local/progressions",
       "version": "0.1.0",
       "source": {
         "type": "app-local-package",
-        "packagePath": "packages/user-progression-track-progress",
-        "descriptorPath": "packages/user-progression-track-progress/package.descriptor.mjs"
+        "packagePath": "packages/progressions",
+        "descriptorPath": "packages/progressions/package.descriptor.mjs"
       },
       "managed": {
         "packageJson": {
@@ -1707,7 +1435,359 @@
         "migrations": []
       },
       "options": {},
-      "installedAt": "2026-05-09T15:51:31.329Z"
+      "installedAt": "2026-05-10T01:14:49.971Z"
+    },
+    "@local/progression-entries": {
+      "packageId": "@local/progression-entries",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/progression-entries",
+        "descriptorPath": "packages/progression-entries/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:14:50.914Z"
+    },
+    "@local/program-collections": {
+      "packageId": "@local/program-collections",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/program-collections",
+        "descriptorPath": "packages/program-collections/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:14:51.996Z"
+    },
+    "@local/program-versions": {
+      "packageId": "@local/program-versions",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/program-versions",
+        "descriptorPath": "packages/program-versions/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:50.939Z"
+    },
+    "@local/program-entries": {
+      "packageId": "@local/program-entries",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/program-entries",
+        "descriptorPath": "packages/program-entries/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:51.827Z"
+    },
+    "@local/instance-programs": {
+      "packageId": "@local/instance-programs",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/instance-programs",
+        "descriptorPath": "packages/instance-programs/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:53.713Z"
+    },
+    "@local/instance-program-entries": {
+      "packageId": "@local/instance-program-entries",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/instance-program-entries",
+        "descriptorPath": "packages/instance-program-entries/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:54.606Z"
+    },
+    "@local/instance-program-routines": {
+      "packageId": "@local/instance-program-routines",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/instance-program-routines",
+        "descriptorPath": "packages/instance-program-routines/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:55.683Z"
+    },
+    "@local/instance-routine-entries": {
+      "packageId": "@local/instance-routine-entries",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/instance-routine-entries",
+        "descriptorPath": "packages/instance-routine-entries/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:56.590Z"
+    },
+    "@local/instance-progressions": {
+      "packageId": "@local/instance-progressions",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/instance-progressions",
+        "descriptorPath": "packages/instance-progressions/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:57.490Z"
+    },
+    "@local/instance-progression-entries": {
+      "packageId": "@local/instance-progression-entries",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/instance-progression-entries",
+        "descriptorPath": "packages/instance-progression-entries/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:58.440Z"
+    },
+    "@local/program-assignments": {
+      "packageId": "@local/program-assignments",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/program-assignments",
+        "descriptorPath": "packages/program-assignments/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:15:59.406Z"
+    },
+    "@local/program-assignment-revisions": {
+      "packageId": "@local/program-assignment-revisions",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/program-assignment-revisions",
+        "descriptorPath": "packages/program-assignment-revisions/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:16:00.295Z"
+    },
+    "@local/user-progressions": {
+      "packageId": "@local/user-progressions",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/user-progressions",
+        "descriptorPath": "packages/user-progressions/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:16:01.274Z"
+    },
+    "@local/workouts": {
+      "packageId": "@local/workouts",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/workouts",
+        "descriptorPath": "packages/workouts/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:16:02.343Z"
+    },
+    "@local/workout-exercises": {
+      "packageId": "@local/workout-exercises",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/workout-exercises",
+        "descriptorPath": "packages/workout-exercises/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:16:03.313Z"
+    },
+    "@local/workout-sets": {
+      "packageId": "@local/workout-sets",
+      "version": "0.1.0",
+      "source": {
+        "type": "app-local-package",
+        "packagePath": "packages/workout-sets",
+        "descriptorPath": "packages/workout-sets/package.descriptor.mjs"
+      },
+      "managed": {
+        "packageJson": {
+          "dependencies": {},
+          "devDependencies": {},
+          "scripts": {}
+        },
+        "text": {},
+        "vite": {},
+        "files": [],
+        "migrations": []
+      },
+      "options": {},
+      "installedAt": "2026-05-10T01:16:04.284Z"
     }
   }
 }

@@ -13,10 +13,10 @@ class ProgressProvider {
     "json-rest-api.core",
     "auth.policy.fastify",
     "crud.exercises",
-    "crud.progression_tracks",
-    "crud.progression_track_steps",
-    "crud.user_progression_track_progress",
-    "crud.workout_occurrences"
+    "crud.instance_progressions",
+    "crud.instance_progression_entries",
+    "crud.user_progressions",
+    "crud.workouts"
   ];
 
   register(app) {

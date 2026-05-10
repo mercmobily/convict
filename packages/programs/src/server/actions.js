@@ -10,6 +10,7 @@ import {
 } from "@jskit-ai/crud-core/server/listQueryValidators";
 import { resource } from "../shared/programResource.js";
 
+
 const listCursorPaginationQueryValidator = createCrudCursorPaginationQueryValidator({
   orderBy: resource.defaultSort
 });
@@ -40,7 +41,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const query = input || {};
+        const { workspaceSlug, ...query } = input || {};
         return deps.programsService.queryDocuments(query, {
           context
         });
@@ -77,11 +78,7 @@ function createActions({ surface } = {}) {
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
       permission: authenticatedPermission,
-      input: composeSchemaDefinitions([
-  resource.operations.create.body,
-], {
-  mode: "create"
-}),
+      input: resource.operations.create.body,
       output: null,
       idempotency: "optional",
       audit: {
@@ -89,7 +86,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const payload = input || {};
+        const { workspaceSlug, ...payload } = input || {};
         return deps.programsService.createDocument(payload, {
           context
         });
@@ -113,7 +110,7 @@ function createActions({ surface } = {}) {
       },
       observability: {},
       async execute(input, context, deps) {
-        const { recordId, ...patch } = input || {};
+        const { workspaceSlug, recordId, ...patch } = input || {};
         return deps.programsService.patchDocumentById(recordId, patch, {
           context
         });
@@ -126,9 +123,7 @@ function createActions({ surface } = {}) {
       channels: ["api", "automation", "internal"],
       surfaces: [surface],
       permission: authenticatedPermission,
-      input: composeSchemaDefinitions([
-  recordIdParamsValidator,
-]),
+      input: recordIdParamsValidator,
       output: null,
       idempotency: "optional",
       audit: {

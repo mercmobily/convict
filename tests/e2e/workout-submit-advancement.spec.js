@@ -51,7 +51,7 @@ async function fetchWorkoutOccurrenceStatus(userId, scheduledForDate) {
     const [rows] = await connection.query(
       [
         "SELECT status, submitted_at AS submittedAt",
-        "FROM workout_occurrences",
+        "FROM workouts",
         "WHERE user_id = ? AND scheduled_for_date = ?",
         "LIMIT 1"
       ].join(" "),
@@ -78,14 +78,14 @@ async function fetchExerciseProgressRows(userId) {
     const [rows] = await connection.query(
       [
         "SELECT",
-        "  REPLACE(pt.name, 'Convict ', '') AS exerciseName,",
+        "  REPLACE(ip.name, 'Convict ', '') AS exerciseName,",
         "  cs.step_label AS currentStepName,",
         "  rs.step_label AS readyStepName",
-        "FROM user_progression_track_progress uptp",
-        "INNER JOIN progression_tracks pt ON pt.id = uptp.progression_track_id",
-        "INNER JOIN progression_track_steps cs ON cs.id = uptp.current_progression_track_step_id",
-        "LEFT JOIN progression_track_steps rs ON rs.id = uptp.ready_to_advance_progression_track_step_id",
-        "WHERE uptp.user_id = ?",
+        "FROM user_progressions up",
+        "INNER JOIN instance_progressions ip ON ip.id = up.instance_progression_id",
+        "INNER JOIN instance_progression_entries cs ON cs.id = up.current_instance_progression_entry_id",
+        "LEFT JOIN instance_progression_entries rs ON rs.id = up.ready_to_advance_instance_progression_entry_id",
+        "WHERE up.user_id = ?",
         "ORDER BY exerciseName ASC"
       ].join(" "),
       [userId]
@@ -184,9 +184,19 @@ test("user can finish a workout and manually apply earned advancement", async ({
       readyStepName: null
     },
     {
+      exerciseName: "Pull-ups",
+      currentStepName: "Vertical Pulls",
+      readyStepName: null
+    },
+    {
       exerciseName: "Push-ups",
       currentStepName: "Wall Push-ups",
       readyStepName: "Incline Push-ups"
+    },
+    {
+      exerciseName: "Squats",
+      currentStepName: "Shoulderstand Squats",
+      readyStepName: null
     }
   ]);
 
@@ -203,8 +213,18 @@ test("user can finish a workout and manually apply earned advancement", async ({
       readyStepName: null
     },
     {
+      exerciseName: "Pull-ups",
+      currentStepName: "Vertical Pulls",
+      readyStepName: null
+    },
+    {
       exerciseName: "Push-ups",
       currentStepName: "Incline Push-ups",
+      readyStepName: null
+    },
+    {
+      exerciseName: "Squats",
+      currentStepName: "Shoulderstand Squats",
       readyStepName: null
     }
   ]);
@@ -264,8 +284,18 @@ test("user can finish a workout below the programmed minimum volume", async ({ p
       readyStepName: null
     },
     {
+      exerciseName: "Pull-ups",
+      currentStepName: "Vertical Pulls",
+      readyStepName: null
+    },
+    {
       exerciseName: "Push-ups",
       currentStepName: "Wall Push-ups",
+      readyStepName: null
+    },
+    {
+      exerciseName: "Squats",
+      currentStepName: "Shoulderstand Squats",
       readyStepName: null
     }
   ]);

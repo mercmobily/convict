@@ -12,19 +12,24 @@ class ProgramAssignmentProvider {
     "runtime.actions",
     "json-rest-api.core",
     "auth.policy.fastify",
-    "crud.program_templates",
-    "crud.program_template_schedule_entries",
-    "crud.program_template_routine_assignments",
+    "crud.program_collections",
     "crud.programs",
-    "crud.program_schedule_entries",
+    "crud.program_versions",
+    "crud.program_entries",
     "crud.program_routines",
-    "crud.program_routine_entries",
     "crud.exercises",
     "crud.routine_entries",
-    "crud.progression_track_steps",
-    "crud.user_progression_track_progress",
-    "crud.user_program_assignments",
-    "crud.user_program_assignment_revisions"
+    "crud.progressions",
+    "crud.progression_entries",
+    "crud.instance_programs",
+    "crud.instance_program_entries",
+    "crud.instance_program_routines",
+    "crud.instance_routine_entries",
+    "crud.instance_progressions",
+    "crud.instance_progression_entries",
+    "crud.program_assignments",
+    "crud.program_assignment_revisions",
+    "crud.user_progressions"
   ];
 
   register(app) {
@@ -40,13 +45,15 @@ class ProgramAssignmentProvider {
     app.singleton("feature.program-assignment.repository", (scope) => {
       return createRepository({
         api: scope.make(INTERNAL_JSON_REST_API),
-        programsRepository: scope.make("repository.programs"),
-        programScheduleEntriesRepository: scope.make("repository.program_schedule_entries"),
-        programRoutinesRepository: scope.make("repository.program_routines"),
-        programRoutineEntriesRepository: scope.make("repository.program_routine_entries"),
-        userProgramAssignmentsRepository: scope.make("repository.user_program_assignments"),
-        userProgramAssignmentRevisionsRepository: scope.make("repository.user_program_assignment_revisions"),
-        userProgressionTrackProgressRepository: scope.make("repository.user_progression_track_progress")
+        instanceProgramsRepository: scope.make("repository.instance_programs"),
+        instanceProgramEntriesRepository: scope.make("repository.instance_program_entries"),
+        instanceProgramRoutinesRepository: scope.make("repository.instance_program_routines"),
+        instanceRoutineEntriesRepository: scope.make("repository.instance_routine_entries"),
+        instanceProgressionsRepository: scope.make("repository.instance_progressions"),
+        instanceProgressionEntriesRepository: scope.make("repository.instance_progression_entries"),
+        programAssignmentsRepository: scope.make("repository.program_assignments"),
+        programAssignmentRevisionsRepository: scope.make("repository.program_assignment_revisions"),
+        userProgressionsRepository: scope.make("repository.user_progressions")
       });
     });
 

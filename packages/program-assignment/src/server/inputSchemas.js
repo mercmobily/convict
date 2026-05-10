@@ -16,7 +16,7 @@ const selectionStateQueryInputValidator = deepFreeze({
 
 const startProgramBodyInputValidator = deepFreeze({
   schema: createSchema({
-    programTemplateId: {
+    programVersionId: {
       type: "id",
       required: true
     },

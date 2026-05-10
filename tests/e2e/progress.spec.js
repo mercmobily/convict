@@ -51,11 +51,11 @@ async function fetchPushupProgress(userId) {
     const [rows] = await connection.query(
       [
         "SELECT cs.step_label AS currentStepName, rs.step_label AS readyStepName",
-        "FROM user_progression_track_progress uptp",
-        "INNER JOIN progression_tracks pt ON pt.id = uptp.progression_track_id",
-        "INNER JOIN progression_track_steps cs ON cs.id = uptp.current_progression_track_step_id",
-        "LEFT JOIN progression_track_steps rs ON rs.id = uptp.ready_to_advance_progression_track_step_id",
-        "WHERE uptp.user_id = ? AND pt.slug = 'convict-push-ups'",
+        "FROM user_progressions up",
+        "INNER JOIN instance_progressions ip ON ip.id = up.instance_progression_id",
+        "INNER JOIN instance_progression_entries cs ON cs.id = up.current_instance_progression_entry_id",
+        "LEFT JOIN instance_progression_entries rs ON rs.id = up.ready_to_advance_instance_progression_entry_id",
+        "WHERE up.user_id = ? AND ip.slug = 'convict-push-ups'",
         "LIMIT 1"
       ].join(" "),
       [userId]

@@ -54,17 +54,17 @@ async function fetchSavedSetLogs(userId, scheduledForDate) {
     const [rows] = await connection.query(
       [
         "SELECT",
-        "  woe.exercise_name_snapshot AS exerciseName,",
-        "  wsl.measurement_unit_snapshot AS measurementUnit,",
-        "  wsl.performed_value AS performedValue",
-        "FROM workout_occurrences wo",
-        "INNER JOIN workout_occurrence_exercises woe",
-        "ON woe.workout_occurrence_id = wo.id",
-        "INNER JOIN workout_set_logs wsl",
-        "ON wsl.workout_occurrence_exercise_id = woe.id",
-        "WHERE wo.user_id = ?",
-        "AND wo.scheduled_for_date = ?",
-        "ORDER BY woe.slot_number ASC, wsl.logged_at ASC, wsl.id ASC"
+        "  we.exercise_name_snapshot AS exerciseName,",
+        "  ws.measurement_unit_snapshot AS measurementUnit,",
+        "  ws.performed_value AS performedValue",
+        "FROM workouts w",
+        "INNER JOIN workout_exercises we",
+        "ON we.workout_id = w.id",
+        "INNER JOIN workout_sets ws",
+        "ON ws.workout_exercise_id = we.id",
+        "WHERE w.user_id = ?",
+        "AND w.scheduled_for_date = ?",
+        "ORDER BY we.slot_number ASC, ws.logged_at ASC, ws.id ASC"
       ].join(" "),
       [userId, scheduledForDate]
     );
